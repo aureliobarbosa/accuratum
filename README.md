@@ -1,6 +1,6 @@
 # **accuratum**
-# python library for creating *accuratum sundials*
+# A python library for creating *accuratum sundials*
 
 Authors:
-Paulo Eduardo de Brito (original creator)
-Marco Aurélio Alves Barbosa
+- Paulo Eduardo de Brito (creator)
+- Marco Aurélio Alves Barbosa
