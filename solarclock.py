@@ -1,8 +1,7 @@
 from astropy.coordinates import EarthLocation, AltAz, get_sun
 from astropy.time import Time, TimeDelta
-from astropy.units import deg, meter
+from astropy.units import deg
 import numpy as np
-import matplotlib.pyplot as plt
 import datetime
 
 """
