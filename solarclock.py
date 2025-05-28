@@ -1,8 +1,9 @@
-from astropy.coordinates import EarthLocation, AltAz, get_sun
+import datetime
+
+import numpy as np
+from astropy.coordinates import AltAz, EarthLocation, get_sun
 from astropy.time import Time, TimeDelta
 from astropy.units import deg
-import numpy as np
-import datetime
 
 """
 Posição da entrada do Predio "Paulo Freire" FUP-UnB
@@ -52,6 +53,7 @@ data_atual = Time(data1)
 data_fim = Time(data3)
 horas = np.arange(7+fuso, 17.05+fuso, passoH/60) # Intervalos de passoH minutos
 ho=0
+print("# ho,di,tempo1,altura_sol,azimute_sol,comprimento_sombra,-x_sombra,y_sombra", "\n")
 for hora in horas:
     data_atual = Time(data1)
     di=0
@@ -67,10 +69,10 @@ for hora in horas:
         sombraX[di,ho] = x_sombra
         sombraY[di,ho] = y_sombra
         horadia[di,ho] = str(tempo1)
-#        print(ho,di,tempo1,altura_sol,azimute_sol,comprimento_sombra,-x_sombra,y_sombra)
+        print(ho,di,tempo1,altura_sol,azimute_sol,comprimento_sombra,-x_sombra,y_sombra)
         data_atual += TimeDelta(passoD) # Incrementa para passoD
         di +=1 
-#    print("")
-    ho +=1
+        # print("")
+    ho += 1
 
 
