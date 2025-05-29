@@ -1,7 +1,9 @@
-from typing import Optional, Tuple
+import time
+from typing import Optional, Tuple, TypeAlias
 
 from geopy.exc import (
     GeocoderParseError,
+    GeocoderQueryError,
     GeocoderServiceError,
     GeocoderTimedOut,
     GeocoderUnavailable,
@@ -9,10 +11,14 @@ from geopy.exc import (
 from geopy.geocoders import Nominatim
 from geopy.location import Location
 
+GeoException: TypeAlias = (
+    GeocoderParseError | GeocoderServiceError | GeocoderTimedOut | GeocoderUnavailable
+)
 
-def convert_place_to_latitude_longitude(
-    location_string: str, user: str = "Anonymous", project: str = "geopy-project"
-) -> Tuple[Optional[float], Optional[float]]:
+
+def location_to_latitude_longitude(
+    location_string: str, user: str = "Anonymous", project: str = "Accuratum"
+) -> Tuple[float, float] | None:
     """
     Converts a location string to latitude and longitude coordinates.
 
@@ -21,70 +27,73 @@ def convert_place_to_latitude_longitude(
         user (str): An identifier for the user or specific part of the application.
                     Defaults to "Anonymous".
         project (str): The name of your project. This will be used in the user_agent string.
-                       Defaults to "geopy-project".
+                       Defaults to "Accuratum".
 
     Returns:
-        Tuple[Optional[float], Optional[float]]: A tuple containing (latitude, longitude) if successful.
-                                                  If an error occurs, returns (None, None).
+        Tuple[ float, float] | None:: A tuple containing (latitude, longitude) if successful,
+                                                  or None, if the location cannot be found.
     """
     user_agent = f"{project}-{user}"
     geolocator = Nominatim(user_agent=user_agent)
 
     try:
-        location: Optional[Location] = geolocator.geocode(location_string)
+        location: Location | None = geolocator.geocode(location_string)
 
         if location:
             return location.latitude, location.longitude
         else:
-            # If location is None, it means no result was found
-            return None, None
-    except GeocoderTimedOut:
-        return None, None
-    except GeocoderServiceError:
-        return None, None
-    except GeocoderUnavailable:
-        return None, None
-    except GeocoderParseError:
-        return None, None
-    except Exception:
-        # Catch any other unexpected exceptions
-        return None, None
+            return None
+    except GeoException as e:
+        print("A service problem has occurred.")
+        raise e
+    except GeocoderQueryError as e:
+        print(f"The string '{location_string}' is possibly malformed!")
 
+
+def test_existing_location(location_string):
+    project_test = "AccuratumTest"
+    user_test = "AccuratumDev"
+
+    latlon = location_to_latitude_longitude(
+        location_string=location_string,
+        project=project_test,
+        user=user_test,
+    )
+    if latlon:
+        latitude, longitude = latlon
+        print(f"{location_string}: Latitude={latitude}, Longitude={longitude}")
+
+    assert latlon is not None, "TestError: Could not find existing location '{location_string}'."
+    assert isinstance(latitude, float), "TestError: variable latitude should be a float, but is of {type(latitude)}."
+    assert isinstance(longitude, float), "TestError: variable langitude should be a float, but is of {type(latitude)}."
+
+def test_non_existing_location(location_string):
+    project_test = "AccuratumTest"
+    user_test = "AccuratumDev"
+
+    latlon = location_to_latitude_longitude(
+        location_string=location_string,
+        project=project_test,
+        user=user_test,
+    )
+    if latlon is None:
+        print(f"location {location_string} does not exist, as expected.")
+    else:
+        latitude, longitude = latlon
+        print(f"found previously inexistent location {location_string} at {latitude},{longitude}.")
+
+    assert latlon is None, "TestError: Found previously inexistent location {location_string} at {latitude},{longitude}."
+
+
+
+# def test_non_existing_location(location_string):
 
 if __name__ == "__main__":
-    # Example Usage:
-    lat, lon = convert_place_to_latitude_longitude(
-        location_string="Praça do Cruzeiro, Brasília, Brazil",
-        project="MyAstropyApp",
-        user="TestUser1",
-    )
-    if lat is not None and lon is not None:
-        print(f"Praça do Cruzeiro, Brasília, Brazil: Latitude={lat}, Longitude={lon}")
-    else:
-        print(
-            "Could not get coordinates for Praça do Cruzeiro, Brasília, Brazil or an error occurred."
-        )
+    location_string = "Praça do Cruzeiro, Brasília, Brazil"
+    test_existing_location(location_string)
+    
+    location_string = "Paris"
+    test_existing_location(location_string)
 
-    lat, lon = convert_place_to_latitude_longitude(
-        location_string="NonExistentPlaceXYZ123",
-        project="MyAstropyApp",
-        user="TestUser2",
-    )
-    if lat is not None and lon is not None:
-        print(f"NonExistentPlaceXYZ123: Latitude={lat}, Longitude={lon}")
-    else:
-        print(
-            "Could not get coordinates for NonExistentPlaceXYZ123 or an error occurred."
-        )
-
-    # Example of a potentially problematic request (e.g., very vague)
-    lat, lon = convert_place_to_latitude_longitude(
-        location_string="Paris", project="MyAstropyApp", user="TestUser3"
-    )
-    if lat is not None and lon is not None:
-        print(f"Paris: Latitude={lat}, Longitude={lon}")
-    else:
-        print("Could not get coordinates for Paris or an error occurred.")
-
-    # You could also add a test for a service error by e.g. using a fake URL in Nominatim if you were truly testing
-    # Or by triggering a timeout by setting a very short timeout on Nominatim in a test environment.
+    location_string="NonExistentPlaceXYZ123"
+    test_non_existing_location(location_string)
