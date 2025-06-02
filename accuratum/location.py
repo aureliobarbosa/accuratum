@@ -44,7 +44,13 @@ def location_to_latitude_longitude(
         else:
             return None
     except GeoException as e:
-        print("A service problem has occurred.")
+        print("AccuratumError: a service problem has occurred and has been catched by geopy.")
+        print("An error been catched and will be raised again. Check backtrace for more information.")
         raise e
     except GeocoderQueryError as e:
-        print(f"The string '{location_string}' is possibly malformed!")
+        print(f"AccuratumError: the string '{location_string}' is possibly malformed!")
+        print("An error been catched and will be raised again. Check backtrace for more information.")
+        print("Geopy Error Message:\n", e)
+        raise ValueError
+        
+        
