@@ -1,5 +1,4 @@
-import time
-from typing import Optional, Tuple, TypeAlias
+from typing import Tuple, TypeAlias
 
 from geopy.exc import (
     GeocoderParseError,
