@@ -182,3 +182,4 @@ cython_debug/
 
 # solarclock project excludes
 bkp/
+nohup.out
