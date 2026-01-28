@@ -11,7 +11,7 @@ To setup this project for development on Ubuntu Linux use the commands below to
 ```bash
 $ python -m venv env
 $ source env/bin/activate
-$ pip install -e .["dev","recommended"]
+$ pip install -e .["dev"]
 $ python -m ipykernel install --user --name=accuratum
 ```
 
