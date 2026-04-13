@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker --version)",
+      "Bash(docker info:*)",
+      "Bash(grep -v \"^d.*env$\")",
+      "Bash(python -m pytest tests/ -v --collect-only)",
+      "Bash(python -c \"import sys; print\\(f'Version: {sys.version}'\\)\")"
+    ]
+  }
+}
