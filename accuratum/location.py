@@ -1,4 +1,4 @@
-from typing import Tuple, TypeAlias
+from typing import Optional, Tuple
 
 from geopy.exc import (
     GeocoderParseError,
@@ -9,14 +9,17 @@ from geopy.exc import (
 )
 from geopy.geocoders import Nominatim
 
-GeoException: TypeAlias = (
-    GeocoderParseError | GeocoderServiceError | GeocoderTimedOut | GeocoderUnavailable
+_GEO_SERVICE_ERRORS = (
+    GeocoderParseError,
+    GeocoderServiceError,
+    GeocoderTimedOut,
+    GeocoderUnavailable,
 )
 
 
 def location_to_latitude_longitude(
     location_string: str, user: str = "Anonymous", project: str = "Accuratum"
-) -> Tuple[float, float]:
+) -> Optional[Tuple[float, float]]:
     """
     Converts a location string to latitude and longitude coordinates.
 
@@ -40,15 +43,15 @@ def location_to_latitude_longitude(
         if location is not None:
             return location.latitude, location.longitude
         else:
-            raise ValueError(f"Package geopy could not identify the string: ''{location_string}")
-    except GeoException as e:
-        print("AccuratumError: a service problem has occurred and has been catched by geopy.")
-        print("An error been catched and will be raised again. Check backtrace for more information.")
-        raise e
+            return None
     except GeocoderQueryError as e:
         print(f"AccuratumError: the string '{location_string}' is possibly malformed!")
         print("An error been catched and will be raised again. Check backtrace for more information.")
         print("Geopy Error Message:\n", e)
         raise ValueError(f"Package geopy could not identify the string: ''{location_string}")
+    except _GEO_SERVICE_ERRORS as e:
+        print("AccuratumError: a service problem has occurred and has been catched by geopy.")
+        print("An error been catched and will be raised again. Check backtrace for more information.")
+        raise e
 
 
