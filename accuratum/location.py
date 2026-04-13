@@ -17,7 +17,7 @@ GeoException: TypeAlias = (
 
 def location_to_latitude_longitude(
     location_string: str, user: str = "Anonymous", project: str = "Accuratum"
-) -> Tuple[float, float] | None:
+) -> Tuple[float, float]:
     """
     Converts a location string to latitude and longitude coordinates.
 
@@ -36,12 +36,12 @@ def location_to_latitude_longitude(
     geolocator = Nominatim(user_agent=user_agent)
 
     try:
-        location: Location | None = geolocator.geocode(location_string)
+        location = geolocator.geocode(location_string)
 
-        if location:
+        if location is not None:
             return location.latitude, location.longitude
         else:
-            return None
+            raise ValueError(f"Package geopy could not identify the string: ''{location_string}")
     except GeoException as e:
         print("AccuratumError: a service problem has occurred and has been catched by geopy.")
         print("An error been catched and will be raised again. Check backtrace for more information.")
@@ -50,6 +50,6 @@ def location_to_latitude_longitude(
         print(f"AccuratumError: the string '{location_string}' is possibly malformed!")
         print("An error been catched and will be raised again. Check backtrace for more information.")
         print("Geopy Error Message:\n", e)
-        raise ValueError
-        
-        
+        raise ValueError(f"Package geopy could not identify the string: ''{location_string}")
+
+
