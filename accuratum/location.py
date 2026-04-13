@@ -8,7 +8,6 @@ from geopy.exc import (
     GeocoderUnavailable,
 )
 from geopy.geocoders import Nominatim
-from geopy.location import Location
 
 GeoException: TypeAlias = (
     GeocoderParseError | GeocoderServiceError | GeocoderTimedOut | GeocoderUnavailable
@@ -29,7 +28,7 @@ def location_to_latitude_longitude(
                        Defaults to "Accuratum".
 
     Returns:
-        Tuple[ float, float] | None:: A tuple containing (latitude, longitude) if successful,
+        Tuple[ float, float]:: A tuple containing (latitude, longitude) if successful,
                                         or None, if the location cannot be found.
     """
     user_agent = f"{project}-{user}"
