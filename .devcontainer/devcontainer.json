@@ -1,7 +1,14 @@
 {
   "name": "accuratum",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "postCreateCommand": "pip install -e '.[dev]'",
+  "forwardPorts": [8888],
+  "portsAttributes": {
+    "8888": {
+      "label": "Jupyter",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "pip install -e '.[dev]' && python -m ipykernel install --user --name=accuratum --display-name='Python (accuratum)'",
   "customizations": {
     "vscode": {
       "extensions": [
