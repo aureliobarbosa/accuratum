@@ -4,8 +4,16 @@
       "Bash(docker --version)",
       "Bash(docker info:*)",
       "Bash(grep -v \"^d.*env$\")",
-      "Bash(python -m pytest tests/ -v --collect-only)",
-      "Bash(python -c \"import sys; print\\(f'Version: {sys.version}'\\)\")"
+      "Bash(python -c \"import sys; print\\(f'Version: {sys.version}'\\)\")",
+      "Bash(python -m pytest :*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(uv --version)",
+      "Bash(uv build:*)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(curl -LsSf https://astral.sh/uv/install.sh)",
+      "Bash(sh)",
+      "Bash(/home/vscode/.local/bin/uv build:*)"
     ]
   }
 }
