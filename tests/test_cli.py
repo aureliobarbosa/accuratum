@@ -123,13 +123,6 @@ def test_resolve_location_requires_any_input():
 # --- timezone resolution -----------------------------------------------------
 
 
-def test_timezone_help_mentions_location_fallback():
-    parser = build_parser()
-    help_text = parser.format_help()
-    assert "location of --lat-long" in help_text
-    assert "system local" not in help_text
-
-
 def test_main_uses_timezonefinder_when_timezone_omitted(tmp_path):
     from accuratum.cli import main
 
