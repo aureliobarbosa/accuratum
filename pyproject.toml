@@ -1,7 +1,11 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "accuratum"
 version = "0.1.0"
-description = "A python library for creating accuratum sundials"
+description = "A python library and CLI for creating Accuratum sundial diagrams"
 readme = "README.md"
 authors = [
     { name = "Paulo Eduardo de Brito", email = "pedebrito@unb.br" },
@@ -14,10 +18,15 @@ license = "MIT"
 license-files = ["LICENSE.md"]
 requires-python = ">=3.11"
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Astronomy",
     "Topic :: Education",
 ]
@@ -32,7 +41,8 @@ dependencies = [
     "geopy>=2.4.1",
     "numpy>=2.2.6",
     "matplotlib>=3.10.3",
-    "timezonefinder>=8.2.2"
+    "timezonefinder>=8.2.2",
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]
@@ -42,8 +52,25 @@ dev = [
     "ruff>=0.11.11",
 ]
 
+[project.scripts]
+accuratum = "accuratum.cli:main"
+
 [project.urls]
-repository = "https://github.com/aureliobarbosa/accuratum"
+Homepage = "https://github.com/aureliobarbosa/accuratum"
+Repository = "https://github.com/aureliobarbosa/accuratum"
+Issues = "https://github.com/aureliobarbosa/accuratum/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["accuratum"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "accuratum",
+    "tests",
+    "README.md",
+    "LICENSE.md",
+    "pyproject.toml",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
