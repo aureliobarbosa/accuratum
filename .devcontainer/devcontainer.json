@@ -8,7 +8,7 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "pip install -e '.[dev]' && python -m ipykernel install --user --name=accuratum --display-name='Python (accuratum)'",
+  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.local/bin/uv pip install --system -e '.[dev]' && python -m ipykernel install --user --name=accuratum --display-name='Python (accuratum)'",
   "customizations": {
     "vscode": {
       "extensions": [
