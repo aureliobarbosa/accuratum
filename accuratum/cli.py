@@ -18,6 +18,7 @@ from accuratum.datetime_utils import (  # noqa: E402
 )
 from accuratum.graph import plot_solar_clock  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
+from timezonefinder import timezone_at  # noqa: E402
 
 DEFAULT_OUTPUT = "accuratum.png"
 
@@ -83,7 +84,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--timezone",
         default=None,
         help="IANA timezone override (e.g. 'America/Sao_Paulo'). "
-        "If omitted, uses the system local time zone.",
+        "If omitted, uses the oficial timezone at the place specified "
+        "using either location or --lat-long parameters.",
     )
     return parser
 
@@ -114,8 +116,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parse_args(argv)
     lat, lon = resolve_location(args)
 
-    tz = ZoneInfo(args.timezone) if args.timezone else datetime.now().astimezone().tzinfo
-    now = datetime.now(tz=tz) if tz is not None else datetime.now()
+    tz_str = args.timezone or timezone_at(lat=lat, lng=lon) or "UTC"
+    tz = ZoneInfo(tz_str)
+    now = datetime.now(tz=tz)
 
     periods = frame_periods(get_solstices(now))
     period = periods[args.period]

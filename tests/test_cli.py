@@ -120,6 +120,53 @@ def test_resolve_location_requires_any_input():
         resolve_location(args)
 
 
+# --- timezone resolution -----------------------------------------------------
+
+
+def test_timezone_help_mentions_location_fallback():
+    parser = build_parser()
+    help_text = parser.format_help()
+    assert "location of --lat-long" in help_text
+    assert "system local" not in help_text
+
+
+def test_main_uses_timezonefinder_when_timezone_omitted(tmp_path):
+    from accuratum.cli import main
+
+    out = tmp_path / "clock.png"
+    with patch("accuratum.cli.timezone_at", return_value="America/Sao_Paulo") as tzf:
+        exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out)])
+    assert exit_code == 0
+    tzf.assert_called_once_with(lat=-15.6, lng=-47.65)
+
+
+def test_main_respects_explicit_timezone_over_timezonefinder(tmp_path):
+    from accuratum.cli import main
+
+    out = tmp_path / "clock.png"
+    with patch("accuratum.cli.timezone_at") as tzf:
+        exit_code = main(
+            [
+                "--lat-long=-15.6,-47.65",
+                "--timezone",
+                "UTC",
+                "--output",
+                str(out),
+            ]
+        )
+    assert exit_code == 0
+    tzf.assert_not_called()
+
+
+def test_main_falls_back_to_utc_when_timezonefinder_returns_none(tmp_path):
+    from accuratum.cli import main
+
+    out = tmp_path / "clock.png"
+    with patch("accuratum.cli.timezone_at", return_value=None):
+        exit_code = main(["--lat-long=0,0", "--output", str(out)])
+    assert exit_code == 0
+
+
 # --- end-to-end --------------------------------------------------------------
 
 
