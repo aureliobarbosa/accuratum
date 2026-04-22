@@ -8,6 +8,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+from timezonefinder import timezone_at  # noqa: E402
 
 from accuratum.astronomy import compute_blocks  # noqa: E402
 from accuratum.datetime_utils import (  # noqa: E402
@@ -18,9 +19,9 @@ from accuratum.datetime_utils import (  # noqa: E402
 )
 from accuratum.graph import plot_solar_clock  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
-from timezonefinder import timezone_at  # noqa: E402
 
 DEFAULT_OUTPUT = "accuratum.png"
+
 
 def parse_lat_long(value: str) -> tuple[float, float]:
     """Parse a 'LAT,LON' (with optional parens/spaces) string into two floats."""
