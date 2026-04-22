@@ -21,7 +21,7 @@
         "ms-python.vscode-pylance",
         "ms-toolsai.jupyter",
         "anthropic.claude-code",
-        "astral-sh.ruff"
+        "charliermarsh.ruff"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/workspaces/accuratum/.venv/bin/python"
