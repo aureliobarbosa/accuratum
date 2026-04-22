@@ -20,14 +20,11 @@
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-toolsai.jupyter",
-        "charliermarsh.ruff"
+        "anthropic.claude-code",
+        "astral-sh.ruff"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/workspaces/accuratum/.venv/bin/python",
-        "editor.formatOnSave": true,
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff"
-        }
+        "python.defaultInterpreterPath": "/workspaces/accuratum/.venv/bin/python"
       }
     }
   }
