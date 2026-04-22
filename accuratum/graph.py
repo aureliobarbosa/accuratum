@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 def plot_solar_clock(
     blocks_x: Sequence,
     blocks_y: Sequence,
-    logos: Optional[Sequence[tuple[str, tuple[float, float, float, float]]]] = None,
+    logos: Sequence[tuple[str, tuple[float, float, float, float]]] | None = None,
     plumb_xy: tuple[float, float] = (0.0, 0.0),
     line_color: str = "green",
     line_width: float = 0.5,

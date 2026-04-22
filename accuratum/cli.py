@@ -1,7 +1,7 @@
 import argparse
 import sys
 from datetime import datetime
-from typing import Optional, Sequence
+from typing import Sequence
 from zoneinfo import ZoneInfo
 
 import matplotlib
@@ -21,7 +21,6 @@ from accuratum.location import location_to_latitude_longitude  # noqa: E402
 from timezonefinder import timezone_at  # noqa: E402
 
 DEFAULT_OUTPUT = "accuratum.png"
-
 
 def parse_lat_long(value: str) -> tuple[float, float]:
     """Parse a 'LAT,LON' (with optional parens/spaces) string into two floats."""
@@ -90,7 +89,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
+def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.location is not None and args.lat_long is not None:
@@ -112,7 +111,7 @@ def resolve_location(args: argparse.Namespace) -> tuple[float, float]:
     return latlon
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
     lat, lon = resolve_location(args)
 

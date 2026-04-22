@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 from geopy.exc import (
     GeocoderParseError,
@@ -19,7 +19,7 @@ _GEO_SERVICE_ERRORS = (
 
 def location_to_latitude_longitude(
     location_string: str, user: str = "Anonymous", project: str = "Accuratum"
-) -> Optional[Tuple[float, float]]:
+) -> Tuple[float, float] | None:
     """
     Converts a location string to latitude and longitude coordinates.
 
