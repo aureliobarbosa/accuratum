@@ -13,7 +13,7 @@
   "remoteEnv": {
     "CLAUDE_CONFIG_DIR": "/workspaces/accuratum/.claude-data"
   },
-  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.local/bin/uv sync --extra dev && python -m ipykernel install --user --name=accuratum --display-name='Python (accuratum)' && npm install -g @anthropic-ai/claude-code",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   "customizations": {
     "vscode": {
       "extensions": [
