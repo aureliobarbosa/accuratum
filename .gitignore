@@ -183,3 +183,6 @@ cython_debug/
 # solarclock project excludes
 bkp/
 nohup.out
+
+# Claude Code chat history
+.claude-data/
