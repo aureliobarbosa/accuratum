@@ -1,14 +1,19 @@
 {
   "name": "accuratum",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "forwardPorts": [8888],
+  "forwardPorts": [
+    8888
+  ],
   "portsAttributes": {
     "8888": {
       "label": "Jupyter",
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.local/bin/uv pip install --system -e '.[dev]' && python -m ipykernel install --user --name=accuratum --display-name='Python (accuratum)'",
+  "remoteEnv": {
+    "CLAUDE_CONFIG_DIR": "/workspaces/accuratum/.claude-data"
+  },
+  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.local/bin/uv sync --extra dev && python -m ipykernel install --user --name=accuratum --display-name='Python (accuratum)' && npm install -g @anthropic-ai/claude-code",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -18,7 +23,7 @@
         "charliermarsh.ruff"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.defaultInterpreterPath": "/workspaces/accuratum/.venv/bin/python",
         "editor.formatOnSave": true,
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
