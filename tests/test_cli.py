@@ -1,10 +1,8 @@
-import os
 from unittest.mock import patch
 
 import pytest
 
 from accuratum.cli import build_parser, parse_lat_long, resolve_location
-
 
 # --- parse_lat_long -----------------------------------------------------------
 
