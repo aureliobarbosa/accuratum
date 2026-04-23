@@ -8,6 +8,7 @@ from astropy.coordinates import AltAz
 from accuratum.astronomy import (
     build_altaz_frame,
     compute_blocks,
+    get_sunrises_and_sunsets,
     grid_to_shadow_xy,
     smart_dayline_grid,
 )
@@ -72,6 +73,39 @@ def test_plumb_length_scales_shadow_linearly(grids):
 
 
 @pytest.fixture(scope="module")
+def sun_times():
+    days = np.array(["2026-06-21", "2026-09-21", "2026-12-21"], dtype="datetime64[D]")
+    rises, sets = get_sunrises_and_sunsets(days, lat=LAT, lon=LON)
+    return rises, sets
+
+
+def test_get_sunrises_and_sunsets_shape(sun_times):
+    rises, sets = sun_times
+    assert rises.shape == (3,)
+    assert sets.shape == (3,)
+
+
+def test_get_sunrises_and_sunsets_dtype(sun_times):
+    rises, sets = sun_times
+    assert rises.dtype == np.dtype("datetime64[s]")
+    assert sets.dtype == np.dtype("datetime64[s]")
+
+
+def test_get_sunrises_and_sunsets_sunset_after_sunrise(sun_times):
+    rises, sets = sun_times
+    assert np.all(sets.astype(np.int64) > rises.astype(np.int64))
+
+
+def test_get_sunrises_and_sunsets_horizon_shifts_times(sun_times):
+    rises_0, sets_0 = sun_times
+    days = np.array(["2026-06-21", "2026-09-21", "2026-12-21"], dtype="datetime64[D]")
+    rises_10, sets_10 = get_sunrises_and_sunsets(days, lat=LAT, lon=LON, horizon=10.0)
+    # 10° horizon → later sunrise, earlier sunset
+    assert np.all(rises_10.astype(np.int64) > rises_0.astype(np.int64))
+    assert np.all(sets_10.astype(np.int64) < sets_0.astype(np.int64))
+
+
+@pytest.fixture(scope="module")
 def smart_grid():
     reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
     solstices = get_solstices(reference)
@@ -86,7 +120,7 @@ def test_smart_dayline_grid_shape(smart_grid):
 
 
 def test_smart_dayline_grid_dtype(smart_grid):
-    assert smart_grid.dtype == np.dtype("datetime64[ms]")
+    assert smart_grid.dtype == np.dtype("datetime64[s]")
 
 
 def test_smart_dayline_grid_rows_are_ordered(smart_grid):
