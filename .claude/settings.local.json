@@ -13,7 +13,8 @@
       "WebFetch(domain:pypi.org)",
       "Bash(curl -LsSf https://astral.sh/uv/install.sh)",
       "Bash(sh)",
-      "Bash(/home/vscode/.local/bin/uv build:*)"
+      "Bash(/home/vscode/.local/bin/uv build:*)",
+      "WebSearch"
     ]
   }
 }
