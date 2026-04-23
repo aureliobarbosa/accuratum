@@ -11,7 +11,6 @@ from accuratum.datetime_utils import (
     get_solstices,
 )
 
-
 TZ_SP = ZoneInfo("America/Sao_Paulo")
 
 
