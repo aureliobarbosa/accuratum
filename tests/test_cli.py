@@ -52,7 +52,6 @@ def test_parser_accepts_positive_lat_long_without_equals():
 
 
 def test_parser_rejects_both_location_sources():
-    parser = build_parser()
     with pytest.raises(SystemExit):
         # Parsing alone is not enough — we enforce mutual exclusion via parser.error
         # in _parse_args; call the top-level entry point that triggers it.

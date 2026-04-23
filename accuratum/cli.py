@@ -31,8 +31,8 @@ def parse_lat_long(value: str) -> tuple[float, float]:
         raise ValueError(f"expected 'LAT,LON', got {value!r}")
     try:
         return float(parts[0]), float(parts[1])
-    except ValueError as exc:
-        raise ValueError(f"could not parse {value!r} as two floats") from exc
+    except ValueError:
+        raise ValueError(f"could not parse {value!r} as two floats.")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -47,8 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
         "location",
         nargs="?",
         default=None,
-        help="Free-text location (e.g. 'belem, brazil'). "
-        "Resolved via geocoding. Mutually exclusive with --lat-long.",
+        help="Free-text location (e.g. 'belem, brazil'). Resolved via geocoding. Mutually exclusive with --lat-long.",
     )
     parser.add_argument(
         "--lat-long",
@@ -77,8 +76,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         choices=(0, 1),
         default=0,
-        help="Which half-year solstice frame to render: "
-        "0 = Dec(prev)->Jun(curr), 1 = Jun(curr)->Dec(curr).",
+        help="Which half-year solstice frame to render: 0 = Dec(prev)->Jun(curr), 1 = Jun(curr)->Dec(curr).",
     )
     parser.add_argument(
         "--timezone",
@@ -94,7 +92,7 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.location is not None and args.lat_long is not None:
-        parser.error("provide either a location string or --lat-long, not both")
+        parser.error("provide either a location string or --lat-long, not both.")
     return args
 
 
@@ -106,9 +104,7 @@ def resolve_location(args: argparse.Namespace) -> tuple[float, float]:
         raise SystemExit("error: provide a location string or --lat-long")
     latlon = location_to_latitude_longitude(args.location)
     if latlon is None:
-        raise SystemExit(
-            f"error: could not resolve location {args.location!r} via geocoder"
-        )
+        raise SystemExit(f"error: could not resolve location {args.location!r} via geocoder.")
     return latlon
 
 
