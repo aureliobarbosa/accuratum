@@ -1,7 +1,13 @@
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
 import numpy as np
+from astroplan import Observer
 from astropy.coordinates import AltAz, EarthLocation, get_sun
 from astropy.time import Time
 from astropy.units import deg
+
+_UTC = ZoneInfo("UTC")
 
 
 def build_altaz_frame(lat: float, lon: float) -> AltAz:
@@ -27,6 +33,32 @@ def grid_to_shadow_xy(
     x = -shadow_length * np.sin(np.deg2rad(sun_az))
     y = shadow_length * np.cos(np.deg2rad(sun_az))
     return x, y
+
+
+def smart_dayline_grid(
+    frame_period: list[datetime],
+    lat: float,
+    lon: float,
+    day_step: timedelta = timedelta(days=7),
+    line_points: int = 500,
+    horizon: float = 10,
+) -> np.ndarray:
+    """Build a 2-D datetime64 grid for daylines using actual sunrise/sunset at 10° horizon."""
+    observer = Observer(location=EarthLocation(lat=lat * deg, lon=lon * deg))
+
+    start, end = frame_period
+    first = np.datetime64(start.astimezone(_UTC).replace(tzinfo=None), "D")
+    last = np.datetime64(end.astimezone(_UTC).replace(tzinfo=None), "D")
+    days = np.arange(first, last + np.timedelta64(1, "D"), np.timedelta64(day_step, "D"))
+
+    rows = []
+    for day in days:
+        t_ref = Time(f"{day}T00:00:00", format="isot", scale="utc")
+        sunrise = observer.sun_rise_time(t_ref, which="next", horizon=horizon * deg)
+        sunset = observer.sun_set_time(sunrise, which="next", horizon=horizon * deg)
+        ts_ms = (np.linspace(sunrise.unix, sunset.unix, line_points) * 1000).astype(np.int64)
+        rows.append(ts_ms.view("datetime64[ms]"))
+    return np.array(rows)
 
 
 def compute_blocks(
