@@ -43,6 +43,7 @@ dependencies = [
     "matplotlib>=3.10.3",
     "timezonefinder>=8.2.2",
     "tzdata>=2024.1",
+    "astroplan>=0.10.1",
 ]
 
 [project.optional-dependencies]
