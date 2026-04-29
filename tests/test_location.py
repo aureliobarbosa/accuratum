@@ -1,3 +1,5 @@
+from time import sleep
+
 import pytest
 
 from accuratum.location import location_to_latitude_longitude
@@ -7,7 +9,7 @@ from accuratum.location import location_to_latitude_longitude
     "location_string",
     [
         "Praça do Cruzeiro, Brasília, Brazil",
-        "Paris",
+        "Paris, France",
     ],
 )
 def test_existing_location(location_string):
@@ -22,6 +24,8 @@ def test_existing_location(location_string):
     if latlon:
         latitude, longitude = latlon
         print(f"{location_string}: Latitude={latitude}, Longitude={longitude}")
+
+    sleep(0.1)
 
     assert latlon is not None, f"TestError: Could not find existing location '{location_string}'."
     assert isinstance(latitude, float), f"TestError: variable latitude should be a float, but is of {type(latitude)}."
