@@ -26,8 +26,8 @@ def grid_to_shadow_xy(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Convert a datetime64 grid into (x, y) shadow positions of a vertical plumb."""
     sun = get_sun(Time(grid)).transform_to(frame)
-    sun_alt = sun.alt.value
-    sun_az = sun.az.value
+    sun_alt: np.ndarray = sun.alt.value  # type: ignore
+    sun_az: np.ndarray = sun.az.value  # type: ignore
 
     shadow_length = plumb_length / np.tan(np.deg2rad(sun_alt))
     x = -shadow_length * np.sin(np.deg2rad(sun_az))
@@ -50,7 +50,7 @@ def get_sunrises_and_sunsets(
     midnights = Time([f"{d}T00:00:00" for d in dates], format="isot", scale="utc")
     sunrises = observer.sun_rise_time(midnights, which="next", horizon=horizon * deg)
     sunsets = observer.sun_set_time(sunrises, which="next", horizon=horizon * deg)
-    return sunrises.datetime64.astype("datetime64[s]"), sunsets.datetime64.astype("datetime64[s]")
+    return sunrises.datetime64.astype("datetime64[s]"), sunsets.datetime64.astype("datetime64[s]")  # type: ignore
 
 
 def smart_dayline_grid(
