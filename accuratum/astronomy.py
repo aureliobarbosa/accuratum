@@ -59,19 +59,20 @@ def smart_dayline_grid(
     lon: float,
     day_step: timedelta = timedelta(days=7),
     line_points: int = 500,
+    horizon: float = 10.0,
 ) -> np.ndarray:
-    """Build a 2-D datetime64[s] grid (days × daytime_points) bounded by the 10° solar horizon."""
+    """Build a 2-D datetime64[s] grid (days × daytime_points) bounded by 'horizon' degrees from solar horizon."""
     start, end = frame_period
     first = np.datetime64(start.astimezone(_UTC).replace(tzinfo=None), "D")
     last = np.datetime64(end.astimezone(_UTC).replace(tzinfo=None), "D")
     days = np.arange(first, last + np.timedelta64(1, "D"), np.timedelta64(day_step, "D"))
 
-    rises, sets = get_sunrises_and_sunsets(days, lat, lon, horizon=10.0)
+    rises, sets = get_sunrises_and_sunsets(days, lat, lon, horizon=horizon)
 
-    alphas = np.linspace(0, 1, line_points)  # (line_points,)
-    rises_s = rises.astype(np.int64)[:, None]  # (n_days, 1)
-    spans_s = (sets.astype(np.int64) - rises.astype(np.int64))[:, None]  # (n_days, 1)
-    return (rises_s + spans_s * alphas).astype(np.int64).view("datetime64[s]")
+    alphas = np.linspace(0, 1, line_points)
+    rises_s = rises[:, None]
+    spans_s = (sets - rises)[:, None]
+    return rises_s + spans_s * alphas
 
 
 def compute_blocks(
