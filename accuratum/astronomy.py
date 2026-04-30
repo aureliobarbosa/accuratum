@@ -75,6 +75,42 @@ def smart_dayline_grid(
     return rises_s + spans_s * alphas
 
 
+def smart_hourline_grid(
+    frame_period: list[datetime],
+    lat: float,
+    lon: float,
+    day_step: timedelta = timedelta(days=1),
+    time_step: timedelta = timedelta(minutes=20),
+    horizon: float = 10.0,
+) -> np.ndarray:
+    """Build a 2-D datetime64 grid for hourlines (rows = times, columns = days)."""
+    start, end = frame_period
+    first = np.datetime64(start.astimezone(_UTC).replace(tzinfo=None), "D")
+    last = np.datetime64(end.astimezone(_UTC).replace(tzinfo=None), "D")
+    days = np.arange(first, last + np.timedelta64(1, "D"), np.timedelta64(day_step, "D"))
+
+    rises, sets = get_sunrises_and_sunsets(days, lat, lon, horizon=horizon)
+
+    sunrise = rises.min()  # This is wrong (should get the hour alone!)
+    sunset = sets.max()
+
+    # remove the timedelta(inside numpy), use numpy itself to represent those steps
+    time_range = np.timedelta64(timedelta(hours=sunset - sunrise), "s")  # this is failing due to timedelta
+    time_step_np = np.timedelta64(time_step, "s")
+    time_offset = np.timedelta64(timedelta(minutes=1), "s")
+    times = np.arange(0, time_range + time_offset, time_step_np)
+
+    day_offset = np.timedelta64(timedelta(days=1), "D")
+    days = np.arange(first, last + day_offset, np.timedelta64(day_step, "D"))
+
+    grid_days, grid_times = np.meshgrid(days, times)
+    grid = grid_days + grid_times
+
+    mask = rises <= grid <= sets
+
+    return np.where(mask, grid, np.datetime64("NaT"))
+
+
 def compute_blocks(
     daylines_grid: np.ndarray,
     hourlines_grid: np.ndarray,
