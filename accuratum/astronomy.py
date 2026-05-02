@@ -50,7 +50,8 @@ def get_sunrises_and_sunsets(
     midnights = Time([f"{d}T00:00:00" for d in dates], format="isot", scale="utc")
     sunrises = observer.sun_rise_time(midnights, which="next", horizon=horizon * deg)
     sunsets = observer.sun_set_time(sunrises, which="next", horizon=horizon * deg)
-    return sunrises.datetime64.astype("datetime64[s]"), sunsets.datetime64.astype("datetime64[s]")  # type: ignore
+    # return sunrises.datetime64.astype("datetime64[s]"), sunsets.datetime64.astype("datetime64[s]")  # type: ignore
+    return sunrises.datetime64, sunsets.datetime64  # type: ignore
 
 
 def smart_dayline_grid(
@@ -79,36 +80,40 @@ def smart_hourline_grid(
     frame_period: list[datetime],
     lat: float,
     lon: float,
-    day_step: timedelta = timedelta(days=1),
-    time_step: timedelta = timedelta(minutes=20),
+    day_step: timedelta | np.timedelta64 = timedelta(days=1),
+    time_step: timedelta | np.timedelta64 = timedelta(minutes=20),
     horizon: float = 10.0,
-) -> np.ndarray:
+):  # -> np.ndarray:
     """Build a 2-D datetime64 grid for hourlines (rows = times, columns = days)."""
-    start, end = frame_period
-    first = np.datetime64(start.astimezone(_UTC).replace(tzinfo=None), "D")
-    last = np.datetime64(end.astimezone(_UTC).replace(tzinfo=None), "D")
-    days = np.arange(first, last + np.timedelta64(1, "D"), np.timedelta64(day_step, "D"))
+    first_day, last_day = frame_period
+    first_day = np.datetime64(first_day.astimezone(_UTC).replace(tzinfo=None), "D")
+    last_day = np.datetime64(last_day.astimezone(_UTC).replace(tzinfo=None), "D")
+    day_step = np.timedelta64(day_step, "D")
+    day_offset = np.timedelta64(1, "D")
+    days = np.arange(first_day, last_day + day_offset, day_step)
 
     rises, sets = get_sunrises_and_sunsets(days, lat, lon, horizon=horizon)
 
-    sunrise = rises.min()  # This is wrong (should get the hour alone!)
-    sunset = sets.max()
+    sunrise_hours = rises - rises.astype("datetime64[D]")
+    sunset_hours = sets - sets.astype("datetime64[D]")
+
+    min_sunrise = sunrise_hours.min()
+    max_sunset = sunset_hours.max()
 
     # remove the timedelta(inside numpy), use numpy itself to represent those steps
-    time_range = np.timedelta64(timedelta(hours=sunset - sunrise), "s")  # this is failing due to timedelta
-    time_step_np = np.timedelta64(time_step, "s")
-    time_offset = np.timedelta64(timedelta(minutes=1), "s")
-    times = np.arange(0, time_range + time_offset, time_step_np)
-
-    day_offset = np.timedelta64(timedelta(days=1), "D")
-    days = np.arange(first, last + day_offset, np.timedelta64(day_step, "D"))
+    time_range = np.timedelta64(max_sunset - min_sunrise, "s")
+    time_step = np.timedelta64(time_step, "s")
+    time_offset = np.timedelta64(60, "s")
+    times = np.arange(0, time_range + time_offset, time_step)
 
     grid_days, grid_times = np.meshgrid(days, times)
     grid = grid_days + grid_times
 
-    mask = rises <= grid <= sets
+    return grid  # TEST THIS!!!
 
-    return np.where(mask, grid, np.datetime64("NaT"))
+    # mask = rises <= grid <= sets
+
+    # return np.where(mask, grid, np.datetime64("NaT"))
 
 
 def compute_blocks(
