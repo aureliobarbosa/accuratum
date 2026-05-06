@@ -138,7 +138,7 @@ def smart_hourline_grid(
     grid_times, grid_days = np.meshgrid(times, days, indexing="ij")  # indexing as according to 'table' view
     grid = grid_days + grid_times
 
-    mask = (rises <= grid) & (grid <= sets)  # CHECK WHETHER THIS IS REASONABLE.
+    mask = (rises <= grid) & (grid <= sets)
     return np.where(mask, grid, np.datetime64("NaT"))
 
 
