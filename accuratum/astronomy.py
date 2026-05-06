@@ -80,7 +80,7 @@ def get_sunrises_and_sunsets(
     )
 
 
-def smart_dayline_grid(
+def dayline_grid(
     frame_period: list[datetime],
     lat: float,
     lon: float,
@@ -102,14 +102,14 @@ def smart_dayline_grid(
     return rises_s + spans_s * alphas
 
 
-def smart_hourline_grid(
+def hourline_grid(
     frame_period: list[datetime],
     lat: float,
     lon: float,
     day_step: timedelta | np.timedelta64 = timedelta(days=1),
     time_step: timedelta | np.timedelta64 = timedelta(minutes=20),
     horizon: float = 10.0,
-):  # -> np.ndarray:
+) -> np.ndarray:
     """Build a 2-D datetime64 grid for hourlines (rows = times, columns = days)."""
     first_day, last_day = frame_period
     first_day = np.datetime64(first_day.astimezone(_UTC).replace(tzinfo=None), "D")

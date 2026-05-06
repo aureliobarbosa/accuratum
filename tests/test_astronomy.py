@@ -8,10 +8,10 @@ from astropy.coordinates import AltAz
 from accuratum.astronomy import (
     build_altaz_frame,
     compute_blocks,
+    dayline_grid,
     get_sunrises_and_sunsets,
     grid_to_shadow_xy,
-    smart_dayline_grid,
-    smart_hourline_grid,
+    hourline_grid,
 )
 from accuratum.datetime_utils import (
     build_dayline_grid,
@@ -82,7 +82,7 @@ def test_grid_to_shadow_xy_skips_nat_per_line():
     reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
     solstices = get_solstices(reference)
     period = frame_periods(solstices)[0]
-    grid = smart_hourline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=1), time_step=timedelta(minutes=20))
+    grid = hourline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=1), time_step=timedelta(minutes=20))
     assert np.isnat(grid).any()  # sanity: this grid does contain NaT entries
 
     frame = build_altaz_frame(LAT, LON)
@@ -135,40 +135,40 @@ def test_get_sunrises_and_sunsets_horizon_shifts_times(sun_times):
 
 
 @pytest.fixture(scope="module")
-def smart_grid():
+def dl_grid():
     reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
     solstices = get_solstices(reference)
     period = frame_periods(solstices)[0]
-    return smart_dayline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=7), line_points=500)
+    return dayline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=7), line_points=500)
 
 
-def test_smart_dayline_grid_shape(smart_grid):
-    n_days, n_points = smart_grid.shape
+def test_dayline_grid_shape(dl_grid):
+    n_days, n_points = dl_grid.shape
     assert n_points == 500
     assert n_days > 0
 
 
-def test_smart_dayline_grid_dtype(smart_grid):
-    assert smart_grid.dtype == np.dtype("datetime64[s]")
+def test_dayline_grid_dtype(dl_grid):
+    assert dl_grid.dtype == np.dtype("datetime64[s]")
 
 
-def test_smart_dayline_grid_rows_are_ordered(smart_grid):
+def test_dayline_grid_rows_are_ordered(dl_grid):
     # Each row must be strictly increasing in time
-    diffs = np.diff(smart_grid.astype(np.int64), axis=1)
+    diffs = np.diff(dl_grid.astype(np.int64), axis=1)
     assert np.all(diffs > 0)
 
 
-def test_smart_dayline_grid_day_window_is_positive(smart_grid):
+def test_dayline_grid_day_window_is_positive(dl_grid):
     # Each row must span a positive duration (sunset > sunrise)
-    spans = smart_grid[:, -1].astype(np.int64) - smart_grid[:, 0].astype(np.int64)
+    spans = dl_grid[:, -1].astype(np.int64) - dl_grid[:, 0].astype(np.int64)
     assert np.all(spans > 0)
 
 
-def test_smart_dayline_grid_hours_are_daytime(smart_grid):
+def test_dayline_grid_hours_are_daytime(dl_grid):
     # At Brasília (-15°), all start times should be between 06:00 and 12:00 UTC
     # and end times between 12:00 and 22:00 UTC — a loose sanity check
-    hours_start = smart_grid[:, 0].astype("datetime64[h]").astype(np.int64) % 24
-    hours_end = smart_grid[:, -1].astype("datetime64[h]").astype(np.int64) % 24
+    hours_start = dl_grid[:, 0].astype("datetime64[h]").astype(np.int64) % 24
+    hours_end = dl_grid[:, -1].astype("datetime64[h]").astype(np.int64) % 24
     assert np.all(hours_start >= 6) and np.all(hours_start <= 12)
     assert np.all(hours_end >= 14) and np.all(hours_end <= 22)
 
