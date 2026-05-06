@@ -11,6 +11,7 @@ from accuratum.astronomy import (
     get_sunrises_and_sunsets,
     grid_to_shadow_xy,
     smart_dayline_grid,
+    smart_hourline_grid,
 )
 from accuratum.datetime_utils import (
     build_dayline_grid,
@@ -45,15 +46,18 @@ def test_build_altaz_frame_returns_altaz():
 def test_grid_to_shadow_xy_shape_matches_input(grids):
     dl, _ = grids
     frame = build_altaz_frame(LAT, LON)
-    x, y = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
-    assert x.shape == dl.shape
-    assert y.shape == dl.shape
+    xs, ys = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
+    assert isinstance(xs, list) and isinstance(ys, list)
+    assert len(xs) == 1 and len(ys) == 1
+    assert xs[0].shape == dl.shape
+    assert ys[0].shape == dl.shape
 
 
 def test_grid_to_shadow_xy_returns_finite_when_sun_is_up(grids):
     dl, _ = grids
     frame = build_altaz_frame(LAT, LON)
-    x, y = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
+    xs, ys = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
+    x, y = xs[0], ys[0]
     # At least a large fraction of points should be finite (sun above horizon)
     finite_frac = np.mean(np.isfinite(x) & np.isfinite(y))
     assert finite_frac > 0.5
@@ -62,14 +66,39 @@ def test_grid_to_shadow_xy_returns_finite_when_sun_is_up(grids):
 def test_plumb_length_scales_shadow_linearly(grids):
     dl, _ = grids
     frame = build_altaz_frame(LAT, LON)
-    x1, y1 = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
-    x2, y2 = grid_to_shadow_xy(dl, frame, plumb_length=2.0)
+    xs1, ys1 = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
+    xs2, ys2 = grid_to_shadow_xy(dl, frame, plumb_length=2.0)
+    x1, y1 = xs1[0], ys1[0]
+    x2, y2 = xs2[0], ys2[0]
 
     mask = np.isfinite(x1) & np.isfinite(x2) & (np.abs(x1) > 1e-6)
     np.testing.assert_allclose(x2[mask] / x1[mask], 2.0, rtol=1e-6)
 
     mask_y = np.isfinite(y1) & np.isfinite(y2) & (np.abs(y1) > 1e-6)
     np.testing.assert_allclose(y2[mask_y] / y1[mask_y], 2.0, rtol=1e-6)
+
+
+def test_grid_to_shadow_xy_skips_nat_per_line():
+    reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
+    solstices = get_solstices(reference)
+    period = frame_periods(solstices)[0]
+    grid = smart_hourline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=1), time_step=timedelta(minutes=20))
+    assert np.isnat(grid).any()  # sanity: this grid does contain NaT entries
+
+    frame = build_altaz_frame(LAT, LON)
+    xs, ys = grid_to_shadow_xy(grid, frame, plumb_length=1.0)
+
+    assert isinstance(xs, list) and isinstance(ys, list)
+    assert len(xs) == grid.shape[0]
+    assert len(ys) == grid.shape[0]
+
+    for i, (x_row, y_row) in enumerate(zip(xs, ys)):
+        expected_len = int(np.sum(~np.isnat(grid[i])))
+        assert x_row.ndim == 1 and y_row.ndim == 1
+        assert x_row.shape == (expected_len,)
+        assert y_row.shape == (expected_len,)
+        assert np.all(np.isfinite(x_row))
+        assert np.all(np.isfinite(y_row))
 
 
 @pytest.fixture(scope="module")
@@ -138,8 +167,8 @@ def test_smart_dayline_grid_day_window_is_positive(smart_grid):
 def test_smart_dayline_grid_hours_are_daytime(smart_grid):
     # At Brasília (-15°), all start times should be between 06:00 and 12:00 UTC
     # and end times between 12:00 and 22:00 UTC — a loose sanity check
-    hours_start = (smart_grid[:, 0].astype("datetime64[h]").astype(np.int64) % 24)
-    hours_end = (smart_grid[:, -1].astype("datetime64[h]").astype(np.int64) % 24)
+    hours_start = smart_grid[:, 0].astype("datetime64[h]").astype(np.int64) % 24
+    hours_end = smart_grid[:, -1].astype("datetime64[h]").astype(np.int64) % 24
     assert np.all(hours_start >= 6) and np.all(hours_start <= 12)
     assert np.all(hours_end >= 14) and np.all(hours_end <= 22)
 
@@ -153,7 +182,8 @@ def test_compute_blocks_returns_two_lists_of_arrays(grids):
     assert len(blocks_x) == 2
     assert len(blocks_y) == 2
 
-    assert blocks_x[0].shape == dl.shape
-    assert blocks_y[0].shape == dl.shape
-    assert blocks_x[1].shape == hl.shape
-    assert blocks_y[1].shape == hl.shape
+    # grid_to_shadow_xy now wraps the no-NaT result in a length-1 list
+    assert blocks_x[0][0].shape == dl.shape
+    assert blocks_y[0][0].shape == dl.shape
+    assert blocks_x[1][0].shape == hl.shape
+    assert blocks_y[1][0].shape == hl.shape
