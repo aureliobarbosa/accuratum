@@ -23,16 +23,40 @@ def grid_to_shadow_xy(
     grid: np.ndarray,
     frame: AltAz,
     plumb_length: float = 1.0,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Convert a datetime64 grid into (x, y) shadow positions of a vertical plumb."""
-    sun = get_sun(Time(grid)).transform_to(frame)
-    sun_alt: np.ndarray = sun.alt.value  # type: ignore
-    sun_az: np.ndarray = sun.az.value  # type: ignore
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """Convert a datetime64 grid into per-line (x, y) shadow positions of a vertical plumb.
 
-    shadow_length = plumb_length / np.tan(np.deg2rad(sun_alt))
-    x = -shadow_length * np.sin(np.deg2rad(sun_az))
-    y = shadow_length * np.cos(np.deg2rad(sun_az))
-    return x, y
+    Returns two lists. When *grid* contains no NaT, each list holds a single
+    ndarray with the original grid shape. When NaT is present, NaT entries are
+    dropped row by row and each list holds one 1-D ndarray per row.
+    """
+
+    def _xy(times: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        sun = get_sun(Time(times)).transform_to(frame)
+        sun_alt: np.ndarray = sun.alt.value  # type: ignore
+        sun_az: np.ndarray = sun.az.value  # type: ignore
+        shadow_length = plumb_length / np.tan(np.deg2rad(sun_alt))
+        return (
+            -shadow_length * np.sin(np.deg2rad(sun_az)),
+            shadow_length * np.cos(np.deg2rad(sun_az)),
+        )
+
+    if not np.isnat(grid).any():
+        x, y = _xy(grid)
+        return [x], [y]
+
+    xs: list[np.ndarray] = []
+    ys: list[np.ndarray] = []
+    for row in grid:
+        valid = row[~np.isnat(row)]
+        if valid.size == 0:
+            xs.append(np.empty(0))
+            ys.append(np.empty(0))
+            continue
+        x, y = _xy(valid)
+        xs.append(x)
+        ys.append(y)
+    return xs, ys
 
 
 def get_sunrises_and_sunsets(
