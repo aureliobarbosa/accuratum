@@ -14,7 +14,8 @@
       "Bash(curl -LsSf https://astral.sh/uv/install.sh)",
       "Bash(sh)",
       "Bash(/home/vscode/.local/bin/uv build:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(uv run *)"
     ]
   }
 }
