@@ -93,27 +93,27 @@ def smart_hourline_grid(
     days = np.arange(first_day, last_day + day_offset, day_step)
 
     rises, sets = get_sunrises_and_sunsets(days, lat, lon, horizon=horizon)
+    rises = rises.reshape(1, len(rises))
+    sets = sets.reshape(1, len(sets))
 
-    sunrise_hours = rises - rises.astype("datetime64[D]")
-    sunset_hours = sets - sets.astype("datetime64[D]")
+    time_offset = np.timedelta64(60, "s")
+    sunrise_hours = (rises - rises.astype("datetime64[D]")).astype("timedelta64[m]") + time_offset
+    sunset_hours = (sets - sets.astype("datetime64[D]")).astype("timedelta64[m]") - time_offset
 
     min_sunrise = sunrise_hours.min()
     max_sunset = sunset_hours.max()
+    days = days + min_sunrise
 
-    # remove the timedelta(inside numpy), use numpy itself to represent those steps
-    time_range = np.timedelta64(max_sunset - min_sunrise, "s")
-    time_step = np.timedelta64(time_step, "s")
-    time_offset = np.timedelta64(60, "s")
+    time_range = np.timedelta64(max_sunset - min_sunrise, "m")
+    time_step = np.timedelta64(time_step, "m")
+    time_offset = np.timedelta64(1, "m")
     times = np.arange(0, time_range + time_offset, time_step)
 
-    grid_days, grid_times = np.meshgrid(days, times)
+    grid_times, grid_days = np.meshgrid(times, days, indexing="ij")  # indexing as according to 'table' view
     grid = grid_days + grid_times
 
-    return grid  # TEST THIS!!!
-
-    # mask = rises <= grid <= sets
-
-    # return np.where(mask, grid, np.datetime64("NaT"))
+    mask = (rises <= grid) & (grid <= sets)  # CHECK WHETHER THIS IS REASONABLE.
+    return np.where(mask, grid, np.datetime64("NaT"))
 
 
 def compute_blocks(
