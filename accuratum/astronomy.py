@@ -74,8 +74,10 @@ def get_sunrises_and_sunsets(
     midnights = Time([f"{d}T00:00:00" for d in dates], format="isot", scale="utc")
     sunrises = observer.sun_rise_time(midnights, which="next", horizon=horizon * deg)
     sunsets = observer.sun_set_time(sunrises, which="next", horizon=horizon * deg)
-    # return sunrises.datetime64.astype("datetime64[s]"), sunsets.datetime64.astype("datetime64[s]")  # type: ignore
-    return sunrises.datetime64, sunsets.datetime64  # type: ignore
+    return (
+        sunrises.datetime64.astype("datetime64[s]"),  # type: ignore
+        sunsets.datetime64.astype("datetime64[s]"),  # type: ignore
+    )
 
 
 def smart_dayline_grid(
