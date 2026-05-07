@@ -24,11 +24,11 @@ def grid_to_shadow_xy(
     frame: AltAz,
     plumb_length: float = 1.0,
 ) -> tuple[list[np.ndarray], list[np.ndarray]]:
-    """Convert a datetime64 grid into per-line (x, y) shadow positions of a vertical plumb.
+    """Convert a datetime64 grid into per-row (x, y) shadow positions of a vertical plumb.
 
-    Returns two lists. When *grid* contains no NaT, each list holds a single
-    ndarray with the original grid shape. When NaT is present, NaT entries are
-    dropped row by row and each list holds one 1-D ndarray per row.
+    Returns two lists, one entry per row of *grid*. Each entry is a 1-D ndarray
+    of shadow positions; NaT entries in the row are dropped before the
+    transform, so rows can have different lengths.
     """
 
     def _xy(times: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -40,10 +40,6 @@ def grid_to_shadow_xy(
             -shadow_length * np.sin(np.deg2rad(sun_az)),
             shadow_length * np.cos(np.deg2rad(sun_az)),
         )
-
-    if not np.isnat(grid).any():
-        x, y = _xy(grid)
-        return [x], [y]
 
     xs: list[np.ndarray] = []
     ys: list[np.ndarray] = []

@@ -48,16 +48,19 @@ def test_grid_to_shadow_xy_shape_matches_input(grids):
     frame = build_altaz_frame(LAT, LON)
     xs, ys = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
     assert isinstance(xs, list) and isinstance(ys, list)
-    assert len(xs) == 1 and len(ys) == 1
-    assert xs[0].shape == dl.shape
-    assert ys[0].shape == dl.shape
+    assert len(xs) == dl.shape[0]
+    assert len(ys) == dl.shape[0]
+    for x_row, y_row in zip(xs, ys):
+        assert x_row.shape == (dl.shape[1],)
+        assert y_row.shape == (dl.shape[1],)
 
 
 def test_grid_to_shadow_xy_returns_finite_when_sun_is_up(grids):
     dl, _ = grids
     frame = build_altaz_frame(LAT, LON)
     xs, ys = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
-    x, y = xs[0], ys[0]
+    x = np.concatenate(xs)
+    y = np.concatenate(ys)
     # At least a large fraction of points should be finite (sun above horizon)
     finite_frac = np.mean(np.isfinite(x) & np.isfinite(y))
     assert finite_frac > 0.5
@@ -68,8 +71,10 @@ def test_plumb_length_scales_shadow_linearly(grids):
     frame = build_altaz_frame(LAT, LON)
     xs1, ys1 = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
     xs2, ys2 = grid_to_shadow_xy(dl, frame, plumb_length=2.0)
-    x1, y1 = xs1[0], ys1[0]
-    x2, y2 = xs2[0], ys2[0]
+    x1 = np.concatenate(xs1)
+    y1 = np.concatenate(ys1)
+    x2 = np.concatenate(xs2)
+    y2 = np.concatenate(ys2)
 
     mask = np.isfinite(x1) & np.isfinite(x2) & (np.abs(x1) > 1e-6)
     np.testing.assert_allclose(x2[mask] / x1[mask], 2.0, rtol=1e-6)
