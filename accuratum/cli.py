@@ -10,10 +10,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from timezonefinder import timezone_at  # noqa: E402
 
-from accuratum.astronomy import compute_blocks  # noqa: E402
+from accuratum.astronomy import compute_blocks, dayline_grid, hourline_grid  # noqa: E402
 from accuratum.datetime_utils import (  # noqa: E402
-    build_dayline_grid,
-    build_hourline_grid,
     frame_periods,
     get_solstices,
 )
@@ -118,8 +116,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     periods = frame_periods(get_solstices(now))
     period = periods[args.period]
-    daylines = build_dayline_grid(period)
-    hourlines = build_hourline_grid(period)
+    daylines = dayline_grid(period, lat=lat, lon=lon)
+    hourlines = hourline_grid(period, lat=lat, lon=lon)
 
     blocks_x, blocks_y = compute_blocks(
         daylines_grid=daylines,
