@@ -187,8 +187,14 @@ def test_compute_blocks_returns_two_lists_of_arrays(grids):
     assert len(blocks_x) == 2
     assert len(blocks_y) == 2
 
-    # grid_to_shadow_xy now wraps the no-NaT result in a length-1 list
-    assert blocks_x[0][0].shape == dl.shape
-    assert blocks_y[0][0].shape == dl.shape
-    assert blocks_x[1][0].shape == hl.shape
-    assert blocks_y[1][0].shape == hl.shape
+    # Each block is a list of 1-D rows (one polyline per grid row)
+    assert len(blocks_x[0]) == dl.shape[0]
+    assert len(blocks_y[0]) == dl.shape[0]
+    assert len(blocks_x[1]) == hl.shape[0]
+    assert len(blocks_y[1]) == hl.shape[0]
+    for x_row, y_row in zip(blocks_x[0], blocks_y[0]):
+        assert x_row.shape == (dl.shape[1],)
+        assert y_row.shape == (dl.shape[1],)
+    for x_row, y_row in zip(blocks_x[1], blocks_y[1]):
+        assert x_row.shape == (hl.shape[1],)
+        assert y_row.shape == (hl.shape[1],)

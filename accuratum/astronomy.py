@@ -144,11 +144,15 @@ def compute_blocks(
     lat: float,
     lon: float,
     plumb_length: float = 1.0,
-) -> tuple[list[np.ndarray], list[np.ndarray]]:
-    """Compute (x, y) shadow blocks for both dayline and hourline grids."""
+) -> tuple[list[list[np.ndarray]], list[list[np.ndarray]]]:
+    """Compute (x, y) shadow blocks for both dayline and hourline grids.
+
+    Each block is a list of 1-D ndarrays (one polyline per grid row), as
+    produced by :func:`grid_to_shadow_xy`.
+    """
     frame = build_altaz_frame(lat, lon)
-    blocks_x: list[np.ndarray] = []
-    blocks_y: list[np.ndarray] = []
+    blocks_x: list[list[np.ndarray]] = []
+    blocks_y: list[list[np.ndarray]] = []
     for grid in (daylines_grid, hourlines_grid):
         x, y = grid_to_shadow_xy(grid, frame, plumb_length=plumb_length)
         blocks_x.append(x)
