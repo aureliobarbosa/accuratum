@@ -14,8 +14,6 @@ from accuratum.astronomy import (
     hourline_grid,
 )
 from accuratum.datetime_utils import (
-    build_dayline_grid,
-    build_hourline_grid,
     frame_periods,
     get_solstices,
 )
@@ -26,16 +24,6 @@ LAT = -15.6006489
 LON = -47.6580608
 
 
-@pytest.fixture(scope="module")
-def grids():
-    reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
-    solstices = get_solstices(reference)
-    period = frame_periods(solstices)[0]
-    dl = build_dayline_grid(period, 6, 18, timedelta(days=7), timedelta(minutes=1))
-    hl = build_hourline_grid(period, 6, 18, timedelta(days=1), timedelta(minutes=10))
-    return dl, hl
-
-
 def test_build_altaz_frame_returns_altaz():
     frame = build_altaz_frame(LAT, LON)
     assert isinstance(frame, AltAz)
@@ -43,22 +31,20 @@ def test_build_altaz_frame_returns_altaz():
     assert frame.pressure.value == 0
 
 
-def test_grid_to_shadow_xy_shape_matches_input(grids):
-    dl, _ = grids
+def test_grid_to_shadow_xy_shape_matches_input(dl_grid):
     frame = build_altaz_frame(LAT, LON)
-    xs, ys = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
+    xs, ys = grid_to_shadow_xy(dl_grid, frame, plumb_length=1.0)
     assert isinstance(xs, list) and isinstance(ys, list)
-    assert len(xs) == dl.shape[0]
-    assert len(ys) == dl.shape[0]
+    assert len(xs) == dl_grid.shape[0]
+    assert len(ys) == dl_grid.shape[0]
     for x_row, y_row in zip(xs, ys):
-        assert x_row.shape == (dl.shape[1],)
-        assert y_row.shape == (dl.shape[1],)
+        assert x_row.shape == (dl_grid.shape[1],)
+        assert y_row.shape == (dl_grid.shape[1],)
 
 
-def test_grid_to_shadow_xy_returns_finite_when_sun_is_up(grids):
-    dl, _ = grids
+def test_grid_to_shadow_xy_returns_finite_when_sun_is_up(dl_grid):
     frame = build_altaz_frame(LAT, LON)
-    xs, ys = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
+    xs, ys = grid_to_shadow_xy(dl_grid, frame, plumb_length=1.0)
     x = np.concatenate(xs)
     y = np.concatenate(ys)
     # At least a large fraction of points should be finite (sun above horizon)
@@ -66,11 +52,10 @@ def test_grid_to_shadow_xy_returns_finite_when_sun_is_up(grids):
     assert finite_frac > 0.5
 
 
-def test_plumb_length_scales_shadow_linearly(grids):
-    dl, _ = grids
+def test_plumb_length_scales_shadow_linearly(dl_grid):
     frame = build_altaz_frame(LAT, LON)
-    xs1, ys1 = grid_to_shadow_xy(dl, frame, plumb_length=1.0)
-    xs2, ys2 = grid_to_shadow_xy(dl, frame, plumb_length=2.0)
+    xs1, ys1 = grid_to_shadow_xy(dl_grid, frame, plumb_length=1.0)
+    xs2, ys2 = grid_to_shadow_xy(dl_grid, frame, plumb_length=2.0)
     x1 = np.concatenate(xs1)
     y1 = np.concatenate(ys1)
     x2 = np.concatenate(xs2)
@@ -247,23 +232,27 @@ def test_hourline_grid_nonnat_values_are_within_sunrise_sunset(hl_grid):
         k += 1
 
 
-def test_compute_blocks_returns_two_lists_of_arrays(grids):
-    dl, hl = grids
-    blocks_x, blocks_y = compute_blocks(dl, hl, lat=LAT, lon=LON, plumb_length=1.0)
+def test_compute_blocks_returns_two_lists_of_arrays(dl_grid, hl_grid):
+    blocks_x, blocks_y = compute_blocks(dl_grid, hl_grid, lat=LAT, lon=LON, plumb_length=1.0)
 
     assert isinstance(blocks_x, list)
     assert isinstance(blocks_y, list)
     assert len(blocks_x) == 2
     assert len(blocks_y) == 2
 
-    # Each block is a list of 1-D rows (one polyline per grid row)
-    assert len(blocks_x[0]) == dl.shape[0]
-    assert len(blocks_y[0]) == dl.shape[0]
-    assert len(blocks_x[1]) == hl.shape[0]
-    assert len(blocks_y[1]) == hl.shape[0]
+    # Each block is a list of 1-D rows (one polyline per grid row).
+    # Daylines have no NaT, so each row matches dl_grid's column count.
+    assert len(blocks_x[0]) == dl_grid.shape[0]
+    assert len(blocks_y[0]) == dl_grid.shape[0]
     for x_row, y_row in zip(blocks_x[0], blocks_y[0]):
-        assert x_row.shape == (dl.shape[1],)
-        assert y_row.shape == (dl.shape[1],)
-    for x_row, y_row in zip(blocks_x[1], blocks_y[1]):
-        assert x_row.shape == (hl.shape[1],)
-        assert y_row.shape == (hl.shape[1],)
+        assert x_row.shape == (dl_grid.shape[1],)
+        assert y_row.shape == (dl_grid.shape[1],)
+
+    # Hourlines have NaT entries dropped per row, so row lengths are ragged
+    # but match the count of non-NaT entries in the source grid row.
+    assert len(blocks_x[1]) == hl_grid.shape[0]
+    assert len(blocks_y[1]) == hl_grid.shape[0]
+    for i, (x_row, y_row) in enumerate(zip(blocks_x[1], blocks_y[1])):
+        expected = int(np.sum(~np.isnat(hl_grid[i])))
+        assert x_row.shape == (expected,)
+        assert y_row.shape == (expected,)

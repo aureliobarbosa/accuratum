@@ -1,15 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import numpy as np
-import pytest
-
-from accuratum.datetime_utils import (
-    build_dayline_grid,
-    build_hourline_grid,
-    frame_periods,
-    get_solstices,
-)
+from accuratum.datetime_utils import frame_periods, get_solstices
 
 TZ_SP = ZoneInfo("America/Sao_Paulo")
 
@@ -56,72 +48,3 @@ def test_frame_periods_returns_two_pairs():
     # Second pair: jun current -> dec current
     assert periods[1][0] == solstices[1]
     assert periods[1][1] == solstices[2]
-
-
-def test_build_dayline_grid_shape_and_dtype():
-    reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
-    solstices = get_solstices(reference)
-    periods = frame_periods(solstices)
-
-    grid = build_dayline_grid(
-        periods[0],
-        sunrise=6,
-        sunset=18,
-        day_step=timedelta(days=7),
-        time_step=timedelta(minutes=1),
-    )
-    assert isinstance(grid, np.ndarray)
-    assert grid.ndim == 2
-    # Type must be a numpy datetime64
-    assert np.issubdtype(grid.dtype, np.datetime64)
-    # The first point must be near the start date at sunrise+1 UTC-converted hour
-    assert grid.shape[0] > 0
-    assert grid.shape[1] > 0
-
-
-def test_build_hourline_grid_shape_and_dtype():
-    reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
-    solstices = get_solstices(reference)
-    periods = frame_periods(solstices)
-
-    grid = build_hourline_grid(
-        periods[1],
-        sunrise=6,
-        sunset=18,
-        day_step=timedelta(days=1),
-        time_step=timedelta(minutes=10),
-    )
-    assert isinstance(grid, np.ndarray)
-    assert grid.ndim == 2
-    assert np.issubdtype(grid.dtype, np.datetime64)
-    assert grid.shape[0] > 0
-    assert grid.shape[1] > 0
-
-
-def test_dayline_and_hourline_have_different_orientations():
-    """Dayline grid rows are days; hourline grid rows are times (transposed semantics)."""
-    reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
-    solstices = get_solstices(reference)
-    period = frame_periods(solstices)[0]
-
-    dl = build_dayline_grid(period, 6, 18, timedelta(days=7), timedelta(minutes=1))
-    hl = build_hourline_grid(period, 6, 18, timedelta(days=1), timedelta(minutes=10))
-
-    # Dayline row should advance along time (minutes) — consecutive elements ~1 min apart
-    dl_delta = dl[0, 1] - dl[0, 0]
-    assert dl_delta == np.timedelta64(1, "m")
-
-    # Hourline row should advance along days — consecutive elements ~1 day apart
-    hl_delta = hl[0, 1] - hl[0, 0]
-    assert hl_delta == np.timedelta64(1, "D")
-
-
-def test_invalid_frame_period_raises():
-    with pytest.raises((TypeError, ValueError)):
-        build_dayline_grid(
-            "not a period",
-            6,
-            18,
-            timedelta(days=7),
-            timedelta(minutes=1),
-        )
