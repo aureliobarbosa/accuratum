@@ -178,6 +178,75 @@ def test_dayline_grid_hours_are_daytime(dl_grid):
     assert np.all(hours_end >= 14) and np.all(hours_end <= 22)
 
 
+@pytest.fixture(scope="module")
+def hl_grid():
+    reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
+    solstices = get_solstices(reference)
+    period = frame_periods(solstices)[0]
+    return hourline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=1), time_step=timedelta(minutes=20))
+
+
+def test_hourline_grid_shape(hl_grid):
+    n_times, n_days = hl_grid.shape
+    assert n_times > 0
+    assert n_days > 0
+
+
+def test_hourline_grid_dtype(hl_grid):
+    assert hl_grid.dtype == np.dtype("datetime64[s]")
+
+
+def test_hourline_grid_has_some_nat(hl_grid):
+    # By design, sub-horizon (10°) moments are NaT — at solstices the day
+    # length differs enough that some cells are masked.
+    assert np.isnat(hl_grid).any()
+
+
+def test_hourline_grid_columns_are_ordered(hl_grid):
+    # Each column = one day, time increasing down rows. NaT entries are
+    # excluded from the monotonicity check.
+    for j in range(hl_grid.shape[1]):
+        col = hl_grid[:, j]
+        valid = col[~np.isnat(col)]
+        if valid.size < 2:
+            continue
+        diffs = np.diff(valid.astype(np.int64))
+        assert np.all(diffs > 0), f"column {j} not strictly increasing"
+
+
+def test_hourline_grid_rows_are_ordered(hl_grid):
+    # Each row = approximately constant clock time, day increasing across
+    # columns. NaT entries are excluded.
+    for i in range(hl_grid.shape[0]):
+        row = hl_grid[i, :]
+        valid = row[~np.isnat(row)]
+        if valid.size < 2:
+            continue
+        diffs = np.diff(valid.astype(np.int64))
+        assert np.all(diffs > 0), f"row {i} not strictly increasing"
+
+
+def test_hourline_grid_nonnat_values_are_within_sunrise_sunset(hl_grid):
+    # Every non-NaT value must lie inside that day's [sunrise, sunset] window
+    # at the same horizon used by the grid (10°).
+    days = hl_grid[0, :].astype("datetime64[D]")
+    # First row may itself be NaT for some columns; fall back to the grid's
+    # day axis directly via column-wise min/max.
+    valid_per_col = [hl_grid[:, j][~np.isnat(hl_grid[:, j])] for j in range(hl_grid.shape[1])]
+    days = np.array(
+        [v[0].astype("datetime64[D]") if v.size else None for v in valid_per_col],
+        dtype=object,
+    )
+    real_days = np.array([d for d in days if d is not None], dtype="datetime64[D]")
+    rises, sets = get_sunrises_and_sunsets(real_days, lat=LAT, lon=LON, horizon=10.0)
+    k = 0
+    for v in valid_per_col:
+        if v.size == 0:
+            continue
+        assert np.all(v >= rises[k]) and np.all(v <= sets[k])
+        k += 1
+
+
 def test_compute_blocks_returns_two_lists_of_arrays(grids):
     dl, hl = grids
     blocks_x, blocks_y = compute_blocks(dl, hl, lat=LAT, lon=LON, plumb_length=1.0)
