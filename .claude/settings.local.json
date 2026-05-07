@@ -15,7 +15,8 @@
       "Bash(sh)",
       "Bash(/home/vscode/.local/bin/uv build:*)",
       "WebSearch",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
