@@ -4,6 +4,9 @@ import pytest
 
 from accuratum.cli import build_parser, parse_lat_long, resolve_location
 
+# Coarse grid args for end-to-end CLI tests — keep the astropy work small.
+FAST_GRID_ARGS = ["--line-points", "20", "--time-step", "120"]
+
 # --- parse_lat_long -----------------------------------------------------------
 
 
@@ -79,6 +82,19 @@ def test_parser_plumb_length_and_period_defaults():
     assert args.period == 0
 
 
+def test_parser_grid_resolution_defaults_and_overrides():
+    from accuratum.cli import DEFAULT_LINE_POINTS, DEFAULT_TIME_STEP_MIN
+
+    parser = build_parser()
+    args = parser.parse_args(["--lat-long=0,0"])
+    assert args.line_points == DEFAULT_LINE_POINTS
+    assert args.time_step == DEFAULT_TIME_STEP_MIN
+
+    args = parser.parse_args(["--lat-long=0,0", "--line-points", "20", "--time-step", "120"])
+    assert args.line_points == 20
+    assert args.time_step == 120
+
+
 # --- resolve_location --------------------------------------------------------
 
 
@@ -125,7 +141,7 @@ def test_main_uses_timezonefinder_when_timezone_omitted(tmp_path):
 
     out = tmp_path / "clock.png"
     with patch("accuratum.cli.timezone_at", return_value="America/Sao_Paulo") as tzf:
-        exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out)])
+        exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out), *FAST_GRID_ARGS])
     assert exit_code == 0
     tzf.assert_called_once_with(lat=-15.6, lng=-47.65)
 
@@ -142,6 +158,7 @@ def test_main_respects_explicit_timezone_over_timezonefinder(tmp_path):
                 "UTC",
                 "--output",
                 str(out),
+                *FAST_GRID_ARGS,
             ]
         )
     assert exit_code == 0
@@ -153,7 +170,7 @@ def test_main_falls_back_to_utc_when_timezonefinder_returns_none(tmp_path):
 
     out = tmp_path / "clock.png"
     with patch("accuratum.cli.timezone_at", return_value=None):
-        exit_code = main(["--lat-long=0,0", "--output", str(out)])
+        exit_code = main(["--lat-long=0,0", "--output", str(out), *FAST_GRID_ARGS])
     assert exit_code == 0
 
 
@@ -164,7 +181,7 @@ def test_main_saves_output_image(tmp_path):
     from accuratum.cli import main
 
     out = tmp_path / "clock.png"
-    exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out)])
+    exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out), *FAST_GRID_ARGS])
 
     assert exit_code == 0
     assert out.exists()

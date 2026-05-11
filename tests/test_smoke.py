@@ -13,7 +13,17 @@ def test_cli_produces_output(tmp_path):
     from accuratum.cli import main
 
     out = tmp_path / "smoke.png"
-    exit_code = main(["--lat-long=0,0", "--output", str(out)])
+    exit_code = main(
+        [
+            "--lat-long=0,0",
+            "--output",
+            str(out),
+            "--line-points",
+            "20",
+            "--time-step",
+            "120",
+        ]
+    )
 
     assert exit_code == 0
     assert out.exists()

@@ -1,6 +1,6 @@
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
@@ -19,6 +19,8 @@ from accuratum.graph import plot_solar_clock  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
 
 DEFAULT_OUTPUT = "accuratum.png"
+DEFAULT_LINE_POINTS = 500
+DEFAULT_TIME_STEP_MIN = 20
 
 
 def parse_lat_long(value: str) -> tuple[float, float]:
@@ -83,6 +85,25 @@ def build_parser() -> argparse.ArgumentParser:
         "If omitted, uses the oficial timezone at the place specified "
         "using either location or --lat-long parameters.",
     )
+    parser.add_argument(
+        "--line-points",
+        type=int,
+        default=DEFAULT_LINE_POINTS,
+        help=(
+            f"Samples per dayline (default: {DEFAULT_LINE_POINTS}). "
+            "Lower values produce coarser daylines and run faster — useful for tests."
+        ),
+    )
+    parser.add_argument(
+        "--time-step",
+        type=int,
+        default=DEFAULT_TIME_STEP_MIN,
+        metavar="MINUTES",
+        help=(
+            f"Spacing between hourline samples, in minutes (default: {DEFAULT_TIME_STEP_MIN}). "
+            "Larger values produce coarser hourlines and run faster — useful for tests."
+        ),
+    )
     return parser
 
 
@@ -116,8 +137,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     periods = frame_periods(get_solstices(now))
     period = periods[args.period]
-    daylines = dayline_grid(period, lat=lat, lon=lon)
-    hourlines = hourline_grid(period, lat=lat, lon=lon)
+    daylines = dayline_grid(period, lat=lat, lon=lon, line_points=args.line_points)
+    hourlines = hourline_grid(period, lat=lat, lon=lon, time_step=timedelta(minutes=args.time_step))
 
     blocks_x, blocks_y = compute_blocks(
         daylines_grid=daylines,
