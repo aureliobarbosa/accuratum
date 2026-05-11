@@ -23,6 +23,16 @@ TZ_SP = ZoneInfo("America/Sao_Paulo")
 LAT = -15.6006489
 LON = -47.6580608
 
+# Coarse grid resolution for tests. Production defaults are 500 line points,
+# 20-minute hourline steps, and 7-/1-day spacing between dayline/hourline
+# columns; here we use much smaller / wider values so each astropy ephemeris
+# evaluation and astroplan sun_rise_time call runs over far fewer samples.
+# The shape, dtype, ordering, and NaT-pattern properties under test do not
+# depend on these resolutions.
+TEST_LINE_POINTS = 20
+TEST_TIME_STEP = timedelta(minutes=120)
+TEST_DAY_STEP = timedelta(days=30)
+
 
 def test_build_altaz_frame_returns_altaz():
     frame = build_altaz_frame(LAT, LON)
@@ -68,22 +78,18 @@ def test_plumb_length_scales_shadow_linearly(dl_grid):
     np.testing.assert_allclose(y2[mask_y] / y1[mask_y], 2.0, rtol=1e-6)
 
 
-def test_grid_to_shadow_xy_skips_nat_per_line():
-    reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
-    solstices = get_solstices(reference)
-    period = frame_periods(solstices)[0]
-    grid = hourline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=1), time_step=timedelta(minutes=20))
-    assert np.isnat(grid).any()  # sanity: this grid does contain NaT entries
+def test_grid_to_shadow_xy_skips_nat_per_line(hl_grid):
+    assert np.isnat(hl_grid).any()  # sanity: this grid does contain NaT entries
 
     frame = build_altaz_frame(LAT, LON)
-    xs, ys = grid_to_shadow_xy(grid, frame, plumb_length=1.0)
+    xs, ys = grid_to_shadow_xy(hl_grid, frame, plumb_length=1.0)
 
     assert isinstance(xs, list) and isinstance(ys, list)
-    assert len(xs) == grid.shape[0]
-    assert len(ys) == grid.shape[0]
+    assert len(xs) == hl_grid.shape[0]
+    assert len(ys) == hl_grid.shape[0]
 
     for i, (x_row, y_row) in enumerate(zip(xs, ys)):
-        expected_len = int(np.sum(~np.isnat(grid[i])))
+        expected_len = int(np.sum(~np.isnat(hl_grid[i])))
         assert x_row.ndim == 1 and y_row.ndim == 1
         assert x_row.shape == (expected_len,)
         assert y_row.shape == (expected_len,)
@@ -129,12 +135,12 @@ def dl_grid():
     reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
     solstices = get_solstices(reference)
     period = frame_periods(solstices)[0]
-    return dayline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=7), line_points=500)
+    return dayline_grid(period, lat=LAT, lon=LON, day_step=TEST_DAY_STEP, line_points=TEST_LINE_POINTS)
 
 
 def test_dayline_grid_shape(dl_grid):
     n_days, n_points = dl_grid.shape
-    assert n_points == 500
+    assert n_points == TEST_LINE_POINTS
     assert n_days > 0
 
 
@@ -168,7 +174,7 @@ def hl_grid():
     reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
     solstices = get_solstices(reference)
     period = frame_periods(solstices)[0]
-    return hourline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=1), time_step=timedelta(minutes=20))
+    return hourline_grid(period, lat=LAT, lon=LON, day_step=TEST_DAY_STEP, time_step=TEST_TIME_STEP)
 
 
 def test_hourline_grid_shape(hl_grid):
