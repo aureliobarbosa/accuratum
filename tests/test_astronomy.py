@@ -23,12 +23,15 @@ TZ_SP = ZoneInfo("America/Sao_Paulo")
 LAT = -15.6006489
 LON = -47.6580608
 
-# Coarse grid resolution for tests. Production defaults are 500 line points
-# and 20-minute hourline steps; here we use much smaller values so each
-# astropy ephemeris evaluation runs over far fewer samples. The shape, dtype,
-# ordering, and NaT-pattern properties under test do not depend on resolution.
+# Coarse grid resolution for tests. Production defaults are 500 line points,
+# 20-minute hourline steps, and 7-/1-day spacing between dayline/hourline
+# columns; here we use much smaller / wider values so each astropy ephemeris
+# evaluation and astroplan sun_rise_time call runs over far fewer samples.
+# The shape, dtype, ordering, and NaT-pattern properties under test do not
+# depend on these resolutions.
 TEST_LINE_POINTS = 20
 TEST_TIME_STEP = timedelta(minutes=120)
+TEST_DAY_STEP = timedelta(days=30)
 
 
 def test_build_altaz_frame_returns_altaz():
@@ -132,7 +135,7 @@ def dl_grid():
     reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
     solstices = get_solstices(reference)
     period = frame_periods(solstices)[0]
-    return dayline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=7), line_points=TEST_LINE_POINTS)
+    return dayline_grid(period, lat=LAT, lon=LON, day_step=TEST_DAY_STEP, line_points=TEST_LINE_POINTS)
 
 
 def test_dayline_grid_shape(dl_grid):
@@ -171,7 +174,7 @@ def hl_grid():
     reference = datetime(2026, 4, 14, tzinfo=TZ_SP)
     solstices = get_solstices(reference)
     period = frame_periods(solstices)[0]
-    return hourline_grid(period, lat=LAT, lon=LON, day_step=timedelta(days=7), time_step=TEST_TIME_STEP)
+    return hourline_grid(period, lat=LAT, lon=LON, day_step=TEST_DAY_STEP, time_step=TEST_TIME_STEP)
 
 
 def test_hourline_grid_shape(hl_grid):

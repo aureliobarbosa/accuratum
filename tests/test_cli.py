@@ -4,8 +4,18 @@ import pytest
 
 from accuratum.cli import build_parser, parse_lat_long, resolve_location
 
-# Coarse grid args for end-to-end CLI tests — keep the astropy work small.
-FAST_GRID_ARGS = ["--line-points", "20", "--time-step", "120"]
+# Coarse grid args for end-to-end CLI tests — keep the astropy/astroplan work small.
+# Larger day steps reduce how many days astroplan's sun_rise_time is evaluated on.
+FAST_GRID_ARGS = [
+    "--line-points",
+    "20",
+    "--time-step",
+    "120",
+    "--dayline-day-step",
+    "30",
+    "--hourline-day-step",
+    "30",
+]
 
 # --- parse_lat_long -----------------------------------------------------------
 
@@ -83,16 +93,37 @@ def test_parser_plumb_length_and_period_defaults():
 
 
 def test_parser_grid_resolution_defaults_and_overrides():
-    from accuratum.cli import DEFAULT_LINE_POINTS, DEFAULT_TIME_STEP_MIN
+    from accuratum.cli import (
+        DEFAULT_DAYLINE_DAY_STEP,
+        DEFAULT_HOURLINE_DAY_STEP,
+        DEFAULT_LINE_POINTS,
+        DEFAULT_TIME_STEP_MIN,
+    )
 
     parser = build_parser()
     args = parser.parse_args(["--lat-long=0,0"])
     assert args.line_points == DEFAULT_LINE_POINTS
     assert args.time_step == DEFAULT_TIME_STEP_MIN
+    assert args.dayline_day_step == DEFAULT_DAYLINE_DAY_STEP
+    assert args.hourline_day_step == DEFAULT_HOURLINE_DAY_STEP
 
-    args = parser.parse_args(["--lat-long=0,0", "--line-points", "20", "--time-step", "120"])
+    args = parser.parse_args(
+        [
+            "--lat-long=0,0",
+            "--line-points",
+            "20",
+            "--time-step",
+            "120",
+            "--dayline-day-step",
+            "30",
+            "--hourline-day-step",
+            "30",
+        ]
+    )
     assert args.line_points == 20
     assert args.time_step == 120
+    assert args.dayline_day_step == 30
+    assert args.hourline_day_step == 30
 
 
 # --- resolve_location --------------------------------------------------------

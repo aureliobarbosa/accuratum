@@ -22,6 +22,10 @@ def test_cli_produces_output(tmp_path):
             "20",
             "--time-step",
             "120",
+            "--dayline-day-step",
+            "30",
+            "--hourline-day-step",
+            "30",
         ]
     )
 
