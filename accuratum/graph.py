@@ -1,3 +1,4 @@
+from importlib.resources import files
 from typing import Sequence
 
 import matplotlib.image as mpimg
@@ -7,7 +8,7 @@ from matplotlib.figure import Figure
 
 DEFAULT_LOGO = (
     (
-        "accuratum/fig/unb_basic.jpg",
+        str(files("accuratum").joinpath("fig", "unb_basic.jpg")),
         (0.12, 0.75, 0.12, 0.12),
     ),
 )
