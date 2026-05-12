@@ -5,11 +5,18 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
+DEFAULT_LOGO = (
+    (
+        "accuratum/fig/unb_basic.jpg",
+        (0.12, 0.75, 0.12, 0.12),
+    ),
+)
+
 
 def plot_solar_clock(
     blocks_x: Sequence,
     blocks_y: Sequence,
-    logos: Sequence[tuple[str, tuple[float, float, float, float]]] | None = None,
+    logos: Sequence[tuple[str, tuple[float, float, float, float]]] | None = DEFAULT_LOGO,
     plumb_xy: tuple[float, float] = (0.0, 0.0),
     line_color: str = "green",
     line_width: float = 0.5,
