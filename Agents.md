@@ -13,7 +13,7 @@ Project Structure
 | `accuratum/location.py` | Geocoding via geopy/Nominatim |
 | `accuratum/notebooks/` | Prototype notebook — not production code |
 
-Plan ahead on any task; Break down larger problems into smaller ones; Create an outline of the required files and stub functions with signatures before coding; Ask permission before adding new modules, changing the package layout, or modifying `pyproject.toml`. This project uses Python 3.11 as the baseline version. Package management with uv in the front end and uv_build in the backend. Tests are managed with pytest. Development is done inside a devcontainer. Code formatting uses ruff.
+Plan ahead on any task; Break down larger problems into smaller ones; Create an outline of the required files and stub functions with signatures before coding; Ask permission before adding new modules, changing the package layout, or modifying `pyproject.toml`. Package management with uv in the front end and uv_build in the backend. Tests are managed with pytest. Development is done inside a devcontainer. Code formatting uses ruff.
 
 Follow Test Driven Development, except for `accuratum/graph.py`
 After finishing a task run the corresponding test (if test is available); once finishing an issue/bug/feature, run the full test suite (`uv run pytest`); after getting tests approved, run `uv run ruff check --fix` then `uv run ruff format`; Commit your work as you go; commit each subtask; Never push or merge branches without explicit user authorization. Geocoding uses Nominatim (geopy), which has rate limits. Always mock
