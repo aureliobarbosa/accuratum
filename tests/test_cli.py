@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from accuratum.cli import build_parser, parse_lat_long, resolve_location
+from accuratum.cli import build_parser, parse_lat_long, parse_rect, resolve_location
 
 # Coarse grid args for end-to-end CLI tests — keep the astropy/astroplan work small.
 # Larger day steps reduce how many days astroplan's sun_rise_time is evaluated on.
@@ -203,6 +203,67 @@ def test_main_falls_back_to_utc_when_timezonefinder_returns_none(tmp_path):
     with patch("accuratum.cli.timezone_at", return_value=None):
         exit_code = main(["--lat-long=0,0", "--output", str(out), *FAST_GRID_ARGS])
     assert exit_code == 0
+
+
+# --- logo --------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("0.1,0.75,0.12,0.12", (0.1, 0.75, 0.12, 0.12)),
+        (" 0.1 , 0.75 , 0.12 , 0.12 ", (0.1, 0.75, 0.12, 0.12)),
+        ("(0.1,0.75,0.12,0.12)", (0.1, 0.75, 0.12, 0.12)),
+    ],
+)
+def test_parse_rect_accepts_formats(value, expected):
+    assert parse_rect(value) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("value", ["0.1,0.75,0.12", "a,b,c,d", "1,2,3,4,5"])
+def test_parse_rect_rejects_invalid(value):
+    with pytest.raises(ValueError):
+        parse_rect(value)
+
+
+def test_parser_logo_defaults_are_none():
+    parser = build_parser()
+    args = parser.parse_args(["--lat-long=0,0"])
+    assert args.logo is None
+    assert args.logo_rect is None
+
+
+def test_parser_accepts_logo_and_rect(tmp_path):
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "--lat-long=0,0",
+            "--logo",
+            "some/logo.png",
+            "--logo-rect",
+            "0.2,0.8,0.1,0.1",
+        ]
+    )
+    assert args.logo == "some/logo.png"
+    assert args.logo_rect == (0.2, 0.8, 0.1, 0.1)
+
+
+def test_main_fails_when_logo_file_missing(tmp_path):
+    from accuratum.cli import main
+
+    missing = tmp_path / "nope.png"
+    out = tmp_path / "clock.png"
+    with pytest.raises(SystemExit):
+        main(
+            [
+                "--lat-long=0,0",
+                "--logo",
+                str(missing),
+                "--output",
+                str(out),
+                *FAST_GRID_ARGS,
+            ]
+        )
 
 
 # --- end-to-end --------------------------------------------------------------

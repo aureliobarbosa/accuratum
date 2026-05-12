@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 from datetime import datetime, timedelta
 from typing import Sequence
@@ -15,7 +16,7 @@ from accuratum.datetime_utils import (  # noqa: E402
     frame_periods,
     get_solstices,
 )
-from accuratum.graph import plot_solar_clock  # noqa: E402
+from accuratum.graph import DEFAULT_LOGO, plot_solar_clock  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
 
 DEFAULT_OUTPUT = "accuratum.png"
@@ -23,6 +24,18 @@ DEFAULT_LINE_POINTS = 500
 DEFAULT_TIME_STEP_MIN = 20
 DEFAULT_DAYLINE_DAY_STEP = 7
 DEFAULT_HOURLINE_DAY_STEP = 1
+
+
+def parse_rect(value: str) -> tuple[float, float, float, float]:
+    """Parse 'LEFT,BOTTOM,WIDTH,HEIGHT' into four floats (figure-coord rect)."""
+    cleaned = value.strip().lstrip("(").rstrip(")")
+    parts = [p.strip() for p in cleaned.split(",")]
+    if len(parts) != 4:
+        raise ValueError(f"expected 'LEFT,BOTTOM,WIDTH,HEIGHT', got {value!r}")
+    try:
+        return tuple(float(p) for p in parts)  # type: ignore[return-value]
+    except ValueError:
+        raise ValueError(f"could not parse {value!r} as four floats.")
 
 
 def parse_lat_long(value: str) -> tuple[float, float]:
@@ -126,6 +139,22 @@ def build_parser() -> argparse.ArgumentParser:
             "Larger values draw fewer hourline columns and run faster — useful for tests."
         ),
     )
+    parser.add_argument(
+        "--logo",
+        default=None,
+        metavar="PATH",
+        help="Path to a logo image to overlay on the figure. Defaults to the bundled Accuratum logo.",
+    )
+    parser.add_argument(
+        "--logo-rect",
+        type=parse_rect,
+        default=None,
+        metavar="LEFT,BOTTOM,WIDTH,HEIGHT",
+        help=(
+            "Logo placement in figure coordinates (0-1). "
+            "Defaults to the bundled logo's position. Example: --logo-rect=0.12,0.75,0.12,0.12"
+        ),
+    )
     return parser
 
 
@@ -182,7 +211,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         plumb_length=args.plumb_length,
     )
 
-    fig, _ = plot_solar_clock(blocks_x, blocks_y, plumb_xy=(0, 0))
+    default_path, default_rect = DEFAULT_LOGO[0]
+    logo_path = args.logo if args.logo is not None else default_path
+    logo_rect = args.logo_rect if args.logo_rect is not None else default_rect
+    if not os.path.isfile(logo_path):
+        raise SystemExit(f"error: logo file not found: {logo_path}")
+    logos = [(logo_path, logo_rect)]
+
+    fig, _ = plot_solar_clock(blocks_x, blocks_y, logos=logos, plumb_xy=(0, 0))
     fig.savefig(args.output, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
