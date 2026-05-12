@@ -11,7 +11,7 @@ Project Structure
 | `accuratum/graph.py` | Matplotlib rendering |
 | `accuratum/cli.py` | Argparse CLI entry point |
 | `accuratum/location.py` | Geocoding via geopy/Nominatim |
-| `accuratum/notebooks/` | Prototype notebook — not production code |
+| `notebooks/` | Prototype notebooks (top-level, not shipped in wheel) — not production code |
 
 Plan ahead on any task; Break down larger problems into smaller ones; Create an outline of the required files and stub functions with signatures before coding; Ask permission before adding new modules, changing the package layout, or modifying `pyproject.toml`. Package management with uv in the front end and uv_build in the backend. Tests are managed with pytest. Development is done inside a devcontainer. Code formatting uses ruff.
 
