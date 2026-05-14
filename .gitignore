@@ -187,5 +187,6 @@ nohup.out
 
 # Claude Code chat history
 .claude-data/
-# Generated CLI default output
-/accuratum.png
+# Generated CLI outputs at the repo root (subdir assets like accuratum/fig/*.png stay tracked)
+/*.png
+/*.svg
