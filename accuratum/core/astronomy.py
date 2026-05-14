@@ -4,8 +4,6 @@ This is the bottom of the core stack. It knows about astropy and astroplan,
 but nothing about sundial types, grids, or rendering.
 """
 
-from __future__ import annotations
-
 import numpy as np
 from astroplan import Observer
 from astropy.coordinates import AltAz, EarthLocation, get_sun

@@ -10,8 +10,6 @@ catch shape mistakes. Plugins are free to define their own kinds; the
 contract is purely structural.
 """
 
-from __future__ import annotations
-
 from typing import Literal, TypedDict
 
 

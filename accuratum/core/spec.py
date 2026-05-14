@@ -12,8 +12,6 @@ Rendering concerns (overlay images, canvas size, fonts) live in
 machines.
 """
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any

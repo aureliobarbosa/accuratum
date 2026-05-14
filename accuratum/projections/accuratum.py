@@ -9,8 +9,6 @@ Convention: +y points geographic north, -x points east
 (az=90° east → x = -sin(90°) = -1).
 """
 
-from __future__ import annotations
-
 import numpy as np
 
 

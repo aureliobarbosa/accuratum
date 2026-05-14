@@ -6,8 +6,6 @@ A saved spec is shareable; a saved hints file (when we have one) is not.
 Renderers take ``(plot, hints)``.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 

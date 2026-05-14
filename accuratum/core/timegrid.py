@@ -8,8 +8,6 @@ Knowing about astronomy (rise/set times) is fine; knowing about projection
 or rendering is not.
 """
 
-from __future__ import annotations
-
 from zoneinfo import ZoneInfo
 
 import numpy as np

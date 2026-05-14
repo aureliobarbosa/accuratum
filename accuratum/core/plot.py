@@ -10,8 +10,6 @@ Unlike ``SundialSpec``, a ``Plot`` is not required to be JSON-serializable
 — it holds numpy arrays for the polyline samples.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Any
 
