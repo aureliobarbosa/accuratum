@@ -20,8 +20,8 @@ class DaylineMetadata(TypedDict):
 
 class HourlineMetadata(TypedDict):
     kind: Literal["hourline"]
-    hour: int
-    minute: int
+    hour: int  # canonical target hour in 0..23, local timezone — stable identity
+    minute_offset: int  # signed minutes between the sampled middle and ``hour:00``
 
 
 def selector_matches(selector: dict, metadata: dict) -> bool:
