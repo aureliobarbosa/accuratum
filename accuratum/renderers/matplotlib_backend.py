@@ -1,0 +1,48 @@
+"""Matplotlib renderer — turns a :class:`Plot` into a ``matplotlib.Figure``.
+
+The renderer reads ``Plot`` and ``RenderHints`` and does *only* drawing:
+positions, label texts, alignments, and overlay rects have all been
+resolved upstream. No geometry, no label heuristics here.
+"""
+
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+
+from accuratum.core.hints import RenderHints
+from accuratum.core.plot import Plot
+
+
+def render(plot: Plot, hints: RenderHints | None = None) -> tuple[Figure, Axes]:
+    """Render *plot* to a matplotlib ``(Figure, Axes)``."""
+    hints = hints or RenderHints()
+    fig, ax = plt.subplots(figsize=hints.figsize)
+    ax.set_aspect("equal")
+
+    for poly in plot.polylines:
+        if poly.xs.size == 0:
+            continue
+        ax.plot(poly.xs, poly.ys, "-", color=hints.line_color, linewidth=hints.line_width)
+
+    for label in plot.labels:
+        ax.text(
+            label.x,
+            label.y,
+            label.text,
+            color=hints.label_color,
+            fontsize=hints.label_fontsize,
+            ha=label.ha,
+            va=label.va,
+        )
+
+    for overlay in hints.overlays:
+        img = mpimg.imread(overlay.image_path)
+        overlay_ax = fig.add_axes(overlay.rect, zorder=10)
+        overlay_ax.imshow(img)
+        overlay_ax.axis("off")
+
+    xp, yp = plot.plumb_xy
+    ax.scatter(xp, yp, s=10, facecolors="none", edgecolors="k", linewidths=0.5, zorder=5)
+
+    return fig, ax
