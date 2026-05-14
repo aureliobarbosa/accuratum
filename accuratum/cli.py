@@ -90,7 +90,27 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--compass", default=None, metavar="PATH")
     parser.add_argument("--compass-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
     parser.add_argument("--label-fontsize", type=float, default=DEFAULT_LABEL_FONTSIZE, metavar="PT")
+    parser.add_argument(
+        "--canvas-size-mm",
+        type=_parse_canvas_mm,
+        default=None,
+        metavar="WIDTH,HEIGHT",
+        help=(
+            "SVG canvas size in millimetres, e.g. --canvas-size-mm=6000,2000 for a "
+            "6m x 2m panel. Defaults to 297,210 (A4 landscape). Ignored for raster output."
+        ),
+    )
     return parser
+
+
+def _parse_canvas_mm(value: str) -> tuple[float, float]:
+    parts = [p.strip() for p in value.split(",")]
+    if len(parts) != 2:
+        raise ValueError(f"expected 'WIDTH,HEIGHT', got {value!r}")
+    try:
+        return float(parts[0]), float(parts[1])
+    except ValueError:
+        raise ValueError(f"could not parse {value!r} as two floats.")
 
 
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -165,7 +185,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         _resolve_overlay(args.logo, args.logo_rect, DEFAULT_LOGO_PATH, DEFAULT_LOGO_RECT, "logo"),
         _resolve_overlay(args.compass, args.compass_rect, DEFAULT_COMPASS_PATH, DEFAULT_COMPASS_RECT, "compass"),
     ]
-    hints = RenderHints(overlays=overlays, label_fontsize=args.label_fontsize)
+    hints = RenderHints(
+        overlays=overlays,
+        label_fontsize=args.label_fontsize,
+        canvas_size_mm=args.canvas_size_mm,
+    )
 
     plot = build_plot(spec)
     _save(plot, hints, args.output)

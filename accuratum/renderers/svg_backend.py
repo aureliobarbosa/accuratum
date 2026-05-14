@@ -30,15 +30,24 @@ def render(plot: Plot, hints: RenderHints | None = None) -> str:
     """Return an SVG document string rendering *plot*."""
     hints = hints or RenderHints()
 
-    xmin, xmax, ymin, ymax = _data_bbox(plot)
-    width_data = xmax - xmin
-    height_data = ymax - ymin
-    # Pad 5 % on each side so labels at the extremes aren't clipped.
-    pad = 0.05 * max(width_data, height_data)
-    xmin -= pad
-    ymin -= pad
-    xmax += pad
-    ymax += pad
+    # Tight data bbox.
+    data_xmin, data_xmax, data_ymin, data_ymax = _data_bbox(plot)
+    data_w = data_xmax - data_xmin
+    data_h = data_ymax - data_ymin
+
+    # Margin around the data. TOP margin is large enough to hold overlays
+    # (logo, compass) whose figure-coord rects sit at y≈0.75 by convention —
+    # mirroring matplotlib's "figure has margins around the axes" so the
+    # same default rects land above the data instead of on top of it.
+    # Side and bottom margins fit endpoint labels.
+    top_margin = 0.4 * data_h
+    bottom_margin = 0.05 * data_h
+    side_margin = 0.15 * data_w
+
+    xmin = data_xmin - side_margin
+    xmax = data_xmax + side_margin
+    ymin = data_ymin - bottom_margin
+    ymax = data_ymax + top_margin
     width_data = xmax - xmin
     height_data = ymax - ymin
 
