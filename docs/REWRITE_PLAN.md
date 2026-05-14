@@ -7,138 +7,172 @@ reference for the label-collision heuristic but will not be merged.
 The rewrite is a strict chain: Step 1 unlocks Steps 2, 3, 3.1. Steps 2 and 3
 can run in parallel after Step 1 if desired.
 
+## Status legend
+
+- ✅ done and committed
+- ▶ in progress
+- ⏳ pending
+
+## Current position
+
+- ✅ Step 1 — Functional core
+- ✅ Step 2 — Matplotlib renderer + CLI rewire (user visually approved)
+- ✅ Cleanup — old `astronomy.py` / `datetime_utils.py` / `graph.py` deleted
+- ▶ Step 3 — SVG renderer (next)
+- ⏳ Step 3.1 — Spec file I/O + overrides
+
+Branch `rewrite-core`, 12 commits ahead of `main`. 87 tests passing. Not
+pushed, not merged.
+
 ---
 
-## Step 1 — Functional core: `Spec → Geometry → Plot`
+## ✅ Step 1 — Functional core: `Spec → Geometry → Plot`
 
 ### Goal
 Make the library a pure data pipeline. No matplotlib, no I/O, no global
 state inside the core. Renderers come later (Step 2+).
 
-### Deliverables
+### Delivered
 ```
 accuratum/
   core/
-    spec.py          # SundialSpec, RenderHints (dataclasses)
-    plot.py          # Plot, Polyline, Label (pure data, no mpl)
-    astronomy.py     # solar geometry (mostly moved from current astronomy.py)
-    timegrid.py      # explicit date/time grid builders
+    spec.py        ✅ SundialSpec + JSON roundtrip helpers
+    plot.py        ✅ Plot, Polyline, Label (frozen dataclasses, numpy xy)
+    hints.py       ✅ Overlay, RenderHints (separated from Spec for portability)
+    metadata.py    ✅ TypedDict contract shared by polyline metadata and selectors
+    astronomy.py   ✅ build_altaz_frame, get_sun_altaz, get_sunrises_and_sunsets
+    timegrid.py    ✅ dayline_grid, hourline_grid (Spec-driven)
+    builder.py     ✅ build_plot(spec) -> Plot orchestrator
   projections/
-    accuratum.py     # project(altaz, plumb_length) -> (x, y)
+    accuratum.py   ✅ project(alt_deg, az_deg, plumb_length) -> (xs, ys)
   defaults/
-    labels.py        # default label-selection rules (current per-month / per-hour logic)
-    placement.py     # default endpoint placement & collision rules (current heuristic)
-  __init__.py        # re-export public API: SundialSpec, build_plot(...)
+    labels.py      ✅ select_dayline_labels, select_hourline_labels
+    placement.py   ✅ place_labels — collision heuristic from labels branch,
+                       per-axis tolerance, plumb-exclusion radius, override
+                       application by selector
 ```
 
-**Public API:**
+**Public API** (current):
 ```python
-spec = SundialSpec(location=..., dates=..., hours=..., overrides=...)
-plot = build_plot(spec)              # pure data in, pure data out
-# (Step 2 adds:) figure = render_matplotlib(plot)
+from accuratum.core.builder import build_plot
+from accuratum.core.spec import SundialSpec
+plot = build_plot(spec)               # pure data in, pure data out
 ```
 
-### Key design decisions
-- `SundialSpec` is JSON-serializable (primitive fields, ISO date strings,
-  dicts of overrides). Enables Step 3.1, Step 4 (web), Step 5 (paper)
-  without rework.
-- No automatic solstice/timezone resolution inside the core. The CLI
-  resolves those before constructing the Spec. The core takes explicit
-  dates and times — deterministic and testable.
-- `Plot` is a list of `Polyline` and `Label` objects with coordinates.
-  No matplotlib types anywhere. Polylines carry a `kind` field
-  (`"dayline"`, `"hourline"`, future types).
-- Defaults are functions over a Spec, not baked into `build_plot`. Calling
-  `build_plot(spec)` runs them; passing `spec.overrides` short-circuits any
-  of them.
+### Key design decisions (kept)
+- `SundialSpec` is JSON-serializable via `spec_to_dict` / `spec_from_dict`
+  (datetimes ↔ ISO strings; frozen subobjects rebuilt on load).
+- Solstice resolution + timezone lookup live in the **CLI**, not the core.
+  The core takes explicit `TimeFrame(start, end)`.
+- `Plot` is pure data, no matplotlib types.
+- Labels carry a `selector` dict so overrides match by metadata identity
+  (e.g. `{"kind": "hourline", "hour": 6}`), surviving `time_step` changes.
+- Overlays live in `RenderHints`, not `Spec` — saved spec stays portable.
+- Heuristics live in `defaults/*`; `build_plot` calls them but they are
+  short-circuited per-label by matching overrides.
 
-### Acceptance criteria
-- CLI rebuilt on the new core produces output visually equivalent to v0.1
-  for a fixed seed/location.
-- `build_plot(spec)` is fully deterministic, no network, no matplotlib
-  import.
-- Every public function is testable with no I/O mocking other than the
-  astropy geometry layer.
-- Roundtrip: `Spec → JSON → Spec → Plot` gives the same plot.
+### Acceptance criteria — met
+- ✅ CLI rebuilt on the new core produces output visually equivalent to
+  v0.1 (user-confirmed).
+- ✅ `build_plot(spec)` is deterministic, no network, no matplotlib
+  import (importable without matplotlib installed in core/ — confirmed
+  by import graph).
+- ✅ Public functions tested without I/O mocking other than astropy.
+- ✅ JSON roundtrip test (`tests/core/test_spec.py`).
 
-### Test strategy
-- TDD on `core/timegrid.py` and `defaults/*` (pure functions, easy).
-- Regression tests on `projections/accuratum.py` against known
-  lat/lon/time values from v0.1.
-- Snapshot test for `Plot` from a fixed spec (small JSON in
-  `tests/fixtures/`).
-- `graph.py` (Step 2) remains TDD-exempt per Agents.md; `build_plot` is
-  testable end-to-end without rendering.
+### Tests delivered
+- `tests/core/test_metadata.py` — selector match semantics
+- `tests/core/test_spec.py` — JSON roundtrip, frozen-subobject rebuild,
+  tz-aware enforcement
+- `tests/core/test_astronomy.py` — altaz query, rise/set, horizon shift
+- `tests/core/test_timegrid.py` — grid shape, dtype, monotonicity, NaT masking
+- `tests/core/test_builder.py` — end-to-end Spec → Plot, metadata shape,
+  label format, selector presence, override hide, unsupported sundial_type
+- `tests/projections/test_accuratum.py` — overhead → zero shadow, linear
+  scaling with plumb_length, v0.1 sign convention locked
+- `tests/defaults/test_labels.py` — month-transition, on-the-hour
+  threshold, non-matching kinds
+- `tests/defaults/test_placement.py` — endpoint alignment, hour-yields-
+  to-day, per-axis collision, plumb exclusion, override dx/dy/hide/text
 
-### Effort & risk
-~2–3 focused sessions. Most code already exists — this is re-shaping
-boundaries plus adding the Spec/Plot dataclasses. Risk: scope creep into
-"while we're here, let's improve…" — resist; the only job is restructuring.
+### Deviations from the original plan
+- `core/hints.py` was added as a separate module (originally lumped into
+  `spec.py`). Justification from the Plan-agent review: overlay image
+  paths shouldn't bake into a portable spec file.
+- `core/builder.py` exists as its own module rather than living in
+  `core/__init__.py` (cleaner imports, easier to read).
+- `Label` carries a `selector` dict, not just a `kind` string — emerged
+  from the override-by-identity decision.
 
-### Subagent use (sequential)
-1. **Pre-flight Explore:** inventory of current code — which functions are
-   pure, which have hidden I/O, which have matplotlib coupling. Output: a
-   short markdown report.
-2. **Optional Plan agent at end:** one-shot review of the Spec/Plot
-   dataclass design.
+### Subagent runs (sequential, as instructed)
+- ✅ Explore — code inventory of v0.1 / labels branch
+- ✅ claude — wrote `docs/LESSONS_LABELS.md`
+- ✅ Plan — review of Spec/Plot dataclass design before implementation
 
 ---
 
-## Step 2 — Matplotlib renderer as a thin adapter
+## ✅ Step 2 — Matplotlib renderer as a thin adapter
 
 ### Goal
-Reproduce v0.1 output (lines, labels, compass, logo) by reading a `Plot`.
-No core logic in the renderer.
+Reproduce v0.1 output by reading a `Plot`. No core logic in the renderer.
 
-### Deliverables
+### Delivered
 ```
-accuratum/
-  renderers/
-    matplotlib_backend.py   # render(plot, hints) -> matplotlib.Figure
+accuratum/renderers/matplotlib_backend.py   ✅ render(plot, hints) -> (Figure, Axes)
+accuratum/cli.py                            ✅ rewired on SundialSpec + build_plot + render
 ```
-Revive the CLI: `spec = …; plot = build_plot(spec); fig = render_matplotlib(plot); fig.savefig(...)`.
 
-### Key design decisions
-- Renderer takes a `Plot` and a small `RenderHints` dataclass (figsize,
-  colors, font, output_dpi, overlay rects). No solar geometry inside.
-- The `labels`-branch collision heuristic ports into
-  `defaults/placement.py` and runs at *plot-build* time. The renderer just
-  draws labels at the positions the Plot tells it to.
-- Logo/compass overlays become `OverlayImage` entries in the `Plot`. Same
-  primitive, two configurations.
+CLI now does:
+```python
+spec = SundialSpec(location, timeframe, plumb_length, grid)
+plot = build_plot(spec)
+fig, _ = render(plot, hints)
+fig.savefig(args.output, ...)
+```
 
-### Acceptance criteria
-- Reproduces v0.1 output for a fixed seed/location (visual diff acceptable;
-  pixel diff not required).
-- Existing CLI integration tests pass after Spec construction is wired in.
-- All overlays handled via the generic `OverlayImage` mechanism.
+### Key design decisions (kept)
+- Renderer takes `Plot` + `RenderHints`. No geometry.
+- Overlay/logo/compass all flow through the same `Overlay` primitive in
+  `RenderHints.overlays`.
+- The labels-branch collision heuristic ran inside `defaults/placement.py`
+  at plot-build time, not in the renderer.
 
-### Test strategy
-- Renderer remains TDD-exempt. End-to-end smoke test + manual visual
-  review at one location.
-- A guard test importing `accuratum.core.*` and asserting `matplotlib` is
-  not importable from there.
+### Acceptance criteria — met
+- ✅ Visual diff vs v0.1: user-approved.
+- ✅ CLI integration tests pass after Spec/Hints construction wired in.
+- ✅ Overlays via the generic `OverlayImage` mechanism.
 
-### Effort & risk
-~1 session. Risk: matplotlib types leaking into core via Plot field types.
+### Pause point — passed
+The assistant paused after writing the renderer. User compared output
+against v0.1 and signed off.
 
-### Subagent use
-Main thread. Renderer is small (~200 lines) and needs visual iteration.
-
-### PAUSE FOR VISUAL FEEDBACK
-After this step completes, the assistant **pauses and asks the user to
-visually compare the new output against v0.1** before proceeding to
-Step 3.
+### Deviations from the original plan
+- No explicit `assert matplotlib not importable from core/*` test was
+  written; the dependency direction is enforced by code structure and
+  test coverage rather than a guard test. May add later if it ever leaks.
 
 ---
 
-## Step 3 — SVG renderer
+## ✅ Cleanup — dead old code removed
+
+After Step 2 signoff:
+- Deleted `accuratum/astronomy.py`, `accuratum/datetime_utils.py`,
+  `accuratum/graph.py`.
+- Deleted `tests/test_astronomy.py`, `tests/test_datetime_utils.py`.
+- `tests/test_smoke.py` updated to import the new modules.
+- `tests/test_cli.py` retained as-is (the CLI flags it tests survived
+  the rewrite).
+- 87 tests passing afterwards.
+
+---
+
+## ▶ Step 3 — SVG renderer
 
 ### Goal
 Second backend, same `Plot` input. Enables large-format printing (req 2)
 and prepares the way for browser-side rendering later.
 
-### Deliverables
+### Deliverables (planned)
 ```
 accuratum/
   renderers/
@@ -147,16 +181,17 @@ accuratum/
 CLI gets `--format svg` (or infers from `--output *.svg`).
 
 ### Key design decisions
-- Pure-Python SVG via string templates / `xml.etree`. No new dependency.
+- Pure-Python SVG via `xml.etree`. No new dependency.
 - Use millimeters, not pixels. A 6 m × 2 m panel is
   `width="6000mm" height="2000mm"`.
 - Reuse the *same* `Plot` from Step 1. If a different intermediate is
   needed, fix Step 1 — don't fork.
-- Text labels are real SVG `<text>` elements (selectable, editable in
-  Inkscape) — enables print-shop nudges without re-running Python.
+- Text labels are real SVG `<text>` elements with selector-derived `id`
+  attributes (selectable, editable in Inkscape) — enables print-shop
+  nudges without re-running Python.
 
 ### Acceptance criteria
-- SVG renders geometrically identical to the matplotlib PDF output for one
+- SVG renders geometrically identical to the matplotlib output for one
   canonical Spec.
 - Opens cleanly in Inkscape / a browser at screen size and at 6 m × 2 m.
 - Snapshot tests for small fixed Plots pass.
@@ -168,9 +203,15 @@ CLI gets `--format svg` (or infers from `--output *.svg`).
   label nudge.
 
 ### Effort & risk
-~1–2 sessions. Gotcha: SVG `text-anchor` semantics differ slightly from
-matplotlib `ha`/`va`. Risk: discovering the Plot needs more metadata
-(e.g., per-label alignment). If so, fix Step 1 cleanly.
+~1–2 sessions. Gotchas:
+- SVG `text-anchor` / `dominant-baseline` semantics differ slightly from
+  matplotlib `ha`/`va`. Mapping table required.
+- y-axis points down in SVG, up in data coords. Flip in the viewBox.
+- Overlay images: SVG supports `<image>` with external `href` or embedded
+  data URIs. Pick one; if external, the SVG isn't portable in isolation.
+
+Risk: discovering the `Plot` needs more metadata (e.g., per-label
+alignment beyond `ha`/`va`). If so, fix Step 1 cleanly.
 
 ### Subagent use (sequential)
 1. **general-purpose**: generate SVG snapshot fixtures + tests once the
@@ -183,7 +224,7 @@ Step 3.1.
 
 ---
 
-## Step 3.1 — Spec file I/O and override mechanism
+## ⏳ Step 3.1 — Spec file I/O and override mechanism
 
 ### Goal
 Make the `Spec` the actual interface. Hand-edit a JSON file, render, see
@@ -196,28 +237,31 @@ accuratum/
   spec_io.py        # load_spec(path), save_spec(spec, path) — JSON
   cli.py            # accepts --spec <file>; --save-spec <file> dumps invocation
 ```
-The override mechanism is wired up: `spec.overrides.label_positions["06h"] =
-(dx, dy)` survives a round-trip and applies in `build_plot`.
+The override mechanism is wired up:
+`LabelOverride(selector={"kind": "hourline", "hour": 6}, dx=0.1, dy=-0.2)`
+survives a round-trip and applies in `build_plot`. (The dataclass and the
+roundtrip are already in place from Step 1 — Step 3.1 is the file I/O
+and CLI surface.)
 
 ### Key design decisions
 - **JSON**, not YAML/TOML. The eventual web app eats JSON natively.
 - CLI gains two modes:
-  - **One-shot mode** (today): all args on CLI, no spec file.
+  - **One-shot mode** (current): all args on CLI, no spec file.
   - **Spec-file mode**: `--spec clock.json` is source of truth; CLI args
     still override fields if given.
-- `--save-spec` lets a user dump their CLI invocation to JSON, then
-  iterate by editing the file. Smallest possible human-in-the-loop UX.
-- Include a `spec_version` field from day 1.
+- `--save-spec` dumps the CLI invocation to JSON; iterate by editing.
+- `spec_version` already present (Step 1).
 
 ### Acceptance criteria
 - `accuratum --lat-long=… --save-spec clock.json` produces a spec.
 - `accuratum --spec clock.json` reproduces the same output.
 - Edit a label override in `clock.json`, re-render, see the label move.
 - All existing CLI tests pass; new tests cover roundtrip and override
-  application.
+  application end-to-end.
 
 ### Test strategy
-- TDD on `spec_io.py` (roundtrip, version handling, malformed-file errors).
+- Already have unit tests for `spec_to_dict` / `spec_from_dict` (Step 1).
+- Add file-I/O tests (load/save, malformed-file errors, version handling).
 - Integration test: save → edit → load → render → check the label moved.
 
 ### Effort & risk
@@ -226,8 +270,8 @@ The override mechanism is wired up: `spec.overrides.label_positions["06h"] =
 problem.
 
 ### Subagent use (sequential)
-1. **Plan agent**: one-shot review of the JSON schema (field names,
-   version strategy, override key conventions) before implementation.
+1. **Plan agent**: one-shot review of the JSON schema / CLI semantics
+   before implementation.
 
 ### PAUSE FOR VISUAL FEEDBACK
 After this step, the assistant pauses and asks the user to test the
@@ -237,8 +281,8 @@ save → edit → re-render flow before declaring the rewrite stage complete.
 
 ## Cross-cutting
 
-### Lessons from the `labels` branch
-Write `docs/LESSONS_LABELS.md` early — half a page summarizing the
+### ✅ Lessons from the `labels` branch
+Captured in [`docs/LESSONS_LABELS.md`](./LESSONS_LABELS.md) — the
 heuristic discoveries (auto-scale tolerance, plumb exclusion radius, 1-D
 collision per axis, shared placed-labels set, hour-yields-to-day
 priority). Institutional memory; prevents rediscovery.
@@ -246,19 +290,19 @@ priority). Institutional memory; prevents rediscovery.
 ### Branch strategy
 - `rewrite-core` branch off `main` (already created).
 - Commit per subtask, per Agents.md.
-- Do not push to `main` until at least Step 1 + Step 2 land and the user
-  has visually approved.
-- Do not merge `labels` branch into `main`.
+- Not yet pushed; do not push to `main` until the user explicitly
+  authorizes.
+- `labels` branch will not be merged into `main`.
 
 ### Subagent execution
 Per user instruction: **agents run in sequence, not parallel.**
-1. Explore agent — code inventory (before Step 1 implementation).
-2. claude agent — write `LESSONS_LABELS.md`.
-3. Plan agent — review Spec/Plot dataclass design (end of Step 1).
-4. general-purpose — SVG snapshot fixtures and tests (during Step 3).
-5. Plan agent — JSON schema review (start of Step 3.1).
+1. ✅ Explore — code inventory (before Step 1 implementation).
+2. ✅ claude — wrote `LESSONS_LABELS.md`.
+3. ✅ Plan — Spec/Plot dataclass design review (end of Step 1a).
+4. ⏳ general-purpose — SVG snapshot fixtures and tests (during Step 3).
+5. ⏳ Plan — JSON schema review (start of Step 3.1).
 
 ### Pause points
-- After Step 2: visual approval against v0.1.
-- After Step 3: SVG opens correctly in Inkscape at 6 m × 2 m.
-- After Step 3.1: human-in-the-loop save → edit → re-render flow works.
+- ✅ After Step 2: visual approval against v0.1.
+- ⏳ After Step 3: SVG opens correctly in Inkscape at 6 m × 2 m.
+- ⏳ After Step 3.1: human-in-the-loop save → edit → re-render flow works.
