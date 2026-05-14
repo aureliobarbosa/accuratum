@@ -278,3 +278,34 @@ def test_main_saves_output_image(tmp_path):
     assert exit_code == 0
     assert out.exists()
     assert out.stat().st_size > 0
+
+
+# --- vector output formats ---------------------------------------------------
+
+
+def test_main_saves_svg_with_selector_derived_gids(tmp_path):
+    from accuratum.cli import main
+
+    out = tmp_path / "clock.svg"
+    exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out), *FAST_GRID_ARGS])
+    assert exit_code == 0
+    assert out.exists()
+
+    body = out.read_text()
+    # svg_backend emits selector-derived ids like "label-dayline-2026-01-15".
+    assert 'id="label-dayline-' in body
+    assert 'id="label-hourline-' in body
+    # polylines carry "poly-<selector>" ids.
+    assert 'id="poly-dayline-' in body
+    assert 'id="poly-hourline-' in body
+
+
+def test_main_saves_pdf_output(tmp_path):
+    from accuratum.cli import main
+
+    out = tmp_path / "clock.pdf"
+    exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out), *FAST_GRID_ARGS])
+    assert exit_code == 0
+    assert out.exists()
+    # PDF magic number — confirms matplotlib's PDF backend ran, not the PNG one.
+    assert out.read_bytes().startswith(b"%PDF")

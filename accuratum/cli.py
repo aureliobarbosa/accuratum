@@ -23,7 +23,7 @@ from accuratum.core.builder import build_plot  # noqa: E402
 from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
 from accuratum.core.spec import GridConfig, Location, SundialSpec, TimeFrame  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
-from accuratum.renderers.matplotlib_backend import render  # noqa: E402
+from accuratum.renderers import matplotlib_backend, svg_backend  # noqa: E402
 
 DEFAULT_OUTPUT = "accuratum.png"
 DEFAULT_LINE_POINTS = 500
@@ -168,12 +168,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     hints = RenderHints(overlays=overlays, label_fontsize=args.label_fontsize)
 
     plot = build_plot(spec)
-    fig, _ = render(plot, hints)
-    fig.savefig(args.output, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-
+    _save(plot, hints, args.output)
     print(f"Saved Accuratum clock to {args.output}")
     return 0
+
+
+def _save(plot, hints: RenderHints, output: str) -> None:
+    """Pick renderer by *output* extension and write to disk."""
+    ext = os.path.splitext(output)[1].lower()
+    if ext == ".svg":
+        svg = svg_backend.render(plot, hints)
+        with open(output, "w", encoding="utf-8") as fh:
+            fh.write(svg)
+        return
+    fig, _ = matplotlib_backend.render(plot, hints)
+    fig.savefig(output, dpi=200, bbox_inches="tight")
+    plt.close(fig)
 
 
 # Re-export timedelta to keep test_cli imports stable
