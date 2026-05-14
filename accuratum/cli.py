@@ -22,6 +22,7 @@ from timezonefinder import timezone_at  # noqa: E402
 from accuratum.core.builder import build_plot  # noqa: E402
 from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
 from accuratum.core.spec import GridConfig, Location, SundialSpec, TimeFrame  # noqa: E402
+from accuratum.core.spec_io import load_spec, save_spec  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
 from accuratum.renderers import matplotlib_backend, svg_backend  # noqa: E402
 
@@ -91,6 +92,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--compass-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
     parser.add_argument("--label-fontsize", type=float, default=DEFAULT_LABEL_FONTSIZE, metavar="PT")
     parser.add_argument(
+        "--spec",
+        default=None,
+        metavar="PATH",
+        help=(
+            "Load a SundialSpec from a JSON file. When given, location/timeframe/"
+            "grid/plumb-length args are ignored and the spec is used as-is. "
+            "Overlay (--logo/--compass) and render flags still apply."
+        ),
+    )
+    parser.add_argument(
+        "--save-spec",
+        default=None,
+        metavar="PATH",
+        help="Also write the resolved SundialSpec to PATH as JSON before rendering.",
+    )
+    parser.add_argument(
         "--canvas-size-mm",
         type=_parse_canvas_mm,
         default=None,
@@ -158,28 +175,36 @@ def _resolve_overlay(
     return Overlay(image_path=path, rect=rect)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    args = _parse_args(argv)
+def _spec_from_args(args: argparse.Namespace) -> SundialSpec:
+    """Build a SundialSpec from CLI args (no --spec given)."""
     lat, lon = resolve_location(args)
-
     tz_str = args.timezone or timezone_at(lat=lat, lng=lon) or "UTC"
     tz = ZoneInfo(tz_str)
     now = datetime.now(tz=tz)
-
-    location = Location(lat=lat, lon=lon, timezone=tz_str)
-    timeframe = _solstice_timeframe(now, args.period)
-    grid = GridConfig(
-        dayline_day_step_days=args.dayline_day_step,
-        line_points=args.line_points,
-        hourline_day_step_days=args.hourline_day_step,
-        time_step_minutes=args.time_step,
-    )
-    spec = SundialSpec(
-        location=location,
-        timeframe=timeframe,
+    return SundialSpec(
+        location=Location(lat=lat, lon=lon, timezone=tz_str),
+        timeframe=_solstice_timeframe(now, args.period),
         plumb_length=args.plumb_length,
-        grid=grid,
+        grid=GridConfig(
+            dayline_day_step_days=args.dayline_day_step,
+            line_points=args.line_points,
+            hourline_day_step_days=args.hourline_day_step,
+            time_step_minutes=args.time_step,
+        ),
     )
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = _parse_args(argv)
+
+    if args.spec is not None:
+        spec = load_spec(args.spec)
+    else:
+        spec = _spec_from_args(args)
+
+    if args.save_spec is not None:
+        save_spec(spec, args.save_spec)
+        print(f"Saved SundialSpec to {args.save_spec}")
 
     overlays = [
         _resolve_overlay(args.logo, args.logo_rect, DEFAULT_LOGO_PATH, DEFAULT_LOGO_RECT, "logo"),

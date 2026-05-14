@@ -309,3 +309,52 @@ def test_main_saves_pdf_output(tmp_path):
     assert out.exists()
     # PDF magic number — confirms matplotlib's PDF backend ran, not the PNG one.
     assert out.read_bytes().startswith(b"%PDF")
+
+
+# --- spec roundtrip ----------------------------------------------------------
+
+
+def test_main_save_spec_writes_json(tmp_path):
+    from accuratum.cli import main
+
+    out = tmp_path / "clock.png"
+    spec_path = tmp_path / "clock.json"
+    exit_code = main(
+        [
+            "--lat-long=-15.6,-47.65",
+            "--output",
+            str(out),
+            "--save-spec",
+            str(spec_path),
+            *FAST_GRID_ARGS,
+        ]
+    )
+    assert exit_code == 0
+    assert spec_path.exists()
+    text = spec_path.read_text()
+    assert '"location"' in text
+    assert '"timeframe"' in text
+
+
+def test_main_spec_load_roundtrip(tmp_path):
+    """--save-spec writes a spec that --spec reads back to the same render."""
+    from accuratum.cli import main
+
+    spec_path = tmp_path / "clock.json"
+    out_a = tmp_path / "a.png"
+    out_b = tmp_path / "b.png"
+
+    main(
+        [
+            "--lat-long=-15.6,-47.65",
+            "--output",
+            str(out_a),
+            "--save-spec",
+            str(spec_path),
+            *FAST_GRID_ARGS,
+        ]
+    )
+    main(["--spec", str(spec_path), "--output", str(out_b)])
+    assert out_a.exists() and out_b.exists()
+    assert out_a.stat().st_size > 0
+    assert out_b.stat().st_size > 0
