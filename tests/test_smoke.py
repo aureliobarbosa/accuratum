@@ -2,11 +2,12 @@
 
 
 def test_imports():
-    import accuratum.astronomy  # noqa: F401
     import accuratum.cli  # noqa: F401
-    import accuratum.datetime_utils  # noqa: F401
-    import accuratum.graph  # noqa: F401
+    import accuratum.core.builder  # noqa: F401
+    import accuratum.core.spec  # noqa: F401
     import accuratum.location  # noqa: F401
+    import accuratum.projections.accuratum  # noqa: F401
+    import accuratum.renderers.matplotlib_backend  # noqa: F401
 
 
 def test_cli_produces_output(tmp_path):
