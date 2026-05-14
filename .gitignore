@@ -187,3 +187,5 @@ nohup.out
 
 # Claude Code chat history
 .claude-data/
+# Generated CLI default output
+/accuratum.png
