@@ -186,4 +186,4 @@ bkp/
 nohup.out
 
 # Claude Code chat history
-.claude-data/
+# .claude-data/
