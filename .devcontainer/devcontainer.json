@@ -10,8 +10,23 @@
       "onAutoForward": "notify"
     }
   },
+  "initializeCommand": [
+    "bash",
+    "-c",
+    "mkdir -p \"$HOME\"/Dropbox/claude-code/{projects,file-history,skills,agents,commands,plans,todos}"
+  ],
+  "mounts": [
+    "source=claude-code-state,target=/home/vscode/.claude-code,type=volume",
+    "source=${localEnv:HOME}/Dropbox/claude-code/projects,target=/home/vscode/.claude-code/projects,type=bind",
+    "source=${localEnv:HOME}/Dropbox/claude-code/file-history,target=/home/vscode/.claude-code/file-history,type=bind",
+    "source=${localEnv:HOME}/Dropbox/claude-code/skills,target=/home/vscode/.claude-code/skills,type=bind",
+    "source=${localEnv:HOME}/Dropbox/claude-code/agents,target=/home/vscode/.claude-code/agents,type=bind",
+    "source=${localEnv:HOME}/Dropbox/claude-code/commands,target=/home/vscode/.claude-code/commands,type=bind",
+    "source=${localEnv:HOME}/Dropbox/claude-code/plans,target=/home/vscode/.claude-code/plans,type=bind",
+    "source=${localEnv:HOME}/Dropbox/claude-code/todos,target=/home/vscode/.claude-code/todos,type=bind"
+  ],
   "remoteEnv": {
-    "CLAUDE_CONFIG_DIR": "/workspaces/accuratum/.claude-data"
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude-code"
   },
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "customizations": {
