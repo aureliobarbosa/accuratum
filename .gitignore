@@ -185,8 +185,5 @@ cython_debug/
 bkp/
 nohup.out
 
-# Claude Code chat history
-# .claude-data/
-
-# Claude Code credentials (never commit)
-.claude-data/.credentials.json
+# Claude Code data (synced via Dropbox, see .devcontainer/devcontainer.json)
+.claude-data/
