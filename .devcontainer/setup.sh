@@ -1,4 +1,20 @@
 #!/bin/bash
+# Claude Code config: the named volume is created root-owned
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-/home/vscode/.claude-code}"
+sudo chown vscode:vscode "$CLAUDE_CONFIG_DIR"
+
+# Seed per-machine Claude settings (settings.json is not synced)
+if [ ! -f "$CLAUDE_CONFIG_DIR/settings.json" ]; then
+  cat > "$CLAUDE_CONFIG_DIR/settings.json" << 'EOF'
+{
+  "model": "opus",
+  "effortLevel": "medium",
+  "agentPushNotifEnabled": true,
+  "cleanupPeriodDays": 100000
+}
+EOF
+fi
+
 # Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
