@@ -1,8 +1,7 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-28):** back after a four-month break. `main` has the v0.1
-> layout, and the core rewrite waits unmerged on `rewrite-core`. Next is
-> **Step 0: pick the trunk**.
+> **Status (2026-09-28):** the core rewrite is merged into `main`. Next:
+> finish the Step 0 housekeeping, then the user's sign-off checks in Step 1.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -31,35 +30,24 @@ before it.
 
 ---
 
-## Step 0 — Consolidate the trunk (decision pending)
+## Step 0 — Consolidate the trunk
 
-The project moves to Trunk Based Development on `main`. Branch facts are in
-[PROJECT_KNOWLEDGE.md § Core rewrite](PROJECT_KNOWLEDGE.md#core-rewrite--rewrite-core-branch-not-merged).
+Done: `rewrite-core` was merged into `main` (c003354); 104 tests pass. The CLI
+renders PNG, SVG and the spec file. Details are in
+[PROJECT_KNOWLEDGE.md § Core rewrite](PROJECT_KNOWLEDGE.md#core-rewrite-spec--plot--renderer).
 
-- `smart_hour_lines` is already fully contained in `main` and can be deleted.
-- `rewrite-core` forks from `main@f3a45e3` and has 15 commits covering Steps
-  1–3.1 of the rewrite. Since then `main` has gained only devcontainer and
-  `.gitignore` commits, so a merge should conflict only on `.gitignore`.
-- `labels` exists only on origin. Its lessons are already captured.
+Still open:
 
-**Decision needed from the user:** merge `rewrite-core` into `main`
-(recommended, since it serves goals 1–3) or keep v0.1 and park the rewrite.
-
-After the decision:
-
-1. Merge, or don't. Run `uv run pytest` and check that the CLI output still
-   renders.
-2. Delete `docs/REWRITE_PLAN.md` and `docs/LESSONS_LABELS.md` that arrive with
-   the merge; their content is already in PROJECT_KNOWLEDGE.
-3. Fill in the **Architecture** section of CLAUDE.md for the chosen layout.
-4. Delete the stale branches (`smart_hour_lines`, `rewrite-core`, `labels`)
-   locally and on origin. This needs push approval.
-5. Confirm the second machine is set up for the Dropbox-synced Claude
-   sessions. The old `NEXT_STEP.md` recipe now lives in
-   [PROJECT_KNOWLEDGE.md § Dev environment](PROJECT_KNOWLEDGE.md#dev-environment-and-multi-machine-sync).
+1. **Delete the stale branches** `smart_hour_lines` and `rewrite-core`
+   (both fully merged), locally and on origin. This needs push approval.
+2. **Decide what happens to `labels`** (only on origin, unmerged): delete it,
+   since its lessons are captured, or keep it as an archive.
+3. **Confirm the second machine is set up** for the Dropbox-synced Claude
+   sessions
+   ([recipe](PROJECT_KNOWLEDGE.md#dev-environment-and-multi-machine-sync)).
    On machine 1, the unused `.claude-data/` folder can be deleted.
 
-## Step 1 — Sign-off of the rewrite (only if merged)
+## Step 1 — Sign-off of the rewrite
 
 Checkpoints that only the user can close:
 
@@ -69,6 +57,11 @@ Checkpoints that only the user can close:
    `--spec clock.json`, and check that the label moved.
 3. Answer the open question: should an override's `dx/dy` move **both**
    endpoint labels of a line, as it does now?
+4. Check the default label placement. In the Brasília PNG rendered after the
+   merge, the day-line labels (`MM/DD`) appear only on the left edge, and the
+   hour labels only for 07–08h and 15–17h. 09–14h are expected to be
+   suppressed by the plumb-exclusion radius, but the missing right-edge day
+   labels are unexplained.
 
 Then reassess the backlog below against goals 3–4.
 
@@ -78,6 +71,11 @@ Then reassess the backlog below against goals 3–4.
   are untested. The label tolerances and exclusion radius may break there.
 - **Sun map:** a plot of the sun's position (altitude, azimuth), comparing
   astropy against skyfield.
-- **Guard test** that `core/` never imports matplotlib (if the rewrite is
-  merged).
+- **Guard test** that `core/` never imports matplotlib.
+- **`notebooks/accuratum.ipynb` still imports the deleted v0.1 modules**
+  (`accuratum.astronomy`, `datetime_utils`, `graph`). Port it to
+  `build_plot`, or delete it.
+- **Solstices are approximated as the 21st** of June and December
+  (`SOLSTICE_DAY` in `cli.py`, the same as v0.1). astropy could compute the
+  exact instant.
 - **Second sundial type**, a prerequisite for goal 5.

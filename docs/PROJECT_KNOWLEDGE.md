@@ -31,9 +31,11 @@ commit that shrinks the step in PLAN.md.
   (`--dayline-day-step` default), hour lines every 20 minutes
   (`--time-step` default).
 
-## Day/hour-line grids — main (v0.1 layout)
+## Day/hour-line grids (v0.1, superseded)
 
-Work from the `smart_hour_lines` branch (May 2026), fully merged into `main`.
+Work from the `smart_hour_lines` branch (May 2026). The v0.1 modules were
+replaced by the rewrite, but the grid logic carried over into
+`core/astronomy.py` and `core/timegrid.py`, and so did these decisions.
 
 - **Grids are bounded by real sunrise/sunset**, taken from
   `astroplan.Observer.sun_rise_time/sun_set_time` with `horizon=10°`. The
@@ -52,11 +54,13 @@ Work from the `smart_hour_lines` branch (May 2026), fully merged into `main`.
   through `importlib.resources` so it works from an installed wheel (06db857,
   9de9d52).
 
-## Core rewrite — `rewrite-core` branch (not merged)
+## Core rewrite: Spec → Plot → Renderer
 
-Commits c81b9f4 … ad69d87, May 2026, forked from main@f3a45e3. Motivation:
-v0.1 tangled geometry, label heuristics and matplotlib in one module. The
-original plan was `docs/REWRITE_PLAN.md` on that branch.
+Commits c81b9f4 … ad69d87 (May 2026), merged into `main` in **c003354**
+(2026-09-28, PLAN Step 0). The only conflict was in `.gitignore`. 104 tests
+pass after the merge (66 before). Motivation: v0.1 tangled geometry, label
+heuristics and matplotlib in one module. The original step-by-step plan was
+`docs/REWRITE_PLAN.md`; read it with `git show ad69d87:docs/REWRITE_PLAN.md`.
 
 ### Architecture
 
@@ -97,7 +101,10 @@ matplotlib, no I/O and no network inside `core/`.
   invocation and `--spec clock.json` is the source of truth; CLI args still
   override it (ad69d87).
 - **Old modules were deleted** after the user approved the visual comparison
-  with v0.1 (4d4d48e).
+  with v0.1 (4d4d48e). The README library example was rewritten for
+  `build_plot` after the merge.
+- **Solstices stay approximated as the 21st** of June and December
+  (`SOLSTICE_DAY` in `cli.py`), the same as v0.1's `get_solstices`.
 
 ### The mid-plan reversal (Step 3)
 
@@ -107,7 +114,7 @@ A subagent had written it earlier, and the tests had never been run in the
 main thread. It was kept: it gives mm units and clean selector ids for
 Inkscape, which matplotlib's SVG doesn't. See the workflow lessons below.
 
-### Open at the time the branch stopped
+### Open when the branch stopped (tracked in PLAN Step 1)
 
 - Inkscape check of the SVG at 6 m × 2 m, nudging a label by its id.
 - Save-spec → hand-edit → re-render check by the user.
@@ -118,8 +125,8 @@ Inkscape, which matplotlib's SVG doesn't. See the workflow lessons below.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 
-Ported to `defaults/placement.py` on `rewrite-core`. Originally recorded in
-`docs/LESSONS_LABELS.md` there.
+Ported to `defaults/placement.py`. Originally recorded in
+`docs/LESSONS_LABELS.md` (`git show ad69d87:docs/LESSONS_LABELS.md`).
 
 - **Labels sit at line endpoints only.** Day lines get `MM/DD` left of the
   first sample and right of the last; hour lines get `HHh` below the first and
@@ -190,8 +197,8 @@ Ported to `defaults/placement.py` on `rewrite-core`. Originally recorded in
 - **Bind-mount sources must exist before the container starts**, or Docker
   creates them owned by root. `initializeCommand` runs `mkdir -p` on the host
   first.
-- **Generated PNG/SVG at the repo root are ignored** (`/*.png`, `/*.svg` on
-  rewrite-core, 1f10f86). Assets in subfolders (`accuratum/fig/`, `images/`)
+- **Generated PNG/SVG at the repo root are ignored** (`/*.png`, `/*.svg`,
+  1f10f86). Assets in subfolders (`accuratum/fig/`, `images/`)
   stay tracked.
 
 ## Workflow lessons

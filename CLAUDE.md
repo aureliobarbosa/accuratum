@@ -18,6 +18,7 @@ uv sync --extra dev                                    # environment (Python 3.1
 uv run pytest -q                                       # all tests
 uv run ruff check . && uv run ruff format --check .    # what CI enforces
 uv run accuratum --lat-long=-15.78,-47.92 -o out.png   # render (negative coords need '=')
+uv run accuratum --lat-long=-15.78,-47.92 --canvas-size-mm=6000,2000 -o panel.svg
 uv run accuratum --help
 ```
 
@@ -29,8 +30,8 @@ production code.
 - **Trunk Based Development:** work directly on `main`, with no feature
   branches.
 - **Test Driven Development:** write the failing test first, see it fail, then
-  write the code. The exception is rendered output (the matplotlib drawing),
-  which is checked visually. Structural facts about the output, such as SVG
+  write the code. The exception is rendered output
+  (`renderers/matplotlib_backend.py`), which is checked visually. Structural facts about the output, such as SVG
   ids, units and file type, still get tests.
 - **One commit per subtask, with its tests.** Use imperative messages with a
   prefix (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`) and
@@ -76,17 +77,23 @@ Record the *why* of any structural change in PROJECT_KNOWLEDGE.md.
 
 ## Architecture
 
-**Pending [PLAN Step 0](docs/PLAN.md#step-0--consolidate-the-trunk-decision-pending).**
-Two layouts exist:
+A pure-data pipeline: `SundialSpec → build_plot → Plot → renderer`.
 
-- **`main` (v0.1):** `datetime_utils.py` (solstices, frames),
-  `astronomy.py` (sunrise/sunset-bounded grids, shadow xy), `graph.py`
-  (matplotlib), `location.py` (Nominatim geocoding) and `cli.py`.
-- **`rewrite-core`:** a pure-data `SundialSpec → build_plot → Plot` core,
-  with pluggable `projections/`, heuristics in `defaults/` and thin
-  `renderers/` (matplotlib, SVG in mm). See PROJECT_KNOWLEDGE.md.
+| Module | Responsibility |
+|---|---|
+| `core/spec.py` | `SundialSpec` (Location, TimeFrame, GridConfig, LabelOverride) and its JSON dict round-trip |
+| `core/spec_io.py` | `load_spec` / `save_spec` for the CLI's `--spec` / `--save-spec` |
+| `core/astronomy.py`, `core/timegrid.py` | Sun alt/az, sunrise/sunset, day- and hour-line time grids (NaT below the horizon cut) |
+| `core/builder.py` | `build_plot(spec) -> Plot`: grids → projection → metadata → default labels → overrides |
+| `core/plot.py`, `core/metadata.py`, `core/hints.py` | `Plot`/`Polyline`/`Label` data; selector contract; `RenderHints` and overlays (kept out of the spec) |
+| `projections/accuratum.py` | `project(alt, az, plumb_length)`, the plug-in point for other sundial types |
+| `defaults/labels.py`, `defaults/placement.py` | Which labels exist, and the collision/placement heuristic |
+| `renderers/matplotlib_backend.py`, `renderers/svg_backend.py` | `render(plot, hints)`: PNG/PDF via matplotlib, and SVG in real mm with selector-derived ids |
+| `cli.py`, `location.py` | All I/O: argv, geocoding (Nominatim), timezone lookup, current time, file output |
 
-`tests/` mirrors the package structure.
+- **`core/` imports neither matplotlib nor anything that does I/O.**
+- **Renderers draw only what the `Plot` says;** no geometry lives in them.
+- `tests/` mirrors the package structure.
 
 ## Traps
 
