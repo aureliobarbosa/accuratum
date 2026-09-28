@@ -69,10 +69,11 @@ lessons are below. Both machines are set up for the synced Claude sessions.
 
 ```
 accuratum/core/        spec.py (SundialSpec + JSON), plot.py (Plot/Polyline/Label),
-                       hints.py (Overlay, RenderHints), metadata.py (selector TypedDict),
-                       astronomy.py, timegrid.py, builder.py (build_plot), spec_io.py
+                       hints.py (Overlay, RenderHints), metadata.py (metadata TypedDicts),
+                       astronomy.py, timegrid.py, builder.py (build_plot),
+                       project.py + project_io.py (project folders, since PLAN Step 1)
 accuratum/projections/ accuratum.py — project(alt, az, plumb_length) -> (xs, ys)
-accuratum/defaults/    labels.py (which labels), placement.py (collision heuristic + overrides)
+accuratum/defaults/    labels.py (which labels), placement.py (collision heuristic; suppressed → hidden)
 accuratum/renderers/   matplotlib_backend.py, svg_backend.py — render(plot, hints)
 ```
 
@@ -84,25 +85,26 @@ matplotlib, no I/O and no network inside `core/`.
 - **Plugin point for other sundial types:** `projections/<name>.py`, chosen
   over a class hierarchy (long-term goal 1).
 - **`SundialSpec` round-trips through JSON** (`spec_to_dict/spec_from_dict`;
-  ISO datetimes; frozen sub-objects rebuilt on load; `spec_version` field).
-  JSON rather than YAML/TOML because the future web app consumes it natively.
+  ISO datetimes; frozen sub-objects rebuilt on load). JSON rather than
+  YAML/TOML because the future web app consumes it natively. Versioning
+  moved to the project file (`version: 2`) in Step 1.
 - **The core takes an explicit `TimeFrame(start, end)`.** Solstice resolution
   and timezone lookup stay in the CLI.
-- **Overlays live in `RenderHints`, not in the spec**, so a saved spec doesn't
-  embed local image paths.
-- **Labels carry a `selector` dict** (e.g. `{"kind": "hourline", "hour": 6}`),
-  so a `LabelOverride(selector, dx, dy, hide, text)` matches by identity and
-  survives a change of `time_step`.
+- **Overlays live in `RenderHints`, not in the spec.** Since Step 1 the
+  project saves them next to the spec, outside `spec_hash`; see
+  [Project folders](#project-folders-and-editable-labels).
+- **Labels carry a `selector` dict**, which is the line's identity plus the
+  endpoint (`{"kind": "hourline", "hour": 6, "end": "start"}`). The
+  `LabelOverride` mechanism it once served was removed in Step 1.
 - **Heuristics run at plot-build time** in `defaults/`. Renderers only draw
   what the `Plot` says.
 - **Two renderers.** `.svg` goes to the custom `svg_backend` (pure
   `xml.etree`, sizes in real mm through `RenderHints.canvas_size_mm`,
   default A4 landscape; a 6 m × 2 m panel is `(6000, 2000)`; ids derived from
-  the selector, e.g. `label-hourline-7`; overlays embedded as base64). Every
+  the selector, e.g. `label-hourline-7-start`; overlays embedded as base64). Every
   other extension, `.pdf` included, goes to matplotlib (ce9a234, 272ab11).
-- **The CLI has spec-file mode:** `--save-spec clock.json` dumps the
-  invocation and `--spec clock.json` is the source of truth; CLI args still
-  override it (ad69d87).
+- **The CLI saves project folders** (Step 1), which replaced the
+  `--spec`/`--save-spec` file mode from ad69d87.
 - **Old modules were deleted** after the user approved the visual comparison
   with v0.1 (4d4d48e). The README library example was rewritten for
   `build_plot` after the merge.
@@ -117,14 +119,87 @@ A subagent had written it earlier, and the tests had never been run in the
 main thread. It was kept: it gives mm units and clean selector ids for
 Inkscape, which matplotlib's SVG doesn't. See the workflow lessons below.
 
-### Open when the branch stopped (tracked in PLAN Step 1)
+### Open when the branch stopped
 
-- Inkscape check of the SVG at 6 m × 2 m, nudging a label by its id.
-- Save-spec → hand-edit → re-render check by the user.
-- An override's `dx/dy` moves **both** endpoint labels of a line. Is that the
-  desired behaviour?
-- No guard test ensures `core/` never imports matplotlib; for now only the
-  code structure enforces that.
+Resolved by Step 1: the hand-edit round trip, and whether `dx/dy` moves both
+endpoints (each endpoint is now its own label). The Inkscape check moved to
+PLAN Step 2, and the matplotlib guard test is in the PLAN backlog.
+
+## Project folders and editable labels
+
+PLAN Step 1, 2026-09-28. Commits: ff6d444 (labels), f8a9637 (project I/O),
+8131f06 (CLI).
+
+**Why.** Before, the spec kept only parameters plus `overrides`, and
+`build_plot` recomputed the labels on every render. An override ran after
+the heuristic's suppression checks, so it couldn't restore a dropped label
+or add one. It also moved both endpoint labels at once, because both shared
+one selector (the same shared selector later meant duplicate SVG ids). The
+user proposed treating a run like a simulation instead: save the parameters
+together with the computed result, and render from the saved result. Labels
+then become plain data to edit, and overrides disappear.
+
+**Layout.** One folder per project, `<location-slug>_<year>_p<period>` by
+default (`--project-dir` sets it):
+
+- `project.json` is short (about 90 lines for a full year) and holds
+  `format`, `version: 2`, `provenance` (accuratum and astropy versions,
+  creation time), `spec`, `spec_hash`, `render`, and `labels` one per line.
+- `polylines.npz` holds flat `x`/`y`/`offsets` arrays plus per-line
+  `kind`/`date`/`hour`/`minute_offset`, with `""`/`-1` where a key is absent,
+  and the `spec_hash`. It loads with `allow_pickle=False`.
+
+The Planaltina example lives in `example-projects/fup_planaltina_2026_p0/`.
+
+**Format choices.**
+
+- A single JSON file holding the geometry was rejected by the user, because
+  0.5 MB of numbers is a mess to check by hand.
+- Parquet would need pyarrow (about 40 MB, and neither pandas nor pyarrow was
+  installed).
+- CSV was offered. The user chose `.npz`: no new dependency, compact,
+  numpy-native. Only the reader and writer in `core/project.py` would change
+  for another format.
+
+**Rules.**
+
+- **`spec_hash`** is a SHA-256 of the canonical spec JSON, **excluding
+  `location.name`**, so renaming a place doesn't invalidate the geometry.
+  `render` is outside it too, since render settings never change geometry.
+- **Loading a project:**
+  - an edited spec raises `StaleProjectError`; the CLI then asks for
+    `--regenerate`;
+  - an npz computed from another spec is rejected;
+  - a missing npz is recomputed, and the labels are kept.
+- **`--regenerate`** derives the timeframe from `year` and `period` when both
+  are set, so switching halves of the year is a one-field edit. A timeframe
+  edited by hand is overwritten in that case. It backs up `project.json.bak`
+  and resets the labels (keeping label edits is in the backlog).
+- **Overwrite protection.** Generating into a folder that already holds a
+  `project.json` needs `--force`.
+- **Render settings.** CLI render flags override the saved `render` settings
+  for that run only; they are not written back. `Overlay` gained a `name`
+  (`logo`, `compass`), so a flag replaces the right one.
+- **Image paths.** Package images are stored as `accuratum:fig/...` and
+  resolved at render time. User images are stored as absolute paths, which
+  isn't portable (backlog).
+- **Precision.** Label `x`/`y` are rounded to 4 decimals on save. The data
+  extent is about 11 units, so that is invisible.
+
+**Findings.**
+
+- In the Planaltina example, 25 of 36 candidate labels come out hidden:
+  every right-side date (the Step 3 bug) and 09h–14h plus some ends (the
+  plumb exclusion). Flipping `hidden` on three right-side dates, moving 07h
+  and adding a free "PLANALTINA" label all rendered as expected.
+- A full-year generation takes about 14 s. `--project` skips it.
+
+**Traps.**
+
+- **Generating writes a folder into the current directory.** CLI tests
+  therefore `monkeypatch.chdir(tmp_path)` (an autouse fixture in
+  `tests/test_cli.py`), and `.gitignore` has `/*_p[01]/` for runs at the
+  repo root.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 

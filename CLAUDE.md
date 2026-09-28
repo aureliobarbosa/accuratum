@@ -17,8 +17,8 @@ Grep it when you touch a finished area; don't read it whole.
 uv sync --extra dev                                    # environment (Python 3.11 baseline)
 uv run pytest -q                                       # all tests
 uv run ruff check . && uv run ruff format --check .    # what CI enforces
-uv run accuratum --lat-long=-15.78,-47.92 -o out.png   # render (negative coords need '=')
-uv run accuratum --lat-long=-15.78,-47.92 --canvas-size-mm=6000,2000 -o panel.svg
+uv run accuratum --lat-long=-15.78,-47.92 --year 2026   # generate a project folder (negative coords need '=')
+uv run accuratum --project lat-15.78_lon-47.92_2026_p0 -o panel.svg --canvas-size-mm=6000,2000
 uv run accuratum --help
 ```
 
@@ -81,21 +81,25 @@ Record the *why* of any structural change in PROJECT_KNOWLEDGE.md.
 
 ## Architecture
 
-A pure-data pipeline: `SundialSpec → build_plot → Plot → renderer`.
+A pure-data pipeline: `SundialSpec → build_plot → Plot → renderer`. A run is
+saved as a project folder (`project.json`: spec, render settings, editable
+labels; `polylines.npz`: geometry), and `--project` renders it without
+recomputing.
 
 | Module | Responsibility |
 |---|---|
-| `core/spec.py` | `SundialSpec` (Location, TimeFrame, GridConfig, LabelOverride) and its JSON dict round-trip |
-| `core/spec_io.py` | `load_spec` / `save_spec` for the CLI's `--spec` / `--save-spec` |
+| `core/spec.py` | `SundialSpec` (Location, TimeFrame, GridConfig, year/period), its JSON dict round-trip, `spec_hash` |
+| `core/project.py`, `core/project_io.py` | `Project` (spec + plot + render + provenance); `save_project` / `load_project` for a folder, with the stale-spec checks |
 | `core/astronomy.py`, `core/timegrid.py` | Sun alt/az, sunrise/sunset, day- and hour-line time grids (NaT below the horizon cut) |
-| `core/builder.py` | `build_plot(spec) -> Plot`: grids → projection → metadata → default labels → overrides |
-| `core/plot.py`, `core/metadata.py`, `core/hints.py` | `Plot`/`Polyline`/`Label` data; selector contract; `RenderHints` and overlays (kept out of the spec) |
+| `core/builder.py` | `build_plot(spec) -> Plot`: grids → projection → metadata → default labels |
+| `core/plot.py`, `core/metadata.py`, `core/hints.py` | `Plot`/`Polyline`/`Label` data (labels may be `hidden`); metadata contract; `RenderHints` and overlays |
 | `projections/accuratum.py` | `project(alt, az, plumb_length)`, the plug-in point for other sundial types |
-| `defaults/labels.py`, `defaults/placement.py` | Which labels exist, and the collision/placement heuristic |
+| `defaults/labels.py`, `defaults/placement.py` | Which labels exist, and the collision/placement heuristic (suppressed → `hidden`) |
 | `renderers/matplotlib_backend.py`, `renderers/svg_backend.py` | `render(plot, hints)`: PNG/PDF via matplotlib, and SVG in real mm with selector-derived ids |
-| `cli.py`, `location.py` | All I/O: argv, geocoding (Nominatim), timezone lookup, current time, file output |
+| `cli.py`, `location.py` | All I/O: argv, project folders, geocoding (Nominatim), timezone lookup, current time, file output |
 
-- **`core/` imports neither matplotlib nor anything that does I/O.**
+- **`core/` imports no matplotlib and does no I/O**, except file reads and
+  writes in `core/project_io.py`.
 - **Renderers draw only what the `Plot` says;** no geometry lives in them.
 - `tests/` mirrors the package structure.
 

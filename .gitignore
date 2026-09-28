@@ -190,3 +190,5 @@ nohup.out
 # Generated CLI outputs at the repo root (subdir assets like accuratum/fig/*.png stay tracked)
 /*.png
 /*.svg
+# Project folders the CLI creates in the current directory (<location>_<year>_p<period>/)
+/*_p[01]/

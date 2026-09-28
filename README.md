@@ -31,14 +31,16 @@ geopy, numpy, timezonefinder) are installed automatically.
 After installation the `accuratum` command is available:
 
 ```bash
-# By location string (resolved via Nominatim/OpenStreetMap)
-accuratum "belem, brazil" --output belem.png
+# By location string (resolved via Nominatim/OpenStreetMap). Creates the
+# project folder belem-brazil_<year>_p0/ with project.json, polylines.npz and
+# accuratum.png
+accuratum "belem, brazil"
 
 # By explicit latitude/longitude (use '=' for negative values)
 accuratum --lat-long=-15.78,-47.92 --output brasilia.png
 
-# Render the other half-year frame (June → December)
-accuratum --lat-long=-15.78,-47.92 --period 1
+# The other half-year frame (June → December) of a given year
+accuratum --lat-long=-15.78,-47.92 --year 2026 --period 1
 
 # Override the overlay logo and its position/size (figure coords, 0-1)
 accuratum --lat-long=0,0 --logo my_logo.png --logo-rect=0.1,0.8,0.15,0.15
@@ -46,10 +48,30 @@ accuratum --lat-long=0,0 --logo my_logo.png --logo-rect=0.1,0.8,0.15,0.15
 # Vector output in real millimetres, e.g. a 6 m x 2 m panel (.pdf also works)
 accuratum --lat-long=-15.78,-47.92 --canvas-size-mm=6000,2000 --output panel.svg
 
-# Save the resolved spec as JSON, hand-edit it (e.g. label overrides), re-render
-accuratum --lat-long=-15.78,-47.92 --save-spec clock.json
-accuratum --spec clock.json --output clock.svg
+# Hand-edit labels in <folder>/project.json, then render without recomputing
+accuratum --project lat-15.78_lon-47.92_2026_p0 --output clock.svg
+
+# After editing the spec in project.json (e.g. "period"), recompute it
+accuratum --project lat-15.78_lon-47.92_2026_p0 --regenerate
 ```
+
+### Project folders
+
+Each run saves a folder (`--project-dir` sets it; an existing one is only
+overwritten with `--force`):
+
+- `project.json` — short and hand-editable: the `spec` (location, year,
+  period, grid, ...), the `render` settings (canvas size, font size, logo and
+  compass) and the `labels`, one per line. Move a label by editing `x`/`y`;
+  hide or restore one with `hidden` (labels the placement heuristic suppressed
+  are kept, hidden); add one by appending `{"text": "...", "x": 0, "y": 3}`.
+- `polylines.npz` — the computed day and hour lines (NumPy arrays).
+
+Rendering a folder with `--project` uses the saved lines and labels as they
+are. Render flags given on the command line win over the saved settings for
+that run. If the spec was edited, `--project` refuses and asks for
+`--regenerate`, which recomputes lines and labels (label edits are lost; the
+previous file is kept as `project.json.bak`).
 
 See `accuratum --help` for the full list of options (grid resolution,
 timezone override, plumb length, etc.).
@@ -88,9 +110,9 @@ with open("clock.svg", "w", encoding="utf-8") as fh:  # real millimetres, e.g. a
     fh.write(svg_backend.render(plot, RenderHints(canvas_size_mm=(6000, 2000))))
 ```
 
-The same spec can be saved and reloaded as JSON from the CLI:
-`accuratum --lat-long=-15.78,-47.92 --save-spec clock.json`, then
-`accuratum --spec clock.json -o clock.svg`.
+To save and reload a project folder from Python, use
+`accuratum.core.project.Project` with `accuratum.core.project_io.save_project`
+/ `load_project`.
 
 ## Development
 

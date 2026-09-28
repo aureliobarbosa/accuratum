@@ -1,8 +1,8 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-28):** the core rewrite is merged into `main`, which is now
-> the only branch. Next: Step 1 (spec round-trip and
-> override semantics); Steps 2–3 come from the user's review of the output.
+> **Status (2026-09-28):** Step 1 (project folders, editable labels) is done.
+> Next: Step 2 (SVG parity) or Step 3 (default date-label side), both from
+> the user's review of the output.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -37,25 +37,18 @@ before it.
 deleted locally and on origin. See
 [PROJECT_KNOWLEDGE.md § Core rewrite](PROJECT_KNOWLEDGE.md#core-rewrite-spec--plot--renderer).
 
-## Step 1 — Spec file round-trip and override semantics — **next**
+## Step 1 — Project folders with editable labels — **done**
 
-1. Run `--save-spec clock.json`, hand-edit a label override, then render with
-   `--spec clock.json` and check that the label moved.
-2. Answer the open question: should an override's `dx/dy` move **both**
-   endpoint labels of a line, as it does now?
-3. **Decide whether overrides need more power (finding, 2026-09-28).** The
-   spec has no `labels` field by design: `build_plot` recomputes the labels on
-   every render, and the spec keeps only corrections, in `overrides`. Each
-   override matches a label by `selector` (`{"kind": "dayline", "date":
-   "YYYY-MM-DD"}` or `{"kind": "hourline", "hour": H}`) and can set
-   `dx`/`dy`, `text` or `hidden`. The limit: `_apply_overrides` runs only
-   *after* a label survives the plumb-exclusion and collision checks in
-   `defaults/placement.py::_try_place`. So an override can't bring back a
-   label the heuristic dropped, and can't add a label for a date or hour the
-   heuristic didn't pick. For goal 3 (human in the loop) that is likely too
-   weak. Options: a `force: true` flag that bypasses the suppression checks,
-   and/or overrides that add labels. Example spec to test with:
-   `example-projects/specs/fup_planaltina.json`.
+- A run is saved like a simulation result, in a project folder:
+  `project.json` (spec, render settings, labels, provenance) and
+  `polylines.npz` (geometry).
+- Labels are plain data. Suppressed labels are kept with `hidden: true`, and
+  every endpoint has its own selector. This replaces overrides.
+- `--project DIR` renders without recomputing. An edited spec is refused
+  until `--regenerate` is run.
+- `--year` added, and `year` and `period` are recorded in the spec.
+
+See [PROJECT_KNOWLEDGE.md § Project folders](PROJECT_KNOWLEDGE.md#project-folders-and-editable-labels).
 
 ## Step 2 — SVG output as good as matplotlib
 
@@ -70,6 +63,8 @@ which is much better so far.
    6 m × 2 m panel. It hasn't been checked yet.
 3. The drawing is about 2.1 : 1 and the SVG keeps its proportions, so a 3 : 1
    panel gets empty side margins. Decide whether that is acceptable.
+4. Inkscape check at 6 m × 2 m: nudge a label by its id
+   (`label-dayline-2026-01-04-end`). It was carried over from the rewrite.
 
 ## Step 3 — Which side the date labels go on
 
@@ -86,6 +81,12 @@ colliding with its own left twin: 6 left labels, 0 right. The fix is to
 check collisions only among labels on the same side, then define the rule
 for choosing the side. Test it across latitudes (southern and northern
 hemisphere, tropics, high latitudes).
+
+**Since Step 1** the dropped labels are kept as `hidden` in `project.json`,
+so a user can already restore the right-side dates by hand. **Proposed
+simplification:** fix only the same-side collision bug, so both sides show
+by default. Drop the "choose the side by latitude" rule unless the fixed
+output still looks wrong somewhere.
 
 The hour labels show only 07–08h and 15–17h. Missing 09–14h is expected from
 the plumb-exclusion radius, but review it in the same step.
@@ -104,3 +105,9 @@ the plumb-exclusion radius, but review it in the same step.
   (`SOLSTICE_DAY` in `cli.py`, the same as v0.1). astropy could compute the
   exact instant.
 - **Second sundial type**, a prerequisite for goal 5.
+- **Keep label edits across `--regenerate`**, by matching labels by
+  `selector`. Today a regenerate resets the labels.
+- **Import label positions nudged in Inkscape** back into `project.json`,
+  through the SVG ids.
+- **Custom overlay images are stored as absolute paths**, so a project folder
+  that uses one isn't portable. Copy the image into the folder instead.
