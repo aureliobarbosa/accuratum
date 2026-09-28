@@ -17,7 +17,8 @@
       "WebSearch",
       "Bash(uv run *)",
       "Bash(git commit -m ' *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git checkout *)"
     ]
   }
 }

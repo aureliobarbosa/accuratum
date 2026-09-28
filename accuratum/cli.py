@@ -1,7 +1,15 @@
+"""Accuratum CLI — constructs a SundialSpec and renders it via the matplotlib backend.
+
+The CLI is the only place I/O lives: argv parsing, geocoding, timezone
+lookup, current time, file output. Everything below the
+``SundialSpec`` construction is pure (see :func:`accuratum.core.builder.build_plot`).
+"""
+
 import argparse
 import os
 import sys
 from datetime import datetime, timedelta
+from importlib.resources import files
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
@@ -11,35 +19,28 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from timezonefinder import timezone_at  # noqa: E402
 
-from accuratum.astronomy import compute_blocks, dayline_grid, hourline_grid  # noqa: E402
-from accuratum.datetime_utils import (  # noqa: E402
-    frame_periods,
-    get_solstices,
-)
-from accuratum.graph import DEFAULT_LOGO, plot_solar_clock  # noqa: E402
+from accuratum.core.builder import build_plot  # noqa: E402
+from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
+from accuratum.core.spec import GridConfig, Location, SundialSpec, TimeFrame  # noqa: E402
+from accuratum.core.spec_io import load_spec, save_spec  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
+from accuratum.renderers import matplotlib_backend, svg_backend  # noqa: E402
 
 DEFAULT_OUTPUT = "accuratum.png"
 DEFAULT_LINE_POINTS = 500
 DEFAULT_TIME_STEP_MIN = 20
 DEFAULT_DAYLINE_DAY_STEP = 7
 DEFAULT_HOURLINE_DAY_STEP = 1
+DEFAULT_LABEL_FONTSIZE = 7.0
+SOLSTICE_DAY = 21
 
-
-def parse_rect(value: str) -> tuple[float, float, float, float]:
-    """Parse 'LEFT,BOTTOM,WIDTH,HEIGHT' into four floats (figure-coord rect)."""
-    cleaned = value.strip().lstrip("(").rstrip(")")
-    parts = [p.strip() for p in cleaned.split(",")]
-    if len(parts) != 4:
-        raise ValueError(f"expected 'LEFT,BOTTOM,WIDTH,HEIGHT', got {value!r}")
-    try:
-        return tuple(float(p) for p in parts)  # type: ignore[return-value]
-    except ValueError:
-        raise ValueError(f"could not parse {value!r} as four floats.")
+DEFAULT_LOGO_PATH = str(files("accuratum").joinpath("fig", "unb_basic.jpg"))
+DEFAULT_LOGO_RECT = (0.12, 0.75, 0.12, 0.12)
+DEFAULT_COMPASS_PATH = str(files("accuratum").joinpath("fig", "rosa.png"))
+DEFAULT_COMPASS_RECT = (0.78, 0.75, 0.12, 0.12)
 
 
 def parse_lat_long(value: str) -> tuple[float, float]:
-    """Parse a 'LAT,LON' (with optional parens/spaces) string into two floats."""
     cleaned = value.strip().lstrip("(").rstrip(")")
     parts = [p.strip() for p in cleaned.split(",")]
     if len(parts) != 2:
@@ -50,6 +51,17 @@ def parse_lat_long(value: str) -> tuple[float, float]:
         raise ValueError(f"could not parse {value!r} as two floats.")
 
 
+def parse_rect(value: str) -> tuple[float, float, float, float]:
+    cleaned = value.strip().lstrip("(").rstrip(")")
+    parts = [p.strip() for p in cleaned.split(",")]
+    if len(parts) != 4:
+        raise ValueError(f"expected 'LEFT,BOTTOM,WIDTH,HEIGHT', got {value!r}")
+    try:
+        return tuple(float(p) for p in parts)  # type: ignore[return-value]
+    except ValueError:
+        raise ValueError(f"could not parse {value!r} as four floats.")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="accuratum",
@@ -58,104 +70,64 @@ def build_parser() -> argparse.ArgumentParser:
             "Provide either a free-text location or explicit --lat-long."
         ),
     )
-    parser.add_argument(
-        "location",
-        nargs="?",
-        default=None,
-        help="Free-text location (e.g. 'belem, brazil'). Resolved via geocoding. Mutually exclusive with --lat-long.",
-    )
-    parser.add_argument(
-        "--lat-long",
-        type=parse_lat_long,
-        default=None,
-        metavar="LAT,LON",
-        help=(
-            "Explicit latitude and longitude in decimal degrees. "
-            "For negative values use '=' syntax, e.g. --lat-long=-15.78,-47.92."
-        ),
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        default=DEFAULT_OUTPUT,
-        help=f"Output image path (default: {DEFAULT_OUTPUT}).",
-    )
-    parser.add_argument(
-        "--plumb-length",
-        type=float,
-        default=1.0,
-        help="Plumb (gnomon) length used to scale the shadow lines.",
-    )
+    parser.add_argument("location", nargs="?", default=None)
+    parser.add_argument("--lat-long", type=parse_lat_long, default=None, metavar="LAT,LON")
+    parser.add_argument("--output", "-o", default=DEFAULT_OUTPUT)
+    parser.add_argument("--plumb-length", type=float, default=1.0)
     parser.add_argument(
         "--period",
         type=int,
         choices=(0, 1),
         default=0,
-        help="Which half-year solstice frame to render: 0 = Dec(prev)->Jun(curr), 1 = Jun(curr)->Dec(curr).",
+        help="0 = Dec(prev) -> Jun(curr), 1 = Jun(curr) -> Dec(curr).",
     )
+    parser.add_argument("--timezone", default=None)
+    parser.add_argument("--line-points", type=int, default=DEFAULT_LINE_POINTS)
+    parser.add_argument("--time-step", type=int, default=DEFAULT_TIME_STEP_MIN, metavar="MINUTES")
+    parser.add_argument("--dayline-day-step", type=int, default=DEFAULT_DAYLINE_DAY_STEP, metavar="DAYS")
+    parser.add_argument("--hourline-day-step", type=int, default=DEFAULT_HOURLINE_DAY_STEP, metavar="DAYS")
+    parser.add_argument("--logo", default=None, metavar="PATH")
+    parser.add_argument("--logo-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
+    parser.add_argument("--compass", default=None, metavar="PATH")
+    parser.add_argument("--compass-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
+    parser.add_argument("--label-fontsize", type=float, default=DEFAULT_LABEL_FONTSIZE, metavar="PT")
     parser.add_argument(
-        "--timezone",
-        default=None,
-        help="IANA timezone override (e.g. 'America/Sao_Paulo'). "
-        "If omitted, uses the oficial timezone at the place specified "
-        "using either location or --lat-long parameters.",
-    )
-    parser.add_argument(
-        "--line-points",
-        type=int,
-        default=DEFAULT_LINE_POINTS,
-        help=(
-            f"Samples per dayline (default: {DEFAULT_LINE_POINTS}). "
-            "Lower values produce coarser daylines and run faster — useful for tests."
-        ),
-    )
-    parser.add_argument(
-        "--time-step",
-        type=int,
-        default=DEFAULT_TIME_STEP_MIN,
-        metavar="MINUTES",
-        help=(
-            f"Spacing between hourline samples, in minutes (default: {DEFAULT_TIME_STEP_MIN}). "
-            "Larger values produce coarser hourlines and run faster — useful for tests."
-        ),
-    )
-    parser.add_argument(
-        "--dayline-day-step",
-        type=int,
-        default=DEFAULT_DAYLINE_DAY_STEP,
-        metavar="DAYS",
-        help=(
-            f"Spacing between daylines, in days (default: {DEFAULT_DAYLINE_DAY_STEP}). "
-            "Larger values draw fewer daylines and run faster — useful for tests."
-        ),
-    )
-    parser.add_argument(
-        "--hourline-day-step",
-        type=int,
-        default=DEFAULT_HOURLINE_DAY_STEP,
-        metavar="DAYS",
-        help=(
-            f"Spacing between hourline columns, in days (default: {DEFAULT_HOURLINE_DAY_STEP}). "
-            "Larger values draw fewer hourline columns and run faster — useful for tests."
-        ),
-    )
-    parser.add_argument(
-        "--logo",
+        "--spec",
         default=None,
         metavar="PATH",
-        help="Path to a logo image to overlay on the figure. Defaults to the bundled Accuratum logo.",
+        help=(
+            "Load a SundialSpec from a JSON file. When given, location/timeframe/"
+            "grid/plumb-length args are ignored and the spec is used as-is. "
+            "Overlay (--logo/--compass) and render flags still apply."
+        ),
     )
     parser.add_argument(
-        "--logo-rect",
-        type=parse_rect,
+        "--save-spec",
         default=None,
-        metavar="LEFT,BOTTOM,WIDTH,HEIGHT",
+        metavar="PATH",
+        help="Also write the resolved SundialSpec to PATH as JSON before rendering.",
+    )
+    parser.add_argument(
+        "--canvas-size-mm",
+        type=_parse_canvas_mm,
+        default=None,
+        metavar="WIDTH,HEIGHT",
         help=(
-            "Logo placement in figure coordinates (0-1). "
-            "Defaults to the bundled logo's position. Example: --logo-rect=0.12,0.75,0.12,0.12"
+            "SVG canvas size in millimetres, e.g. --canvas-size-mm=6000,2000 for a "
+            "6m x 2m panel. Defaults to 297,210 (A4 landscape). Ignored for raster output."
         ),
     )
     return parser
+
+
+def _parse_canvas_mm(value: str) -> tuple[float, float]:
+    parts = [p.strip() for p in value.split(",")]
+    if len(parts) != 2:
+        raise ValueError(f"expected 'WIDTH,HEIGHT', got {value!r}")
+    try:
+        return float(parts[0]), float(parts[1])
+    except ValueError:
+        raise ValueError(f"could not parse {value!r} as two floats.")
 
 
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -167,7 +139,6 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def resolve_location(args: argparse.Namespace) -> tuple[float, float]:
-    """Return (lat, lon) for the CLI args, geocoding if necessary."""
     if args.lat_long is not None:
         return args.lat_long
     if args.location is None:
@@ -178,52 +149,94 @@ def resolve_location(args: argparse.Namespace) -> tuple[float, float]:
     return latlon
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    args = _parse_args(argv)
-    lat, lon = resolve_location(args)
+def _solstice_timeframe(now: datetime, period: int) -> TimeFrame:
+    """Build a TimeFrame from the canonical solstice pair for *now*'s year."""
+    tz = now.tzinfo
+    year = now.year
+    dec_prev = datetime(year - 1, 12, SOLSTICE_DAY, tzinfo=tz)
+    jun_curr = datetime(year, 6, SOLSTICE_DAY, tzinfo=tz)
+    dec_curr = datetime(year, 12, SOLSTICE_DAY, tzinfo=tz)
+    if period == 0:
+        return TimeFrame(start=dec_prev, end=jun_curr)
+    return TimeFrame(start=jun_curr, end=dec_curr)
 
+
+def _resolve_overlay(
+    cli_path: str | None,
+    cli_rect: tuple[float, float, float, float] | None,
+    default_path: str,
+    default_rect: tuple[float, float, float, float],
+    name: str,
+) -> Overlay:
+    path = cli_path if cli_path is not None else default_path
+    rect = cli_rect if cli_rect is not None else default_rect
+    if not os.path.isfile(path):
+        raise SystemExit(f"error: {name} file not found: {path}")
+    return Overlay(image_path=path, rect=rect)
+
+
+def _spec_from_args(args: argparse.Namespace) -> SundialSpec:
+    """Build a SundialSpec from CLI args (no --spec given)."""
+    lat, lon = resolve_location(args)
     tz_str = args.timezone or timezone_at(lat=lat, lng=lon) or "UTC"
     tz = ZoneInfo(tz_str)
     now = datetime.now(tz=tz)
-
-    periods = frame_periods(get_solstices(now))
-    period = periods[args.period]
-    daylines = dayline_grid(
-        period,
-        lat=lat,
-        lon=lon,
-        day_step=timedelta(days=args.dayline_day_step),
-        line_points=args.line_points,
-    )
-    hourlines = hourline_grid(
-        period,
-        lat=lat,
-        lon=lon,
-        day_step=timedelta(days=args.hourline_day_step),
-        time_step=timedelta(minutes=args.time_step),
-    )
-
-    blocks_x, blocks_y = compute_blocks(
-        daylines_grid=daylines,
-        hourlines_grid=hourlines,
-        lat=lat,
-        lon=lon,
+    return SundialSpec(
+        location=Location(lat=lat, lon=lon, timezone=tz_str),
+        timeframe=_solstice_timeframe(now, args.period),
         plumb_length=args.plumb_length,
+        grid=GridConfig(
+            dayline_day_step_days=args.dayline_day_step,
+            line_points=args.line_points,
+            hourline_day_step_days=args.hourline_day_step,
+            time_step_minutes=args.time_step,
+        ),
     )
 
-    default_path, default_rect = DEFAULT_LOGO[0]
-    logo_path = args.logo if args.logo is not None else default_path
-    logo_rect = args.logo_rect if args.logo_rect is not None else default_rect
-    if not os.path.isfile(logo_path):
-        raise SystemExit(f"error: logo file not found: {logo_path}")
-    logos = [(logo_path, logo_rect)]
 
-    fig, _ = plot_solar_clock(blocks_x, blocks_y, logos=logos, plumb_xy=(0, 0))
-    fig.savefig(args.output, dpi=200, bbox_inches="tight")
-    plt.close(fig)
+def main(argv: Sequence[str] | None = None) -> int:
+    args = _parse_args(argv)
 
+    if args.spec is not None:
+        spec = load_spec(args.spec)
+    else:
+        spec = _spec_from_args(args)
+
+    if args.save_spec is not None:
+        save_spec(spec, args.save_spec)
+        print(f"Saved SundialSpec to {args.save_spec}")
+
+    overlays = [
+        _resolve_overlay(args.logo, args.logo_rect, DEFAULT_LOGO_PATH, DEFAULT_LOGO_RECT, "logo"),
+        _resolve_overlay(args.compass, args.compass_rect, DEFAULT_COMPASS_PATH, DEFAULT_COMPASS_RECT, "compass"),
+    ]
+    hints = RenderHints(
+        overlays=overlays,
+        label_fontsize=args.label_fontsize,
+        canvas_size_mm=args.canvas_size_mm,
+    )
+
+    plot = build_plot(spec)
+    _save(plot, hints, args.output)
     print(f"Saved Accuratum clock to {args.output}")
     return 0
+
+
+def _save(plot, hints: RenderHints, output: str) -> None:
+    """Pick renderer by *output* extension and write to disk."""
+    ext = os.path.splitext(output)[1].lower()
+    if ext == ".svg":
+        svg = svg_backend.render(plot, hints)
+        with open(output, "w", encoding="utf-8") as fh:
+            fh.write(svg)
+        return
+    fig, _ = matplotlib_backend.render(plot, hints)
+    fig.savefig(output, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+# Re-export timedelta to keep test_cli imports stable
+__all__ = ["build_parser", "main", "parse_lat_long", "parse_rect", "resolve_location", "timedelta"]
 
 
 if __name__ == "__main__":
