@@ -6,7 +6,6 @@ import pytest
 
 from accuratum.core.spec import (
     GridConfig,
-    LabelOverride,
     Location,
     SundialSpec,
     TimeFrame,
@@ -26,10 +25,6 @@ def _sample_spec() -> SundialSpec:
         ),
         plumb_length=1.5,
         grid=GridConfig(dayline_day_step_days=7, time_step_minutes=20),
-        overrides=[
-            LabelOverride(selector={"kind": "hourline", "hour": 6}, dx=0.1, dy=-0.2),
-            LabelOverride(selector={"kind": "dayline", "date": "2026-01-15"}, hidden=True),
-        ],
     )
 
 
@@ -50,9 +45,6 @@ def test_spec_dict_roundtrip_preserves_all_fields():
     assert restored.grid == original.grid
     assert restored.sundial_type == original.sundial_type
     assert restored.spec_version == original.spec_version
-    assert len(restored.overrides) == len(original.overrides)
-    for a, b in zip(restored.overrides, original.overrides):
-        assert a == b
 
 
 def test_spec_json_roundtrip_via_dumps_loads():
@@ -61,7 +53,6 @@ def test_spec_json_roundtrip_via_dumps_loads():
     restored = spec_from_dict(json.loads(blob))
     assert restored.timeframe == original.timeframe
     assert restored.location == original.location
-    assert restored.overrides == original.overrides
 
 
 def test_timeframe_iso_strings_carry_timezone():
@@ -69,10 +60,3 @@ def test_timeframe_iso_strings_carry_timezone():
     data = spec_to_dict(spec)
     assert "-03:00" in data["timeframe"]["start"]
     assert "-03:00" in data["timeframe"]["end"]
-
-
-def test_label_override_selector_is_metadata_shape():
-    """Selectors must use metadata-identity keys, not rendered text."""
-    ov = LabelOverride(selector={"kind": "hourline", "hour": 6}, dx=0.1, dy=-0.2)
-    assert ov.selector["kind"] == "hourline"
-    assert ov.selector["hour"] == 6

@@ -94,6 +94,8 @@ def render(plot: Plot, hints: RenderHints | None = None) -> str:
         svg, f"{{{SVG_NS}}}g", {"id": "labels", "font-family": "sans-serif", "fill": hints.label_color}
     )
     for label in plot.labels:
+        if label.hidden:
+            continue
         _emit_label(labels_group, label, hints.label_fontsize, data_extent=max(width_data, height_data))
 
     if hints.overlays:
@@ -199,13 +201,13 @@ def _image_data_uri(path: str) -> tuple[str, str]:
 
 
 def _selector_id(selector: dict) -> str:
-    """Stable id slug from a selector dict, e.g. {'kind':'dayline','date':'2026-01-15'} -> 'dayline-2026-01-15'."""
+    """Stable id slug from a selector dict: ``kind`` first, ``end`` last, the rest sorted.
+
+    E.g. ``{'kind': 'dayline', 'date': '2026-01-15', 'end': 'start'}`` -> ``'dayline-2026-01-15-start'``.
+    """
     if not selector:
         return ""
-    parts = []
-    for key in sorted(selector.keys()):
-        if key == "kind":
-            parts.insert(0, str(selector[key]))
-        else:
-            parts.append(str(selector[key]))
+    middle = sorted(k for k in selector if k not in ("kind", "end"))
+    keys = [k for k in ("kind",) if k in selector] + middle + [k for k in ("end",) if k in selector]
+    parts = [str(selector[k]) for k in keys]
     return "-".join(parts).replace("/", "-").replace(" ", "_")

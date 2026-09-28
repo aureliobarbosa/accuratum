@@ -1,7 +1,7 @@
 """Sundial specification — the JSON-roundtrippable input to ``build_plot``.
 
-A ``SundialSpec`` is pure data: location, timeframe, knobs, per-label
-overrides. It contains no astropy or matplotlib objects.
+A ``SundialSpec`` is pure data: location, timeframe and knobs. It
+contains no astropy or matplotlib objects.
 
 JSON-roundtrip is provided by :func:`spec_to_dict` and :func:`spec_from_dict`.
 ``json.dumps`` silently converts tuples to lists, so those helpers also
@@ -49,33 +49,11 @@ class GridConfig:
 
 
 @dataclass
-class LabelOverride:
-    """Per-label adjustment keyed by polyline metadata identity.
-
-    ``selector`` matches a polyline whose ``metadata`` contains every
-    ``(key, value)`` pair in the selector — see
-    :func:`accuratum.core.metadata.selector_matches`.
-
-    Keying by metadata (not by rendered text) means an override survives
-    a change to ``time_step_minutes`` or ``dayline_day_step_days``: if
-    the targeted polyline still exists in the new grid, the override
-    still applies.
-    """
-
-    selector: dict[str, Any]
-    dx: float = 0.0
-    dy: float = 0.0
-    hidden: bool = False
-    text: str | None = None
-
-
-@dataclass
 class SundialSpec:
     location: Location
     timeframe: TimeFrame
     plumb_length: float = 1.0
     grid: GridConfig = field(default_factory=GridConfig)
-    overrides: list[LabelOverride] = field(default_factory=list)
     sundial_type: str = "accuratum"
     spec_version: int = SPEC_VERSION
 
@@ -99,13 +77,11 @@ def spec_from_dict(data: dict[str, Any]) -> SundialSpec:
         end=datetime.fromisoformat(data["timeframe"]["end"]),
     )
     grid = GridConfig(**data.get("grid", {}))
-    overrides = [LabelOverride(**o) for o in data.get("overrides", [])]
     return SundialSpec(
         location=loc,
         timeframe=tf,
         plumb_length=data.get("plumb_length", 1.0),
         grid=grid,
-        overrides=overrides,
         sundial_type=data.get("sundial_type", "accuratum"),
         spec_version=data.get("spec_version", SPEC_VERSION),
     )

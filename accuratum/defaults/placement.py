@@ -12,48 +12,24 @@ Heuristic ported from the ``labels`` branch (see ``docs/LESSONS_LABELS.md``):
 - Tolerance and exclusion default to ``0.04 × data_extent`` and
   ``0.12 × data_extent`` respectively.
 
-Per-label overrides (:class:`accuratum.core.spec.LabelOverride`) apply
-after the heuristic: a matching ``selector`` can ``hide``, ``rename``
-(``text``), or nudge ``(dx, dy)`` a label.
+Suppressed labels are not dropped: they come back with ``hidden=True`` so a
+human can restore one by editing the project file. Each endpoint label has
+its own selector (``end: "start" | "end"``), so it can be edited alone.
 """
 
 import math
 
-from accuratum.core.metadata import selector_matches
 from accuratum.core.plot import Label, Polyline
-from accuratum.core.spec import LabelOverride
 
 
-def _selector_for(poly: Polyline) -> dict:
-    """The metadata-identity selector for *poly*'s label."""
+def _selector_for(poly: Polyline, end: str) -> dict:
+    """The identity selector for the label at *end* (``"start"``/``"end"``) of *poly*."""
     md = poly.metadata
     if md.get("kind") == "dayline":
-        return {"kind": "dayline", "date": md["date"]}
+        return {"kind": "dayline", "date": md["date"], "end": end}
     if md.get("kind") == "hourline":
-        return {"kind": "hourline", "hour": md["hour"]}
-    return {"kind": md.get("kind", "")}
-
-
-def _apply_overrides(
-    base: Label,
-    overrides: list[LabelOverride],
-) -> Label | None:
-    """Apply matching overrides to *base*. Return ``None`` if hidden."""
-    text = base.text
-    x = base.x
-    y = base.y
-    for ov in overrides:
-        if not selector_matches(ov.selector, base.selector):
-            continue
-        if ov.hidden:
-            return None
-        if ov.text is not None:
-            text = ov.text
-        x += ov.dx
-        y += ov.dy
-    if text == base.text and x == base.x and y == base.y:
-        return base
-    return Label(text=text, x=x, y=y, ha=base.ha, va=base.va, kind=base.kind, selector=base.selector)
+        return {"kind": "hourline", "hour": md["hour"], "end": end}
+    return {"kind": md.get("kind", ""), "end": end}
 
 
 def place_labels(
@@ -61,7 +37,6 @@ def place_labels(
     dayline_labels: list[str | None],
     hourline_labels: list[str | None],
     data_extent: float,
-    overrides: list[LabelOverride] | None = None,
     tolerance: float | None = None,
     plumb_exclusion: float | None = None,
 ) -> list[Label]:
@@ -70,12 +45,12 @@ def place_labels(
     *dayline_labels* and *hourline_labels* are aligned with *polylines*
     (entries are ``None`` for unlabeled rows). The function walks
     daylines first so hour labels yield to day labels on collision.
+    Hidden labels don't count as placed, so they never block others.
     """
     if tolerance is None:
         tolerance = 0.04 * data_extent
     if plumb_exclusion is None:
         plumb_exclusion = 0.12 * data_extent
-    overrides = overrides or []
 
     placed: list[tuple[float, float]] = []
     out: list[Label] = []
@@ -91,25 +66,17 @@ def place_labels(
         axis: str,
         exclusion: float,
     ) -> None:
-        if exclusion > 0.0 and math.hypot(x, y) < exclusion:
-            return
-        for px, py in placed:
-            if axis == "x" and abs(px - x) < tolerance:
-                return
-            if axis == "y" and abs(py - y) < tolerance:
-                return
-        base = Label(text=text, x=x, y=y, ha=ha, va=va, kind=kind, selector=selector)
-        resolved = _apply_overrides(base, overrides)
-        if resolved is None:
-            return
-        out.append(resolved)
-        placed.append((resolved.x, resolved.y))
+        hidden = (exclusion > 0.0 and math.hypot(x, y) < exclusion) or any(
+            abs(px - x) < tolerance if axis == "x" else abs(py - y) < tolerance for px, py in placed
+        )
+        out.append(Label(text=text, x=x, y=y, ha=ha, va=va, kind=kind, selector=selector, hidden=hidden))
+        if not hidden:
+            placed.append((x, y))
 
     # Daylines first (shared placed list → hourlines yield to daylines).
     for poly, text in zip(polylines, dayline_labels):
         if text is None or poly.metadata.get("kind") != "dayline" or len(poly.xs) == 0:
             continue
-        selector = _selector_for(poly)
         _try_place(
             float(poly.xs[0]),
             float(poly.ys[0]),
@@ -117,7 +84,7 @@ def place_labels(
             ha="right",
             va="center",
             kind="dayline",
-            selector=selector,
+            selector=_selector_for(poly, "start"),
             axis="y",
             exclusion=0.0,
         )
@@ -128,7 +95,7 @@ def place_labels(
             ha="left",
             va="center",
             kind="dayline",
-            selector=selector,
+            selector=_selector_for(poly, "end"),
             axis="y",
             exclusion=0.0,
         )
@@ -137,7 +104,6 @@ def place_labels(
     for poly, text in zip(polylines, hourline_labels):
         if text is None or poly.metadata.get("kind") != "hourline" or len(poly.xs) == 0:
             continue
-        selector = _selector_for(poly)
         _try_place(
             float(poly.xs[0]),
             float(poly.ys[0]),
@@ -145,7 +111,7 @@ def place_labels(
             ha="center",
             va="top",
             kind="hourline",
-            selector=selector,
+            selector=_selector_for(poly, "start"),
             axis="x",
             exclusion=plumb_exclusion,
         )
@@ -156,7 +122,7 @@ def place_labels(
             ha="center",
             va="bottom",
             kind="hourline",
-            selector=selector,
+            selector=_selector_for(poly, "end"),
             axis="x",
             exclusion=plumb_exclusion,
         )

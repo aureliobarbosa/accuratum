@@ -61,8 +61,9 @@ batch or reproducible use, prefer `--lat-long`.
 ## Library usage
 
 A `SundialSpec` describes the sundial; `build_plot` turns it into a `Plot`
-(pure data); a renderer draws it. Label overrides match labels by identity
-(`selector`), so hand-tuned nudges survive changes to the grid.
+(pure data); a renderer draws it. Labels are plain data: each endpoint label
+has its own `selector`, and labels the placement heuristic suppressed are kept
+with `hidden=True`.
 
 ```python
 from datetime import datetime
@@ -70,14 +71,13 @@ from zoneinfo import ZoneInfo
 
 from accuratum.core.builder import build_plot
 from accuratum.core.hints import RenderHints
-from accuratum.core.spec import LabelOverride, Location, SundialSpec, TimeFrame
+from accuratum.core.spec import Location, SundialSpec, TimeFrame
 from accuratum.renderers import matplotlib_backend, svg_backend
 
 tz = ZoneInfo("America/Sao_Paulo")
 spec = SundialSpec(
     location=Location(lat=-15.78, lon=-47.92, timezone="America/Sao_Paulo"),
     timeframe=TimeFrame(start=datetime(2025, 12, 21, tzinfo=tz), end=datetime(2026, 6, 21, tzinfo=tz)),
-    overrides=[LabelOverride(selector={"kind": "hourline", "hour": 7}, dy=-0.2)],
 )
 plot = build_plot(spec)  # pure data: polylines + labels, no matplotlib
 

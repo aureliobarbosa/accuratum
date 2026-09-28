@@ -40,7 +40,7 @@ def _minimal_plot() -> Plot:
                 ha="right",
                 va="center",
                 kind="dayline",
-                selector={"kind": "dayline", "date": "2026-01-15"},
+                selector={"kind": "dayline", "date": "2026-01-15", "end": "start"},
             ),
             Label(
                 text="07h",
@@ -49,7 +49,17 @@ def _minimal_plot() -> Plot:
                 ha="center",
                 va="top",
                 kind="hourline",
-                selector={"kind": "hourline", "hour": 7},
+                selector={"kind": "hourline", "hour": 7, "end": "start"},
+            ),
+            Label(
+                text="07h",
+                x=3.0,
+                y=-2.0,
+                ha="center",
+                va="bottom",
+                kind="hourline",
+                selector={"kind": "hourline", "hour": 7, "end": "end"},
+                hidden=True,
             ),
         ],
         plumb_xy=(0.0, 0.0),
@@ -99,8 +109,16 @@ def test_labels_present_with_stable_selector_ids():
     root = ET.fromstring(svg.split("\n", 1)[1])
     texts = root.findall(f".//{SVG}text")
     ids = {t.attrib.get("id") for t in texts}
-    assert "label-dayline-2026-01-15" in ids
-    assert "label-hourline-7" in ids
+    assert "label-dayline-2026-01-15-start" in ids
+    assert "label-hourline-7-start" in ids
+
+
+def test_hidden_labels_are_not_emitted():
+    svg = render(_minimal_plot())
+    root = ET.fromstring(svg.split("\n", 1)[1])
+    ids = [t.attrib.get("id") for t in root.findall(f".//{SVG}text")]
+    assert "label-hourline-7-end" not in ids
+    assert len(ids) == 2
 
 
 def test_label_anchor_and_baseline_mapping():
@@ -109,11 +127,11 @@ def test_label_anchor_and_baseline_mapping():
     texts = root.findall(f".//{SVG}text")
     by_id = {t.attrib["id"]: t for t in texts}
 
-    day = by_id["label-dayline-2026-01-15"]
+    day = by_id["label-dayline-2026-01-15-start"]
     assert day.attrib["text-anchor"] == "end"
     assert day.attrib["dominant-baseline"] == "middle"
 
-    hour = by_id["label-hourline-7"]
+    hour = by_id["label-hourline-7-start"]
     assert hour.attrib["text-anchor"] == "middle"
     # va="top" + y-flip → "alphabetic" baseline (text above SVG y position)
     assert hour.attrib["dominant-baseline"] == "alphabetic"

@@ -1,7 +1,6 @@
 import numpy as np
 
 from accuratum.core.plot import Polyline
-from accuratum.core.spec import LabelOverride
 from accuratum.defaults.placement import place_labels
 
 
@@ -39,6 +38,8 @@ def test_dayline_label_at_both_endpoints_with_correct_alignment():
     left, right = labels
     assert left.x == -5.0 and left.ha == "right" and left.text == "01/15"
     assert right.x == 5.0 and right.ha == "left" and right.text == "01/15"
+    assert left.selector == {"kind": "dayline", "date": "2026-01-15", "end": "start"}
+    assert right.selector == {"kind": "dayline", "date": "2026-01-15", "end": "end"}
 
 
 def test_hourline_label_above_first_below_last():
@@ -53,6 +54,8 @@ def test_hourline_label_above_first_below_last():
     first, last = labels
     assert first.y == 2.0 and first.va == "top" and first.text == "07h"
     assert last.y == -2.0 and last.va == "bottom" and last.text == "07h"
+    assert first.selector == {"kind": "hourline", "hour": 7, "end": "start"}
+    assert last.selector == {"kind": "hourline", "hour": 7, "end": "end"}
 
 
 # --- collision suppression --------------------------------------------------
@@ -72,9 +75,9 @@ def test_hour_label_yields_to_day_label_on_collision():
         hourline_labels=[None, "07h"],
         data_extent=10.0,
     )
-    texts = [lbl.text for lbl in labels]
-    assert texts.count("01/15") == 2
-    assert "07h" not in texts
+    visible = [lbl.text for lbl in labels if not lbl.hidden]
+    assert visible.count("01/15") == 2
+    assert "07h" not in visible
 
 
 def test_dayline_collision_uses_y_axis_only():
@@ -90,7 +93,7 @@ def test_dayline_collision_uses_y_axis_only():
         hourline_labels=[None, None],
         data_extent=10.0,
     )
-    assert {lbl.text for lbl in labels} == {"01/15"}
+    assert {lbl.text for lbl in labels if not lbl.hidden} == {"01/15"}
 
 
 def test_plumb_exclusion_drops_hour_labels_near_origin():
@@ -104,67 +107,59 @@ def test_plumb_exclusion_drops_hour_labels_near_origin():
         hourline_labels=["12h", "07h"],
         data_extent=10.0,
     )
-    texts = {lbl.text for lbl in labels}
-    assert "12h" not in texts
-    assert "07h" in texts
+    visible = {lbl.text for lbl in labels if not lbl.hidden}
+    assert "12h" not in visible
+    assert "07h" in visible
 
 
-# --- overrides --------------------------------------------------------------
+# --- suppressed labels are kept, hidden ----------------------------------------
 
 
-def test_override_nudges_label_position():
-    polys = [_dayline("2026-01-15", xs=[-5.0, 5.0], ys=[1.0, 1.0])]
-    overrides = [
-        LabelOverride(
-            selector={"kind": "dayline", "date": "2026-01-15"},
-            dx=0.5,
-            dy=-0.3,
-        )
+def test_suppressed_labels_are_kept_as_hidden():
+    # Suppression hides a label instead of dropping it, so a human can restore
+    # it by flipping ``hidden`` in the project file.
+    polys = [
+        _hourline(12, xs=[0.1, 0.1], ys=[0.1, 0.1]),
+        _hourline(7, xs=[-5.0, 5.0], ys=[2.0, 2.0]),
     ]
     labels = place_labels(
         polys,
-        dayline_labels=["01/15"],
-        hourline_labels=[None],
+        dayline_labels=[None, None],
+        hourline_labels=["12h", "07h"],
         data_extent=10.0,
-        overrides=overrides,
     )
-    # Both endpoints get the same nudge.
-    for lbl in labels:
-        assert lbl.x in (-4.5, 5.5)
-        assert lbl.y == 0.7
+    noon = [lbl for lbl in labels if lbl.text == "12h"]
+    assert len(noon) == 2
+    assert all(lbl.hidden for lbl in noon)
+    assert not any(lbl.hidden for lbl in labels if lbl.text == "07h")
 
 
-def test_override_hidden_suppresses_label():
-    polys = [_dayline("2026-01-15", xs=[-5.0, 5.0], ys=[1.0, 1.0])]
-    overrides = [
-        LabelOverride(
-            selector={"kind": "dayline", "date": "2026-01-15"},
-            hidden=True,
-        )
+def test_hidden_labels_do_not_block_later_labels():
+    # A hidden label must not count as placed in the collision check.
+    polys = [
+        _hourline(12, xs=[0.1, 0.1], ys=[0.1, 0.1]),  # hidden by plumb exclusion
+        _hourline(13, xs=[0.1, 0.1], ys=[5.0, -5.0]),  # same x, outside the disk
     ]
     labels = place_labels(
         polys,
-        dayline_labels=["01/15"],
-        hourline_labels=[None],
+        dayline_labels=[None, None],
+        hourline_labels=["12h", "13h"],
         data_extent=10.0,
-        overrides=overrides,
     )
-    assert labels == []
+    assert [lbl.hidden for lbl in labels if lbl.text == "13h"] == [False, True]
 
 
-def test_override_text_renames_label():
-    polys = [_hourline(6, xs=[-3.0, 3.0], ys=[2.0, -2.0])]
-    overrides = [
-        LabelOverride(
-            selector={"kind": "hourline", "hour": 6},
-            text="dawn",
-        )
+def test_every_label_has_a_unique_selector():
+    polys = [
+        _dayline("2026-01-15", xs=[-5.0, 5.0], ys=[1.0, 1.0]),
+        _hourline(7, xs=[-3.0, 3.0], ys=[2.0, -2.0]),
     ]
     labels = place_labels(
         polys,
-        dayline_labels=[None],
-        hourline_labels=["06h"],
+        dayline_labels=["01/15", None],
+        hourline_labels=[None, "07h"],
         data_extent=10.0,
-        overrides=overrides,
     )
-    assert {lbl.text for lbl in labels} == {"dawn"}
+    keys = [tuple(sorted(lbl.selector.items())) for lbl in labels]
+    assert len(keys) == 4
+    assert len(set(keys)) == 4

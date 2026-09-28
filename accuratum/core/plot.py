@@ -36,9 +36,12 @@ class Polyline:
 class Label:
     """A text label resolved to absolute data coordinates.
 
-    ``selector`` shares the shape used by :class:`LabelOverride` so the
-    placement pass can apply overrides by identity and so SVG output can
-    emit it as an ``id=`` attribute (enabling Inkscape nudges).
+    ``selector`` identifies the label: the polyline identity plus the
+    endpoint, e.g. ``{"kind": "hourline", "hour": 7, "end": "start"}``.
+    SVG output emits it as an ``id=`` attribute (enabling Inkscape nudges).
+    ``hidden`` labels were suppressed by the placement heuristic (or by
+    hand); they stay in the data so they can be restored, but renderers
+    skip them.
     """
 
     text: str
@@ -48,6 +51,7 @@ class Label:
     va: str
     kind: str
     selector: dict[str, Any] = field(default_factory=dict)
+    hidden: bool = False
 
 
 @dataclass(frozen=True)

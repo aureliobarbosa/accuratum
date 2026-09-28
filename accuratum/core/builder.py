@@ -2,7 +2,7 @@
 
 Pure top of the core stack: given a :class:`SundialSpec`, generate the
 time grids, project them through the sundial type's projection, attach
-metadata, select default labels, apply overrides, and return a
+metadata, select and place the default labels, and return a
 :class:`Plot`.
 
 No I/O, no matplotlib. The renderer consumes the returned ``Plot``.
@@ -47,7 +47,6 @@ def build_plot(spec: SundialSpec) -> Plot:
         dl_labels,
         hl_labels,
         data_extent=extent,
-        overrides=spec.overrides,
     )
 
     return Plot(polylines=polylines, labels=labels, plumb_xy=(0.0, 0.0), data_extent=extent)

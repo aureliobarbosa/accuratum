@@ -26,6 +26,8 @@ def render(plot: Plot, hints: RenderHints | None = None) -> tuple[Figure, Axes]:
         ax.plot(poly.xs, poly.ys, "-", color=hints.line_color, linewidth=hints.line_width)
 
     for label in plot.labels:
+        if label.hidden:
+            continue
         ax.text(
             label.x,
             label.y,

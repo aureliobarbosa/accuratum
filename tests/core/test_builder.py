@@ -7,7 +7,6 @@ import pytest
 from accuratum.core.builder import build_plot
 from accuratum.core.spec import (
     GridConfig,
-    LabelOverride,
     Location,
     SundialSpec,
     TimeFrame,
@@ -105,23 +104,9 @@ def test_polylines_have_finite_xy(plot):
             assert np.all(np.isfinite(p.ys))
 
 
-# --- override application ----------------------------------------------------
-
-
-def test_override_hide_removes_matching_label():
-    # First build without overrides to find an existing label.
-    spec_no_ov = SundialSpec(location=PLANALTINA, timeframe=FAST_FRAME, grid=FAST_GRID)
-    plot_a = build_plot(spec_no_ov)
-    target = next(lbl for lbl in plot_a.labels if lbl.kind == "hourline")
-
-    spec_ov = SundialSpec(
-        location=PLANALTINA,
-        timeframe=FAST_FRAME,
-        grid=FAST_GRID,
-        overrides=[LabelOverride(selector=target.selector, hidden=True)],
-    )
-    plot_b = build_plot(spec_ov)
-    assert not any(lbl.selector == target.selector for lbl in plot_b.labels)
+def test_each_label_has_a_unique_selector(plot):
+    keys = [tuple(sorted(lbl.selector.items())) for lbl in plot.labels]
+    assert len(keys) == len(set(keys))
 
 
 def test_unsupported_sundial_type_raises():
