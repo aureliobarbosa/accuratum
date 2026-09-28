@@ -10,6 +10,7 @@ from accuratum.core.spec import (
     SundialSpec,
     TimeFrame,
     spec_from_dict,
+    spec_hash,
     spec_to_dict,
 )
 
@@ -60,3 +61,26 @@ def test_timeframe_iso_strings_carry_timezone():
     data = spec_to_dict(spec)
     assert "-03:00" in data["timeframe"]["start"]
     assert "-03:00" in data["timeframe"]["end"]
+
+
+def test_year_and_period_roundtrip():
+    spec = _sample_spec()
+    spec.year, spec.period = 2026, 0
+    restored = spec_from_dict(spec_to_dict(spec))
+    assert (restored.year, restored.period) == (2026, 0)
+
+
+def test_spec_hash_ignores_location_name():
+    a = _sample_spec()
+    b = spec_from_dict(spec_to_dict(a))
+    b.location = Location(lat=a.location.lat, lon=a.location.lon, timezone=a.location.timezone, name="Other")
+    assert spec_hash(a) == spec_hash(b)
+
+
+def test_spec_hash_changes_with_any_geometry_input():
+    a = _sample_spec()
+    b = spec_from_dict(spec_to_dict(a))
+    b.plumb_length = 2.0
+    c = spec_from_dict(spec_to_dict(a))
+    c.grid = GridConfig(time_step_minutes=10)
+    assert len({spec_hash(a), spec_hash(b), spec_hash(c)}) == 3

@@ -12,6 +12,8 @@ Rendering concerns (overlay images, canvas size, fonts) live in
 machines.
 """
 
+import hashlib
+import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
@@ -50,11 +52,19 @@ class GridConfig:
 
 @dataclass
 class SundialSpec:
+    """Everything needed to compute the sundial's geometry.
+
+    ``timeframe`` is what the computation uses. ``year`` and ``period`` are
+    the CLI options that produced it (``None`` for a hand-built timeframe).
+    """
+
     location: Location
     timeframe: TimeFrame
     plumb_length: float = 1.0
     grid: GridConfig = field(default_factory=GridConfig)
     sundial_type: str = "accuratum"
+    year: int | None = None
+    period: int | None = None
     spec_version: int = SPEC_VERSION
 
 
@@ -83,5 +93,17 @@ def spec_from_dict(data: dict[str, Any]) -> SundialSpec:
         plumb_length=data.get("plumb_length", 1.0),
         grid=grid,
         sundial_type=data.get("sundial_type", "accuratum"),
+        year=data.get("year"),
+        period=data.get("period"),
         spec_version=data.get("spec_version", SPEC_VERSION),
     )
+
+
+def spec_hash(spec: SundialSpec) -> str:
+    """SHA-256 of *spec*'s canonical JSON. ``location.name`` is left out: it
+    doesn't change the geometry, so renaming a place never invalidates a
+    saved dataset."""
+    data = spec_to_dict(spec)
+    data["location"].pop("name", None)
+    blob = json.dumps(data, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()

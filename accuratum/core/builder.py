@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 
 from accuratum.core.astronomy import build_altaz_frame, get_sun_altaz
-from accuratum.core.plot import Plot, Polyline
+from accuratum.core.plot import Plot, Polyline, data_extent
 from accuratum.core.spec import SundialSpec
 from accuratum.core.timegrid import dayline_grid, hourline_grid
 from accuratum.defaults.labels import select_dayline_labels, select_hourline_labels
@@ -37,7 +37,7 @@ def build_plot(spec: SundialSpec) -> Plot:
     hourline_polys = [_row_to_hourline(row, frame, tz, spec.plumb_length) for row in hl_grid]
     polylines = dayline_polys + hourline_polys
 
-    extent = _data_extent(polylines)
+    extent = data_extent(polylines)
 
     dl_labels = select_dayline_labels(polylines)
     hl_labels = select_hourline_labels(polylines, spec.grid.time_step_minutes)
@@ -100,23 +100,3 @@ def _canonical_hour(hour: int, minute: int) -> tuple[int, int]:
     if minute <= 30:
         return hour, minute
     return (hour + 1) % 24, minute - 60
-
-
-def _data_extent(polylines: list[Polyline]) -> float:
-    xs_min: list[float] = []
-    xs_max: list[float] = []
-    ys_min: list[float] = []
-    ys_max: list[float] = []
-    for poly in polylines:
-        if poly.xs.size == 0:
-            continue
-        finite = np.isfinite(poly.xs) & np.isfinite(poly.ys)
-        if not finite.any():
-            continue
-        xs_min.append(float(poly.xs[finite].min()))
-        xs_max.append(float(poly.xs[finite].max()))
-        ys_min.append(float(poly.ys[finite].min()))
-        ys_max.append(float(poly.ys[finite].max()))
-    if not xs_min:
-        return 1.0
-    return max(max(xs_max) - min(xs_min), max(ys_max) - min(ys_min))

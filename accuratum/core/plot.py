@@ -60,3 +60,24 @@ class Plot:
     labels: list[Label]
     plumb_xy: tuple[float, float] = (0.0, 0.0)
     data_extent: float = 1.0
+
+
+def data_extent(polylines: list[Polyline]) -> float:
+    """Largest side of the bounding box of all finite polyline samples (1.0 if none)."""
+    xs_min: list[float] = []
+    xs_max: list[float] = []
+    ys_min: list[float] = []
+    ys_max: list[float] = []
+    for poly in polylines:
+        if poly.xs.size == 0:
+            continue
+        finite = np.isfinite(poly.xs) & np.isfinite(poly.ys)
+        if not finite.any():
+            continue
+        xs_min.append(float(poly.xs[finite].min()))
+        xs_max.append(float(poly.xs[finite].max()))
+        ys_min.append(float(poly.ys[finite].min()))
+        ys_max.append(float(poly.ys[finite].max()))
+    if not xs_min:
+        return 1.0
+    return max(max(xs_max) - min(xs_min), max(ys_max) - min(ys_min))
