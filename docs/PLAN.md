@@ -1,7 +1,8 @@
 # Accuratum — what's left to do
 
 > **Status (2026-09-28):** the core rewrite is merged into `main`, which is now
-> the only branch. Next: the user's sign-off checks in Step 1.
+> the only branch. Next: Step 1 (spec round-trip and
+> override semantics); Steps 2–3 come from the user's review of the output.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -36,23 +37,40 @@ before it.
 deleted locally and on origin. See
 [PROJECT_KNOWLEDGE.md § Core rewrite](PROJECT_KNOWLEDGE.md#core-rewrite-spec--plot--renderer).
 
-## Step 1 — Sign-off of the rewrite
+## Step 1 — Spec file round-trip and override semantics — **next**
 
-Checkpoints that only the user can close:
-
-1. Open `uv run accuratum --lat-long=-15.78,-47.92 --canvas-size-mm=6000,2000 -o panel.svg`
-   in Inkscape and nudge a label by its id.
-2. Run `--save-spec clock.json`, hand-edit a label override, then
-   `--spec clock.json`, and check that the label moved.
-3. Answer the open question: should an override's `dx/dy` move **both**
+1. Run `--save-spec clock.json`, hand-edit a label override, then render with
+   `--spec clock.json` and check that the label moved.
+2. Answer the open question: should an override's `dx/dy` move **both**
    endpoint labels of a line, as it does now?
-4. Check the default label placement. In the Brasília PNG rendered after the
-   merge, the day-line labels (`MM/DD`) appear only on the left edge, and the
-   hour labels only for 07–08h and 15–17h. 09–14h are expected to be
-   suppressed by the plumb-exclusion radius, but the missing right-edge day
-   labels are unexplained.
 
-Then reassess the backlog below against goals 3–4.
+## Step 2 — SVG output as good as matplotlib
+
+User check, 2026-09-28: the SVG comes out at the right physical size
+(6000 × 2000 mm), but its design falls short of the matplotlib output,
+which is much better so far.
+
+1. List the visual differences between `-o x.png` and `-o x.svg` for the
+   same spec: fonts, stroke widths, label anchoring and overlays. Then close
+   the gaps in `renderers/svg_backend.py`.
+2. **Test the default A4 landscape canvas (297 × 210 mm) too**, not only the
+   6 m × 2 m panel. It hasn't been checked yet.
+3. The drawing is about 2.1 : 1 and the SVG keeps its proportions, so a 3 : 1
+   panel gets empty side margins. Decide whether that is acceptable.
+
+## Step 3 — Which side the date labels go on
+
+With "Brasilia" or "planaltina" as the location, the day-line labels
+(`MM/DD`) appear only on the left edge. The user's view: date labels should
+go on either the left or the right side, and which side is right depends on
+latitude and can be completely different from place to place. The design
+inherited from the `labels` branch labels *both* endpoints, so something
+suppresses the right-side ones. Find out what, then define the rule for
+choosing the side. Test it across latitudes (southern and northern
+hemisphere, tropics, high latitudes).
+
+The hour labels show only 07–08h and 15–17h. Missing 09–14h is expected from
+the plumb-exclusion radius, but review it in the same step.
 
 ## Backlog (not scheduled)
 
