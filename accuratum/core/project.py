@@ -86,7 +86,7 @@ def label_from_dict(data: dict[str, Any]) -> Label:
 def hints_from_dict(data: dict[str, Any]) -> RenderHints:
     """Inverse of ``asdict(hints)``: rebuilds overlays and re-tuplizes sizes."""
     data = dict(data)
-    data["overlays"] = [Overlay(image_path=o["image_path"], rect=tuple(o["rect"])) for o in data.get("overlays", [])]
+    data["overlays"] = [Overlay(**{**o, "rect": tuple(o["rect"])}) for o in data.get("overlays", [])]
     if "figsize" in data:
         data["figsize"] = tuple(data["figsize"])
     if data.get("canvas_size_mm") is not None:

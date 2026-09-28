@@ -10,8 +10,10 @@ def test_imports():
     import accuratum.renderers.matplotlib_backend  # noqa: F401
 
 
-def test_cli_produces_output(tmp_path):
+def test_cli_produces_output(tmp_path, monkeypatch):
     from accuratum.cli import main
+
+    monkeypatch.chdir(tmp_path)
 
     out = tmp_path / "smoke.png"
     exit_code = main(

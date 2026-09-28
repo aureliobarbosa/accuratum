@@ -1,9 +1,9 @@
 """Render-side knobs — separate from :class:`SundialSpec` to keep specs portable.
 
-``RenderHints`` carries things that are local to a single render or
-machine: overlay image paths, canvas size in millimeters, fonts, colors.
-A saved spec is shareable; a saved hints file (when we have one) is not.
-Renderers take ``(plot, hints)``.
+``RenderHints`` carries how a plot is drawn: overlay images, canvas size in
+millimeters, fonts, colors. A project saves them next to the spec (in
+``project.json``'s ``render`` section) but outside ``spec_hash``, so changing
+them never invalidates the computed geometry. Renderers take ``(plot, hints)``.
 """
 
 from dataclasses import dataclass, field
@@ -11,8 +11,15 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class Overlay:
+    """An image drawn over the figure; ``rect`` is in figure coords (0-1).
+
+    ``name`` (e.g. ``"logo"``) lets the CLI replace one overlay of a saved
+    project by flag.
+    """
+
     image_path: str
     rect: tuple[float, float, float, float]
+    name: str = ""
 
 
 @dataclass

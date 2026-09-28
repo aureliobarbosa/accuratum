@@ -8,8 +8,9 @@ JSON-roundtrip is provided by :func:`spec_to_dict` and :func:`spec_from_dict`.
 re-tuplize on the way back and rebuild nested dataclasses.
 
 Rendering concerns (overlay images, canvas size, fonts) live in
-:mod:`accuratum.core.hints`, not here — keeping the Spec portable across
-machines.
+:mod:`accuratum.core.hints`, not here: they don't change the geometry, so
+they stay out of :func:`spec_hash`. A saved project keeps both (see
+:mod:`accuratum.core.project`).
 """
 
 import hashlib
@@ -17,8 +18,6 @@ import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
-
-SPEC_VERSION = 1
 
 
 @dataclass(frozen=True)
@@ -65,7 +64,6 @@ class SundialSpec:
     sundial_type: str = "accuratum"
     year: int | None = None
     period: int | None = None
-    spec_version: int = SPEC_VERSION
 
 
 # --- JSON-roundtrip helpers --------------------------------------------------
@@ -95,7 +93,6 @@ def spec_from_dict(data: dict[str, Any]) -> SundialSpec:
         sundial_type=data.get("sundial_type", "accuratum"),
         year=data.get("year"),
         period=data.get("period"),
-        spec_version=data.get("spec_version", SPEC_VERSION),
     )
 
 

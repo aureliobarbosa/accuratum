@@ -1,8 +1,10 @@
+import json
 from unittest.mock import patch
 
 import pytest
 
 from accuratum.cli import build_parser, parse_lat_long, parse_rect, resolve_location
+from accuratum.core.project_io import DATASET_FILE, PROJECT_FILE, load_project
 
 # Coarse grid args for end-to-end CLI tests — keep the astropy/astroplan work small.
 # Larger day steps reduce how many days astroplan's sun_rise_time is evaluated on.
@@ -16,6 +18,13 @@ FAST_GRID_ARGS = [
     "--hourline-day-step",
     "30",
 ]
+
+
+@pytest.fixture(autouse=True)
+def _in_tmp_dir(tmp_path, monkeypatch):
+    """Generating runs write a project folder into the current directory."""
+    monkeypatch.chdir(tmp_path)
+
 
 # --- parse_lat_long -----------------------------------------------------------
 
@@ -73,10 +82,10 @@ def test_parser_rejects_both_location_sources():
         _parse_args(["belem", "--lat-long=1,2"])
 
 
-def test_parser_default_output_is_png():
+def test_parser_default_output_is_none_so_it_goes_in_the_project_folder():
     parser = build_parser()
     args = parser.parse_args(["--lat-long=0,0"])
-    assert args.output.endswith(".png")
+    assert args.output is None
 
 
 def test_parser_custom_output():
@@ -311,50 +320,136 @@ def test_main_saves_pdf_output(tmp_path):
     assert out.read_bytes().startswith(b"%PDF")
 
 
-# --- spec roundtrip ----------------------------------------------------------
+# --- project folders ---------------------------------------------------------
+
+LATLONG = "--lat-long=-15.6,-47.65"
+AUTO_DIR = "lat-15.60_lon-47.65_2026_p0"
 
 
-def test_main_save_spec_writes_json(tmp_path):
+def _generate(*extra):
     from accuratum.cli import main
 
-    out = tmp_path / "clock.png"
-    spec_path = tmp_path / "clock.json"
-    exit_code = main(
-        [
-            "--lat-long=-15.6,-47.65",
-            "--output",
-            str(out),
-            "--save-spec",
-            str(spec_path),
-            *FAST_GRID_ARGS,
-        ]
-    )
-    assert exit_code == 0
-    assert spec_path.exists()
-    text = spec_path.read_text()
-    assert '"location"' in text
-    assert '"timeframe"' in text
+    with patch("accuratum.cli.timezone_at", return_value="America/Sao_Paulo"):
+        return main([LATLONG, "--year", "2026", *FAST_GRID_ARGS, *extra])
 
 
-def test_main_spec_load_roundtrip(tmp_path):
-    """--save-spec writes a spec that --spec reads back to the same render."""
+def test_generate_creates_auto_named_project_folder(tmp_path):
+    assert _generate() == 0
+    folder = tmp_path / AUTO_DIR
+    assert (folder / PROJECT_FILE).is_file()
+    assert (folder / DATASET_FILE).is_file()
+    assert (folder / "accuratum.png").is_file()
+
+
+def test_generate_records_year_and_period(tmp_path):
+    _generate("--period", "1")
+    spec = load_project(tmp_path / "lat-15.60_lon-47.65_2026_p1").spec
+    assert (spec.year, spec.period) == (2026, 1)
+    assert (spec.timeframe.start.year, spec.timeframe.start.month) == (2026, 6)
+    assert (spec.timeframe.end.year, spec.timeframe.end.month) == (2026, 12)
+
+
+def test_auto_folder_and_name_from_location_string(tmp_path):
     from accuratum.cli import main
 
-    spec_path = tmp_path / "clock.json"
-    out_a = tmp_path / "a.png"
-    out_b = tmp_path / "b.png"
+    with (
+        patch("accuratum.cli.location_to_latitude_longitude", return_value=(-15.6, -47.65)),
+        patch("accuratum.cli.timezone_at", return_value="America/Sao_Paulo"),
+    ):
+        main(["Planaltina, DF", "--year", "2026", *FAST_GRID_ARGS])
+    spec = load_project(tmp_path / "planaltina-df_2026_p0").spec
+    assert spec.location.name == "Planaltina, DF"
 
-    main(
-        [
-            "--lat-long=-15.6,-47.65",
-            "--output",
-            str(out_a),
-            "--save-spec",
-            str(spec_path),
-            *FAST_GRID_ARGS,
-        ]
-    )
-    main(["--spec", str(spec_path), "--output", str(out_b)])
-    assert out_a.exists() and out_b.exists()
-    assert out_a.stat().st_size > 0
-    assert out_b.stat().st_size > 0
+
+def test_project_dir_flag_sets_the_folder(tmp_path):
+    _generate("--project-dir", "mine")
+    assert (tmp_path / "mine" / PROJECT_FILE).is_file()
+
+
+def test_existing_project_is_not_overwritten_without_force(tmp_path):
+    _generate()
+    with pytest.raises(SystemExit):
+        _generate()
+    assert _generate("--force") == 0
+
+
+def test_project_renders_without_recomputing(tmp_path):
+    from accuratum.cli import main
+
+    _generate()
+    with patch("accuratum.cli.build_plot", side_effect=AssertionError("recomputed")):
+        assert main(["--project", AUTO_DIR, "-o", "b.png"]) == 0
+    assert (tmp_path / "b.png").is_file()
+
+
+def test_project_render_defaults_into_its_folder(tmp_path):
+    from accuratum.cli import main
+
+    _generate()
+    (tmp_path / AUTO_DIR / "accuratum.png").unlink()
+    main(["--project", AUTO_DIR])
+    assert (tmp_path / AUTO_DIR / "accuratum.png").is_file()
+
+
+def test_render_settings_are_saved_and_cli_flags_win(tmp_path):
+    from accuratum.cli import main
+
+    _generate("--canvas-size-mm=6000,2000")
+    main(["--project", AUTO_DIR, "-o", "saved.svg"])
+    main(["--project", AUTO_DIR, "-o", "cli.svg", "--canvas-size-mm=297,210"])
+    assert 'width="6000.0mm"' in (tmp_path / "saved.svg").read_text()
+    assert 'width="297.0mm"' in (tmp_path / "cli.svg").read_text()
+
+
+def test_default_overlays_are_stored_as_package_paths(tmp_path):
+    _generate()
+    render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]
+    paths = {o["name"]: o["image_path"] for o in render["overlays"]}
+    assert paths == {"logo": "accuratum:fig/unb_basic.jpg", "compass": "accuratum:fig/rosa.png"}
+
+
+def test_hand_edited_label_is_rendered(tmp_path):
+    from accuratum.cli import main
+
+    _generate()
+    path = tmp_path / AUTO_DIR / PROJECT_FILE
+    data = json.loads(path.read_text())
+    data["labels"].append({"text": "HELLO", "x": 0.0, "y": 1.0})
+    path.write_text(json.dumps(data))
+    main(["--project", AUTO_DIR, "-o", "b.svg"])
+    assert ">HELLO<" in (tmp_path / "b.svg").read_text()
+
+
+def _edit_spec(folder, **changes):
+    path = folder / PROJECT_FILE
+    data = json.loads(path.read_text())
+    data["spec"].update(changes)
+    path.write_text(json.dumps(data))
+
+
+def test_edited_spec_is_an_error_until_regenerated(tmp_path):
+    from accuratum.cli import main
+
+    _generate()
+    _edit_spec(tmp_path / AUTO_DIR, plumb_length=2.0)
+    with pytest.raises(SystemExit, match="--regenerate"):
+        main(["--project", AUTO_DIR])
+    assert main(["--project", AUTO_DIR, "--regenerate"]) == 0
+    assert (tmp_path / AUTO_DIR / (PROJECT_FILE + ".bak")).is_file()
+    assert load_project(tmp_path / AUTO_DIR).spec.plumb_length == 2.0
+
+
+def test_regenerate_recomputes_timeframe_from_year_and_period(tmp_path):
+    from accuratum.cli import main
+
+    _generate()
+    _edit_spec(tmp_path / AUTO_DIR, period=1)
+    main(["--project", AUTO_DIR, "--regenerate"])
+    assert load_project(tmp_path / AUTO_DIR).spec.timeframe.start.month == 6
+
+
+def test_project_rejects_location_arguments():
+    from accuratum.cli import main
+
+    with pytest.raises(SystemExit):
+        main(["--project", "x", LATLONG])

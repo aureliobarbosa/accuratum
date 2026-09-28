@@ -45,7 +45,6 @@ def test_spec_dict_roundtrip_preserves_all_fields():
     assert restored.plumb_length == original.plumb_length
     assert restored.grid == original.grid
     assert restored.sundial_type == original.sundial_type
-    assert restored.spec_version == original.spec_version
 
 
 def test_spec_json_roundtrip_via_dumps_loads():
