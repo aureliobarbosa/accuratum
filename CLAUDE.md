@@ -38,6 +38,10 @@ production code.
   explain the *why* in the body. Commit without asking.
 - **Before each commit:** run `uv run pytest -q`, then
   `uv run ruff check --fix`, then `uv run ruff format`.
+- **One issue per Claude session is preferred.** Close a session once its
+  issue is done and recorded in `docs/`, and start the next issue in a fresh
+  session. The docs carry the context between sessions, not the
+  conversation.
 - **Checkpoints:** at the end of each PLAN step, stop and ask the user to
   review before starting the next one. When the step changes the drawing,
   render a PNG and look at it yourself first, then hand it over for the

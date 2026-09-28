@@ -43,6 +43,19 @@ deleted locally and on origin. See
    `--spec clock.json` and check that the label moved.
 2. Answer the open question: should an override's `dx/dy` move **both**
    endpoint labels of a line, as it does now?
+3. **Decide whether overrides need more power (finding, 2026-09-28).** The
+   spec has no `labels` field by design: `build_plot` recomputes the labels on
+   every render, and the spec keeps only corrections, in `overrides`. Each
+   override matches a label by `selector` (`{"kind": "dayline", "date":
+   "YYYY-MM-DD"}` or `{"kind": "hourline", "hour": H}`) and can set
+   `dx`/`dy`, `text` or `hidden`. The limit: `_apply_overrides` runs only
+   *after* a label survives the plumb-exclusion and collision checks in
+   `defaults/placement.py::_try_place`. So an override can't bring back a
+   label the heuristic dropped, and can't add a label for a date or hour the
+   heuristic didn't pick. For goal 3 (human in the loop) that is likely too
+   weak. Options: a `force: true` flag that bypasses the suppression checks,
+   and/or overrides that add labels. Example spec to test with:
+   `example-projects/specs/fup_planaltina.json`.
 
 ## Step 2 — SVG output as good as matplotlib
 
@@ -63,10 +76,15 @@ which is much better so far.
 With "Brasilia" or "planaltina" as the location, the day-line labels
 (`MM/DD`) appear only on the left edge. The user's view: date labels should
 go on either the left or the right side, and which side is right depends on
-latitude and can be completely different from place to place. The design
-inherited from the `labels` branch labels *both* endpoints, so something
-suppresses the right-side ones. Find out what, then define the rule for
-choosing the side. Test it across latitudes (southern and northern
+latitude and can be completely different from place to place. **Root cause, found 2026-09-28 — a bug, not a latitude effect.** In
+`defaults/placement.py::place_labels`, day-line labels use a 1-D collision
+check on `|Δy|` against *every* placed label, including the left label of
+the same line. A day line's two endpoints sit at almost the same height. For
+the Planaltina spec the difference is under 0.02, while the tolerance is
+`0.04 × data_extent`, about 0.5. So every right-side label is dropped as
+colliding with its own left twin: 6 left labels, 0 right. The fix is to
+check collisions only among labels on the same side, then define the rule
+for choosing the side. Test it across latitudes (southern and northern
 hemisphere, tropics, high latitudes).
 
 The hour labels show only 07–08h and 15–17h. Missing 09–14h is expected from
