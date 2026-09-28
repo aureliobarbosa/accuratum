@@ -61,6 +61,9 @@ Commits c81b9f4 … ad69d87 (May 2026), merged into `main` in **c003354**
 pass after the merge (66 before). Motivation: v0.1 tangled geometry, label
 heuristics and matplotlib in one module. The original step-by-step plan was
 `docs/REWRITE_PLAN.md`; read it with `git show ad69d87:docs/REWRITE_PLAN.md`.
+Afterwards `smart_hour_lines`, `rewrite-core` and `labels` were deleted,
+locally and on origin. `labels` was never merged, so its code is gone; its
+lessons are below. Both machines are set up for the synced Claude sessions.
 
 ### Architecture
 

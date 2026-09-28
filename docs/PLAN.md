@@ -1,7 +1,7 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-28):** the core rewrite is merged into `main`. Next:
-> finish the Step 0 housekeeping, then the user's sign-off checks in Step 1.
+> **Status (2026-09-28):** the core rewrite is merged into `main`, which is now
+> the only branch. Next: the user's sign-off checks in Step 1.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -30,22 +30,11 @@ before it.
 
 ---
 
-## Step 0 — Consolidate the trunk
+## Step 0 — Consolidate the trunk — **done**
 
-Done: `rewrite-core` was merged into `main` (c003354); 104 tests pass. The CLI
-renders PNG, SVG and the spec file. Details are in
+`rewrite-core` was merged into `main` (c003354), and the stale branches were
+deleted locally and on origin. See
 [PROJECT_KNOWLEDGE.md § Core rewrite](PROJECT_KNOWLEDGE.md#core-rewrite-spec--plot--renderer).
-
-Still open:
-
-1. **Delete the stale branches** `smart_hour_lines` and `rewrite-core`
-   (both fully merged), locally and on origin. This needs push approval.
-2. **Decide what happens to `labels`** (only on origin, unmerged): delete it,
-   since its lessons are captured, or keep it as an archive.
-3. **Confirm the second machine is set up** for the Dropbox-synced Claude
-   sessions
-   ([recipe](PROJECT_KNOWLEDGE.md#dev-environment-and-multi-machine-sync)).
-   On machine 1, the unused `.claude-data/` folder can be deleted.
 
 ## Step 1 — Sign-off of the rewrite
 
