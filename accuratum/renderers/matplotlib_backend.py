@@ -48,6 +48,13 @@ def render(plot: Plot, hints: RenderHints | None = None) -> tuple[Figure, Axes]:
         overlay_ax.imshow(img)
         overlay_ax.axis("off")
 
+    for text, (x, y), size in (
+        (hints.title, hints.title_xy, hints.title_fontsize),
+        (hints.subtitle, hints.subtitle_xy, hints.subtitle_fontsize),
+    ):
+        if text:
+            fig.text(x, y, text, fontsize=size, color=hints.label_color, ha="center", va="center")
+
     xp, yp = plot.plumb_xy
     ax.scatter(xp, yp, s=10, facecolors="none", edgecolors="k", linewidths=0.5, zorder=5)
 

@@ -471,3 +471,26 @@ def test_default_overlays_sit_in_the_header_above_the_drawing():
     for overlay in DEFAULT_OVERLAYS.values():
         assert overlay.rect[1] >= bottom + height
         assert overlay.rect[1] + overlay.rect[3] <= 1.0
+
+
+# --- title and subtitle ------------------------------------------------------
+
+
+def test_default_titles_are_not_saved_but_rendered(tmp_path):
+    _generate("-o", "a.svg")
+    render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]
+    assert render["title"] is None and render["subtitle"] is None
+    svg = (tmp_path / "a.svg").read_text()
+    assert "15.60° S, 47.65° W" in svg
+    assert "2025-12-21 / 2026-06-21" in svg
+
+
+def test_given_titles_are_saved_and_rendered_again(tmp_path):
+    from accuratum.cli import main
+
+    _generate("--title", "FUP Planaltina", "--subtitle", "Primeiro semestre")
+    render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]
+    assert (render["title"], render["subtitle"]) == ("FUP Planaltina", "Primeiro semestre")
+    main(["--project", AUTO_DIR, "-o", "b.svg"])
+    svg = (tmp_path / "b.svg").read_text()
+    assert "FUP Planaltina" in svg and "Primeiro semestre" in svg

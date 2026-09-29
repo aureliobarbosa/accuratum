@@ -52,3 +52,19 @@ def test_drawing_stays_in_axes_rect_pinned_to_its_top(width, height):
 def test_no_frame_around_the_drawing():
     fig, ax = render(_outline(12.0, 5.0))
     assert not any(spine.get_visible() for spine in ax.spines.values())
+
+
+def test_title_and_subtitle_sit_in_the_header_band():
+    hints = RenderHints(title="Planaltina", subtitle="2025-12-21 / 2026-06-21")
+    fig, ax = render(_outline(12.0, 5.0), hints)
+    texts = {t.get_text(): t for t in fig.texts}
+    title, subtitle = texts["Planaltina"], texts["2025-12-21 / 2026-06-21"]
+    left, bottom, width, height = hints.axes_rect
+    assert subtitle.get_position()[1] > bottom + height
+    assert title.get_position()[1] > subtitle.get_position()[1]
+
+
+@pytest.mark.parametrize("title", [None, ""])
+def test_no_title_means_no_text(title):
+    fig, ax = render(_outline(12.0, 5.0), RenderHints(title=title, subtitle=title))
+    assert not fig.texts

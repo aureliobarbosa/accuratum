@@ -38,6 +38,7 @@ from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
 from accuratum.core.project import Project, hints_from_dict  # noqa: E402
 from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project  # noqa: E402
 from accuratum.core.spec import MAX_LATITUDE, GridConfig, Location, SundialSpec, TimeFrame, spec_from_dict  # noqa: E402
+from accuratum.defaults.titles import default_subtitle, default_title  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
 from accuratum.renderers import matplotlib_backend  # noqa: E402
 
@@ -122,6 +123,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--compass", default=None, metavar="PATH")
     parser.add_argument("--compass-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
     parser.add_argument("--label-fontsize", type=float, default=None, metavar="PT")
+    parser.add_argument("--title", default=None, help="Defaults to the location name, or its coordinates. '' for none.")
+    parser.add_argument("--subtitle", default=None, help="Defaults to the timeframe. '' for none.")
     parser.add_argument(
         "--project-dir",
         default=None,
@@ -254,6 +257,8 @@ def _render_hints(args: argparse.Namespace, saved: RenderHints | None) -> Render
         base,
         overlays=overlays,
         label_fontsize=args.label_fontsize if args.label_fontsize is not None else base.label_fontsize,
+        title=args.title if args.title is not None else base.title,
+        subtitle=args.subtitle if args.subtitle is not None else base.subtitle,
     )
 
 
@@ -262,8 +267,9 @@ def _portable_path(path: str) -> str:
     return os.path.abspath(path)
 
 
-def _resolved(hints: RenderHints) -> RenderHints:
-    """Resolve ``accuratum:`` image paths and check that every overlay file exists."""
+def _resolved(hints: RenderHints, spec: SundialSpec) -> RenderHints:
+    """Resolve ``accuratum:`` image paths, check that every overlay file exists,
+    and fill in the default title and subtitle."""
     overlays = []
     for overlay in hints.overlays:
         path = overlay.image_path
@@ -272,7 +278,12 @@ def _resolved(hints: RenderHints) -> RenderHints:
         if not os.path.isfile(path):
             raise SystemExit(f"error: {overlay.name or 'overlay'} file not found: {path}")
         overlays.append(replace(overlay, image_path=path))
-    return replace(hints, overlays=overlays)
+    return replace(
+        hints,
+        overlays=overlays,
+        title=default_title(spec) if hints.title is None else hints.title,
+        subtitle=default_subtitle(spec) if hints.subtitle is None else hints.subtitle,
+    )
 
 
 # --- modes -------------------------------------------------------------------
@@ -286,7 +297,7 @@ def _generate(args: argparse.Namespace) -> tuple[Project, Path]:
             f"error: {folder} already holds a project; use --project {folder} to render it, or --force to overwrite."
         )
     render = _render_hints(args, None)
-    _resolved(render)  # fail on a missing image before the slow computation
+    _resolved(render, spec)  # fail on a missing image before the slow computation
     project = Project(spec=spec, plot=build_plot(spec), render=render, provenance=_provenance())
     save_project(project, folder)
     print(f"Saved project to {folder}/")
@@ -322,7 +333,7 @@ def _open(args: argparse.Namespace) -> tuple[Project, Path]:
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
     project, folder = _open(args) if args.project is not None else _generate(args)
-    hints = _resolved(_render_hints(args, project.render))
+    hints = _resolved(_render_hints(args, project.render), project.spec)
     output = args.output or str(folder / DEFAULT_OUTPUT_NAME)
     _save(project.plot, hints, output)
     print(f"Saved Accuratum clock to {output}")

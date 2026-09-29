@@ -36,7 +36,12 @@ def _project() -> Project:
         data_extent=10.0,
     )
     render = RenderHints(
-        overlays=[Overlay("logo.png", (0.1, 0.8, 0.1, 0.1))], label_fontsize=9.0, axes_rect=(0.1, 0.1, 0.8, 0.6)
+        overlays=[Overlay("logo.png", (0.1, 0.8, 0.1, 0.1))],
+        label_fontsize=9.0,
+        axes_rect=(0.1, 0.1, 0.8, 0.6),
+        title="FUP",
+        title_xy=(0.4, 0.9),
+        subtitle_xy=(0.4, 0.85),
     )
     return Project(spec=spec, plot=plot, render=render, provenance={"accuratum": "0.2.0"})
 
@@ -145,3 +150,10 @@ def test_legacy_render_keys_are_ignored():
     hints = hints_from_dict({"canvas_size_mm": [6000, 2000], "units": "mm", "label_fontsize": 9.0})
     assert hints.label_fontsize == 9.0
     assert not hasattr(hints, "canvas_size_mm")
+
+
+def test_old_render_settings_keep_the_default_titles():
+    from accuratum.core.project import hints_from_dict
+
+    hints = hints_from_dict({"label_fontsize": 9.0})
+    assert hints.title is None and hints.subtitle is None

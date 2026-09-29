@@ -45,6 +45,10 @@ accuratum --lat-long=-15.78,-47.92 --year 2026 --period 1
 # Override the overlay logo and its position/size (figure coords, 0-1)
 accuratum --lat-long=0,0 --logo my_logo.png --logo-rect=0.1,0.8,0.15,0.15
 
+# Title and subtitle; they default to the location name (or its coordinates)
+# and the timeframe. '' leaves one out
+accuratum "belem, brazil" --title "Belém do Pará" --subtitle "Praça da República"
+
 # Vector output (.svg or .pdf) that a print shop can scale to any panel size
 accuratum --lat-long=-15.78,-47.92 --output panel.svg
 
@@ -61,7 +65,9 @@ Each run saves a folder (`--project-dir` sets it; an existing one is only
 overwritten with `--force`):
 
 - `project.json` — short and hand-editable: the `spec` (location, year,
-  period, grid, ...), the `render` settings (font size, logo and compass) and the `labels`, one per line. Move a label by editing `x`/`y`;
+  period, grid, ...), the `render` settings (font size, logo and compass,
+  title and subtitle, where `null` means the default text) and the
+  `labels`, one per line. Move a label by editing `x`/`y`;
   hide or restore one with `hidden` (labels the placement heuristic suppressed
   are kept, hidden); add one by appending `{"text": "...", "x": 0, "y": 3}`.
 - `polylines.npz` — the computed day and hour lines (NumPy arrays).
@@ -101,6 +107,7 @@ from zoneinfo import ZoneInfo
 from accuratum.core.builder import build_plot
 from accuratum.core.hints import RenderHints
 from accuratum.core.spec import Location, SundialSpec, TimeFrame
+from accuratum.defaults.titles import default_subtitle, default_title
 from accuratum.renderers import matplotlib_backend
 
 tz = ZoneInfo("America/Sao_Paulo")
@@ -110,7 +117,8 @@ spec = SundialSpec(
 )
 plot = build_plot(spec)  # pure data: polylines + labels, no matplotlib
 
-fig, _ = matplotlib_backend.render(plot, RenderHints())
+hints = RenderHints(title=default_title(spec), subtitle=default_subtitle(spec))  # no title if left out
+fig, _ = matplotlib_backend.render(plot, hints)
 fig.savefig("clock.png", dpi=200, bbox_inches="tight")
 fig.savefig("clock.svg", bbox_inches="tight")  # vector; .pdf works too
 ```
