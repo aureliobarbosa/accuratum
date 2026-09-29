@@ -449,3 +449,15 @@ def test_project_rejects_location_arguments():
 
     with pytest.raises(SystemExit):
         main(["--project", "x", LATLONG])
+
+
+# --- latitude range ----------------------------------------------------------
+
+
+def test_latitude_out_of_range_is_a_clear_error(tmp_path):
+    from accuratum.cli import main
+
+    with patch("accuratum.cli.timezone_at") as tzf, pytest.raises(SystemExit, match="latitude 80.*±"):
+        main(["--lat-long=80,15", *FAST_GRID_ARGS])
+    tzf.assert_not_called()
+    assert not list(tmp_path.iterdir())

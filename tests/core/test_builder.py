@@ -6,6 +6,7 @@ import pytest
 
 from accuratum.core.builder import build_plot
 from accuratum.core.spec import (
+    MAX_LATITUDE,
     GridConfig,
     Location,
     SundialSpec,
@@ -160,10 +161,11 @@ def test_hour_lines_are_unique_and_consecutive_across_dst():
     assert hours == list(range(hours[0], hours[0] + len(hours)))
 
 
-@pytest.mark.parametrize("lat", [62.0, -62.0])
+@pytest.mark.parametrize("lat", [62.0, -62.0, MAX_LATITUDE, -MAX_LATITUDE])
 @pytest.mark.parametrize("start, end", [((2025, 12, 21), (2026, 6, 21)), ((2026, 6, 21), (2026, 12, 21))])
 def test_build_plot_at_the_edges_of_the_latitude_range(lat, start, end):
-    """±62° (Ferraz station) has winter days with the sun below the 10° cut."""
+    """±62° (Ferraz station) and the range's edges have winter days with the
+    sun below the 10° cut; past the edge, summer days never drop below it."""
     tz = ZoneInfo("UTC")
     spec = SundialSpec(
         location=Location(lat=lat, lon=-58.39, timezone="UTC"),
@@ -176,6 +178,8 @@ def test_build_plot_at_the_edges_of_the_latitude_range(lat, start, end):
         assert poly.xs.size > 0
         assert np.all(np.isfinite(poly.xs)) and np.all(np.isfinite(poly.ys))
     assert any(not label.hidden for label in plot.labels)
+    selectors = [str(label.selector) for label in plot.labels]
+    assert len(selectors) == len(set(selectors))
 
 
 def test_frame_days_are_local_dates_east_of_greenwich():

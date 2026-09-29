@@ -37,7 +37,7 @@ from accuratum.core.builder import build_plot  # noqa: E402
 from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
 from accuratum.core.project import Project, hints_from_dict  # noqa: E402
 from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project  # noqa: E402
-from accuratum.core.spec import GridConfig, Location, SundialSpec, TimeFrame, spec_from_dict  # noqa: E402
+from accuratum.core.spec import MAX_LATITUDE, GridConfig, Location, SundialSpec, TimeFrame, spec_from_dict  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
 from accuratum.renderers import matplotlib_backend  # noqa: E402
 
@@ -89,7 +89,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("location", nargs="?", default=None)
-    parser.add_argument("--lat-long", type=parse_lat_long, default=None, metavar="LAT,LON")
+    parser.add_argument(
+        "--lat-long",
+        type=parse_lat_long,
+        default=None,
+        metavar="LAT,LON",
+        help=f"Latitude within ±{MAX_LATITUDE:g}°. Negative values need '=': --lat-long=-15.78,-47.92.",
+    )
     parser.add_argument(
         "--output",
         "-o",
@@ -178,6 +184,8 @@ def _solstice_timeframe(year: int, period: int, tz: ZoneInfo) -> TimeFrame:
 def _spec_from_args(args: argparse.Namespace) -> SundialSpec:
     """Build a SundialSpec from CLI args."""
     lat, lon = resolve_location(args)
+    if abs(lat) > MAX_LATITUDE:
+        raise SystemExit(f"error: latitude {lat:g}° is outside the supported range ±{MAX_LATITUDE:g}°.")
     tz_str = args.timezone or timezone_at(lat=lat, lng=lon) or "UTC"
     tz = ZoneInfo(tz_str)
     year = args.year if args.year is not None else datetime.now(tz=tz).year

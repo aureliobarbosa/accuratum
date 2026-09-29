@@ -76,6 +76,10 @@ Hour lines are labelled in the zone's **standard time**. Where daylight
 saving applies, add one hour to the dial's reading in summer, as with any
 sundial.
 
+Latitudes from 75° S to 75° N are supported. Past about 56.5°, the winter
+sun stays below the 10° horizon cut for some weeks around the solstice, so
+the dial covers less of the year the closer it is to the poles.
+
 See `accuratum --help` for the full list of options (grid resolution,
 timezone override, plumb length, etc.).
 

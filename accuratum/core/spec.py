@@ -19,6 +19,11 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
 
+# Past ~75.5° the summer sun stays above the 10° horizon cut nearly all day,
+# and the hour lines of one clock hour start to repeat. Up to here the dial
+# is only shortened: the winter weeks with the sun below the cut drop out.
+MAX_LATITUDE = 75.0
+
 
 @dataclass(frozen=True)
 class Location:
@@ -26,6 +31,10 @@ class Location:
     lon: float
     timezone: str
     name: str | None = None
+
+    def __post_init__(self) -> None:
+        if abs(self.lat) > MAX_LATITUDE:
+            raise ValueError(f"latitude {self.lat:g}° is outside the supported range ±{MAX_LATITUDE:g}°.")
 
 
 @dataclass(frozen=True)

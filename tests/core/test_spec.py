@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from accuratum.core.spec import (
+    MAX_LATITUDE,
     GridConfig,
     Location,
     SundialSpec,
@@ -83,3 +84,14 @@ def test_spec_hash_changes_with_any_geometry_input():
     c = spec_from_dict(spec_to_dict(a))
     c.grid = GridConfig(time_step_minutes=10)
     assert len({spec_hash(a), spec_hash(b), spec_hash(c)}) == 3
+
+
+@pytest.mark.parametrize("lat", [MAX_LATITUDE, -MAX_LATITUDE, 0.0])
+def test_location_accepts_latitudes_in_range(lat):
+    assert Location(lat=lat, lon=0.0, timezone="UTC").lat == lat
+
+
+@pytest.mark.parametrize("lat", [MAX_LATITUDE + 0.01, -MAX_LATITUDE - 0.01, 90.0])
+def test_location_rejects_latitudes_out_of_range(lat):
+    with pytest.raises(ValueError, match=f"±{MAX_LATITUDE:g}°"):
+        Location(lat=lat, lon=0.0, timezone="UTC")
