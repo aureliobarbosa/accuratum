@@ -361,36 +361,45 @@ PLAN Step 5.1, 2026-09-29. Commit 23ab8ea.
   `axes_rect` and pinned to its top; the CLI's default overlays lie above
   it.
 
-## Title and subtitle (Step 5.2)
+## Title and subtitle (Steps 5.2–5.3)
 
-PLAN Step 5.2, 2026-09-29. Commit f61a5b1.
+PLAN Steps 5.2 and 5.3, 2026-09-29. Commits f61a5b1 (first version),
+e84ee45 (moved into the `Plot`).
 
-- **Where they live.** `RenderHints.title`/`subtitle` (plus `title_xy`,
-  `subtitle_xy` in figure coords and two font sizes), so they sit in
-  `project.json`'s `render` section, outside `spec_hash`, and are editable
-  like the overlay rects. The renderer draws them with `fig.text`, only
-  when non-empty.
-- **`None` means the default text, `""` means none.** Defaults come from
-  `defaults/titles.py` (`default_title`, `default_subtitle`) and are
-  resolved in the CLI at render time (`_resolved(hints, spec)`), never
-  saved. So renaming `location.name` in `project.json` renames a default
-  title too; a string the user gave is saved and rendered again by
-  `--project`.
-- **Library callers get no title** unless they pass one:
-  `RenderHints()` has `title=None` and the renderer doesn't know the spec.
-  The README example passes `default_title(spec)`.
-- **Default title without a name** (after `--lat-long`):
-  `15.60° S, 47.65° W`. The example projects were given names
-  (`FUP Planaltina`, `Edinburgh`) in `location.name`, which is outside
-  `spec_hash`, and re-rendered.
-- **`--project X --title Y` is not saved**, like every render flag there
-  (see Project folders). The title is saved only when the project is:
-  generation, where the flag becomes part of the saved `render`.
+- **Defaults.** Title: the location name, or `15.60° S, 47.65° W` without
+  one (`--lat-long`). Subtitle: the spec's timeframe as
+  `yyyy-mm-dd / yyyy-mm-dd`, even past 56.5° where the dial ends before the
+  winter solstice. Both in `defaults/titles.py`.
+- **They are `Plot` data, like labels** (5.3). `build_plot` fills the
+  defaults, `project.json` saves the exact text as top-level `title` and
+  `subtitle` next to `labels`, and the renderer draws `plot.title` and
+  `plot.subtitle` when non-empty. `""` leaves one out. Placement
+  (`title_xy`, `subtitle_xy`, figure coords) and font sizes stay in
+  `RenderHints`, like the overlay rects. A `project.json` without the keys
+  gets the defaults on load.
+- **Why 5.2's version was replaced.** 5.2 kept the texts in
+  `RenderHints.title`, `null` meaning "default", resolved by the CLI's
+  `_resolved(hints, spec)` because the renderer never sees the spec. So
+  `render(build_plot(spec))` from Python drew no title, the website would
+  have had to copy CLI code, and `"title": null` didn't show what was
+  drawn. It never left the machine, so there is no migration.
+- **Flags.** `--title`/`--subtitle` are saved when generating. With
+  `--project` they apply to that run only, like every render flag.
+- **`--regenerate`** keeps a text edited by hand and recomputes one still
+  equal to the old default, so a new `period` updates the subtitle.
+  **Trap:** "old default" comes from the spec as it is in `project.json`,
+  i.e. after hand edits (only the timeframe is recomputed later). After
+  editing `location` (the name, or lat/lon without a name) and
+  regenerating, the old location's default title counts as edited and is
+  kept. Rewrite `title` by hand then.
+- **Renaming `location.name` no longer renames the title** (5.2 did). Edit
+  `title` instead; the name still sets the default folder name.
 - **Fit.** At 14 pt, a 38-character title fits between the default logo and
   compass; longer ones reach the overlays. No shrink-to-fit: edit
   `title_fontsize` in `project.json`.
-- **Timeframe, not drawn days.** The subtitle shows the spec's timeframe
-  even past 56.5°, where the dial ends before the winter solstice.
+- **Example projects** got `location.name` (`FUP Planaltina`,
+  `Edinburgh`) and were re-saved, so their `project.json` shows the texts
+  and every render hint. Their PNGs didn't change between 5.2 and 5.3.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 

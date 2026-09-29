@@ -1,6 +1,6 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-29):** Steps 0–5.2 are closed. Next: Step 6. Steps 4–7 are the fast track to a hosted website, so the
+> **Status (2026-09-29):** Steps 0–5.3 are closed. Next: Step 6. Steps 4–7 are the fast track to a hosted website, so the
 > collaborators can meet and start the paper.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
@@ -103,10 +103,18 @@ See [PROJECT_KNOWLEDGE.md § Header band](PROJECT_KNOWLEDGE.md#header-band-step-
 
 - Centered in the header band, between the logo and the compass. Defaults:
   the location name (coordinates without one) and `yyyy-mm-dd / yyyy-mm-dd`.
-- `--title`/`--subtitle` or `render.title`/`render.subtitle` in
-  `project.json`; `null` is the default text, `""` leaves it out.
+- `--title`/`--subtitle` (`""` leaves one out). Placement and font sizes
+  are render hints.
 
-See [PROJECT_KNOWLEDGE.md § Title and subtitle](PROJECT_KNOWLEDGE.md#title-and-subtitle-step-52).
+### Step 5.3 — One definition of the title and subtitle — **done**
+
+- The texts are `Plot` data like labels: `build_plot` fills the defaults,
+  `project.json` saves the exact text, every renderer draws it. Replaced
+  5.2's `render.title` with `null` meaning "default", resolved only by the
+  CLI.
+- `--regenerate` keeps an edited text and recomputes a default one.
+
+See [PROJECT_KNOWLEDGE.md § Title and subtitle](PROJECT_KNOWLEDGE.md#title-and-subtitle-steps-5253).
 
 ## Step 6 — Create the website
 

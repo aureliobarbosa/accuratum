@@ -92,7 +92,7 @@ recomputing.
 | `core/project.py`, `core/project_io.py` | `Project` (spec + plot + render + provenance); `save_project` / `load_project` for a folder, with the stale-spec checks |
 | `core/astronomy.py`, `core/timegrid.py` | Sun alt/az, sunrise/sunset, day- and hour-line time grids (NaT below the horizon cut) |
 | `core/builder.py` | `build_plot(spec) -> Plot`: grids → projection → metadata → default labels |
-| `core/plot.py`, `core/metadata.py`, `core/hints.py` | `Plot`/`Polyline`/`Label` data (labels may be `hidden`); metadata contract; `RenderHints` and overlays |
+| `core/plot.py`, `core/metadata.py`, `core/hints.py` | `Plot`/`Polyline`/`Label` data (labels may be `hidden`; the plot carries the title and subtitle texts); metadata contract; `RenderHints` and overlays |
 | `projections/accuratum.py` | `project(alt, az, plumb_length)`, the plug-in point for other sundial types |
 | `defaults/labels.py`, `defaults/placement.py`, `defaults/titles.py` | Which labels exist; the collision/placement heuristic (suppressed → `hidden`); the default title and subtitle texts |
 | `renderers/matplotlib_backend.py` | `render(plot, hints)`: one matplotlib figure; the output extension picks PNG, PDF or SVG |
