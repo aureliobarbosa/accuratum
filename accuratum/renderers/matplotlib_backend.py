@@ -21,6 +21,8 @@ def render(plot: Plot, hints: RenderHints | None = None) -> tuple[Figure, Axes]:
     ax = fig.add_axes(hints.axes_rect)
     ax.set_aspect("equal")
     ax.set_anchor("N")  # hug the header band, whatever the drawing's shape
+    for spine in ax.spines.values():
+        spine.set_visible(False)
 
     for poly in plot.polylines:
         if poly.xs.size == 0:

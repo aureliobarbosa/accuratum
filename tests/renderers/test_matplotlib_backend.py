@@ -47,3 +47,8 @@ def test_drawing_stays_in_axes_rect_pinned_to_its_top(width, height):
     left, bottom, w, h = hints.axes_rect
     assert box.y1 == pytest.approx(bottom + h)
     assert box.x0 >= left - 1e-9 and box.x1 <= left + w + 1e-9 and box.y0 >= bottom - 1e-9
+
+
+def test_no_frame_around_the_drawing():
+    fig, ax = render(_outline(12.0, 5.0))
+    assert not any(spine.get_visible() for spine in ax.spines.values())

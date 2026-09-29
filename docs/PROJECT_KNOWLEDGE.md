@@ -354,6 +354,9 @@ PLAN Step 5.1, 2026-09-29. Commit 23ab8ea.
 - **Cosmetic, left as is.** Overlays are placed relative to the figure, not
   to the drawn axes, so on a tall (narrower) drawing the logo sits a little
   left of the frame.
+- **No frame around the drawing** (user request). The axes spines were
+  matplotlib's default, not a feature; the axis numbers (plumb lengths)
+  stay.
 - **Tests.** The renderer keeps wide, square and tall drawings inside
   `axes_rect` and pinned to its top; the CLI's default overlays lie above
   it.
