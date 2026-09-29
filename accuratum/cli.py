@@ -50,11 +50,12 @@ DEFAULT_LABEL_FONTSIZE = 7.0
 SOLSTICE_DAY = 21
 
 # Package images are stored in project files as "accuratum:<path>", so a
-# project folder works on any machine with the package installed.
+# project folder works on any machine with the package installed. Both sit
+# in the header band above RenderHints.axes_rect.
 PACKAGE_PREFIX = "accuratum:"
 DEFAULT_OVERLAYS = {
-    "logo": Overlay(image_path=PACKAGE_PREFIX + "fig/unb_basic.jpg", rect=(0.12, 0.75, 0.12, 0.12), name="logo"),
-    "compass": Overlay(image_path=PACKAGE_PREFIX + "fig/rosa.png", rect=(0.78, 0.75, 0.12, 0.12), name="compass"),
+    "logo": Overlay(image_path=PACKAGE_PREFIX + "fig/unb_basic.jpg", rect=(0.12, 0.82, 0.12, 0.12), name="logo"),
+    "compass": Overlay(image_path=PACKAGE_PREFIX + "fig/rosa.png", rect=(0.78, 0.82, 0.12, 0.12), name="compass"),
 }
 
 

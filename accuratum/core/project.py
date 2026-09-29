@@ -90,8 +90,9 @@ def hints_from_dict(data: dict[str, Any]) -> RenderHints:
     """Inverse of ``asdict(hints)``: rebuilds overlays and re-tuplizes sizes."""
     data = dict(data)
     data["overlays"] = [Overlay(**{**o, "rect": tuple(o["rect"])}) for o in data.get("overlays", [])]
-    if "figsize" in data:
-        data["figsize"] = tuple(data["figsize"])
+    for key in ("figsize", "axes_rect"):
+        if key in data:
+            data[key] = tuple(data[key])
     # Keys of removed settings (the custom SVG backend's canvas size) are ignored.
     data = {k: v for k, v in data.items() if k in _HINT_FIELDS}
     return RenderHints(**data)

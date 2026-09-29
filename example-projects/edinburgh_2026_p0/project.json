@@ -34,12 +34,12 @@
     "overlays": [
       {
         "image_path": "accuratum:fig/unb_basic.jpg",
-        "rect": [0.12, 0.75, 0.12, 0.12],
+        "rect": [0.12, 0.82, 0.12, 0.12],
         "name": "logo"
       },
       {
         "image_path": "accuratum:fig/rosa.png",
-        "rect": [0.78, 0.75, 0.12, 0.12],
+        "rect": [0.78, 0.82, 0.12, 0.12],
         "name": "compass"
       }
     ],

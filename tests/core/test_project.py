@@ -35,7 +35,9 @@ def _project() -> Project:
         ],
         data_extent=10.0,
     )
-    render = RenderHints(overlays=[Overlay("logo.png", (0.1, 0.8, 0.1, 0.1))], label_fontsize=9.0)
+    render = RenderHints(
+        overlays=[Overlay("logo.png", (0.1, 0.8, 0.1, 0.1))], label_fontsize=9.0, axes_rect=(0.1, 0.1, 0.8, 0.6)
+    )
     return Project(spec=spec, plot=plot, render=render, provenance={"accuratum": "0.2.0"})
 
 

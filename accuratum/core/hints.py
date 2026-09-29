@@ -24,8 +24,14 @@ class Overlay:
 
 @dataclass
 class RenderHints:
+    """``axes_rect`` (figure coords) holds the drawing, pinned to its top edge.
+    The band above it is the header, where the default overlays sit; the
+    drawing's shape changes with latitude and period, so overlays placed on
+    top of it would cover lines somewhere."""
+
     overlays: list[Overlay] = field(default_factory=list)
     figsize: tuple[float, float] = (8.0, 6.0)
+    axes_rect: tuple[float, float, float, float] = (0.07, 0.05, 0.9, 0.75)
     line_color: str = "green"
     line_width: float = 0.5
     label_color: str = "black"
