@@ -476,10 +476,10 @@ def test_default_overlays_sit_in_the_header_above_the_drawing():
 # --- title and subtitle ------------------------------------------------------
 
 
-def test_default_titles_are_not_saved_but_rendered(tmp_path):
+def test_default_titles_are_saved_and_rendered(tmp_path):
     _generate("-o", "a.svg")
-    render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]
-    assert render["title"] is None and render["subtitle"] is None
+    data = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())
+    assert (data["title"], data["subtitle"]) == ("15.60° S, 47.65° W", "2025-12-21 / 2026-06-21")
     svg = (tmp_path / "a.svg").read_text()
     assert "15.60° S, 47.65° W" in svg
     assert "2025-12-21 / 2026-06-21" in svg
@@ -489,8 +489,27 @@ def test_given_titles_are_saved_and_rendered_again(tmp_path):
     from accuratum.cli import main
 
     _generate("--title", "FUP Planaltina", "--subtitle", "Primeiro semestre")
-    render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]
-    assert (render["title"], render["subtitle"]) == ("FUP Planaltina", "Primeiro semestre")
+    data = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())
+    assert (data["title"], data["subtitle"]) == ("FUP Planaltina", "Primeiro semestre")
     main(["--project", AUTO_DIR, "-o", "b.svg"])
     svg = (tmp_path / "b.svg").read_text()
     assert "FUP Planaltina" in svg and "Primeiro semestre" in svg
+
+
+def test_title_flag_with_project_is_for_this_run_only(tmp_path):
+    from accuratum.cli import main
+
+    _generate()
+    main(["--project", AUTO_DIR, "--title", "Just once", "-o", "b.svg"])
+    assert "Just once" in (tmp_path / "b.svg").read_text()
+    assert load_project(tmp_path / AUTO_DIR).plot.title == "15.60° S, 47.65° W"
+
+
+def test_regenerate_keeps_edited_texts_and_updates_default_ones(tmp_path):
+    from accuratum.cli import main
+
+    _generate("--title", "Mine")
+    _edit_spec(tmp_path / AUTO_DIR, period=1)
+    main(["--project", AUTO_DIR, "--regenerate"])
+    plot = load_project(tmp_path / AUTO_DIR).plot
+    assert (plot.title, plot.subtitle) == ("Mine", "2026-06-21 / 2026-12-21")

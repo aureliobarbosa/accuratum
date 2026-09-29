@@ -30,10 +30,16 @@ def test_hidden_labels_are_not_drawn():
     assert "gone" not in texts
 
 
-def _outline(width: float, height: float) -> Plot:
+def _outline(width: float, height: float, title: str = "", subtitle: str = "") -> Plot:
     xs = np.array([-width / 2, width / 2, width / 2, -width / 2])
     ys = np.array([-height / 2, -height / 2, height / 2, height / 2])
-    return Plot(polylines=[Polyline("dayline", xs, ys, {"kind": "dayline"})], labels=[], data_extent=max(width, height))
+    return Plot(
+        polylines=[Polyline("dayline", xs, ys, {"kind": "dayline"})],
+        labels=[],
+        data_extent=max(width, height),
+        title=title,
+        subtitle=subtitle,
+    )
 
 
 @pytest.mark.parametrize("width, height", [(12.0, 5.0), (12.0, 11.0), (4.0, 11.0)])
@@ -55,8 +61,8 @@ def test_no_frame_around_the_drawing():
 
 
 def test_title_and_subtitle_sit_in_the_header_band():
-    hints = RenderHints(title="Planaltina", subtitle="2025-12-21 / 2026-06-21")
-    fig, ax = render(_outline(12.0, 5.0), hints)
+    hints = RenderHints()
+    fig, ax = render(_outline(12.0, 5.0, "Planaltina", "2025-12-21 / 2026-06-21"), hints)
     texts = {t.get_text(): t for t in fig.texts}
     title, subtitle = texts["Planaltina"], texts["2025-12-21 / 2026-06-21"]
     left, bottom, width, height = hints.axes_rect
@@ -64,7 +70,6 @@ def test_title_and_subtitle_sit_in_the_header_band():
     assert title.get_position()[1] > subtitle.get_position()[1]
 
 
-@pytest.mark.parametrize("title", [None, ""])
-def test_no_title_means_no_text(title):
-    fig, ax = render(_outline(12.0, 5.0), RenderHints(title=title, subtitle=title))
+def test_empty_title_means_no_text():
+    fig, ax = render(_outline(12.0, 5.0))
     assert not fig.texts

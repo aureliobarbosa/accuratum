@@ -94,6 +94,11 @@ def test_labels_carry_metadata_selectors(plot):
             assert "hour" in lbl.selector
 
 
+def test_plot_has_the_default_title_and_subtitle(plot):
+    assert plot.title == "15.60° S, 47.66° W"
+    assert plot.subtitle == "2025-12-21 / 2026-06-21"
+
+
 def test_data_extent_is_positive(plot):
     assert plot.data_extent > 0
 

@@ -65,9 +65,9 @@ Each run saves a folder (`--project-dir` sets it; an existing one is only
 overwritten with `--force`):
 
 - `project.json` — short and hand-editable: the `spec` (location, year,
-  period, grid, ...), the `render` settings (font size, logo and compass,
-  title and subtitle, where `null` means the default text) and the
-  `labels`, one per line. Move a label by editing `x`/`y`;
+  period, grid, ...), the `render` settings (font size, logo and compass),
+  the `title` and `subtitle` (`""` leaves one out) and the `labels`, one
+  per line. Move a label by editing `x`/`y`;
   hide or restore one with `hidden` (labels the placement heuristic suppressed
   are kept, hidden); add one by appending `{"text": "...", "x": 0, "y": 3}`.
 - `polylines.npz` — the computed day and hour lines (NumPy arrays).
@@ -75,8 +75,9 @@ overwritten with `--force`):
 Rendering a folder with `--project` uses the saved lines and labels as they
 are. Render flags given on the command line win over the saved settings for
 that run. If the spec was edited, `--project` refuses and asks for
-`--regenerate`, which recomputes lines and labels (label edits are lost; the
-previous file is kept as `project.json.bak`).
+`--regenerate`, which recomputes lines and labels (label edits are lost; an
+edited title or subtitle is kept; the previous file is kept as
+`project.json.bak`).
 
 Hour lines are labelled in the zone's **standard time**. Where daylight
 saving applies, add one hour to the dial's reading in summer, as with any
@@ -107,7 +108,6 @@ from zoneinfo import ZoneInfo
 from accuratum.core.builder import build_plot
 from accuratum.core.hints import RenderHints
 from accuratum.core.spec import Location, SundialSpec, TimeFrame
-from accuratum.defaults.titles import default_subtitle, default_title
 from accuratum.renderers import matplotlib_backend
 
 tz = ZoneInfo("America/Sao_Paulo")
@@ -117,8 +117,7 @@ spec = SundialSpec(
 )
 plot = build_plot(spec)  # pure data: polylines + labels, no matplotlib
 
-hints = RenderHints(title=default_title(spec), subtitle=default_subtitle(spec))  # no title if left out
-fig, _ = matplotlib_backend.render(plot, hints)
+fig, _ = matplotlib_backend.render(plot, RenderHints())
 fig.savefig("clock.png", dpi=200, bbox_inches="tight")
 fig.savefig("clock.svg", bbox_inches="tight")  # vector; .pdf works too
 ```

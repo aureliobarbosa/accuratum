@@ -8,7 +8,9 @@ On load:
   and the project must be regenerated (:class:`StaleProjectError`);
 - a missing ``polylines.npz`` is recomputed from the spec and written back.
   Labels are kept, since the geometry is identical;
-- an ``npz`` computed from a different spec is rejected.
+- an ``npz`` computed from a different spec is rejected;
+- a ``project.json`` without ``title``/``subtitle`` (saved before they
+  existed) gets the default texts.
 """
 
 import json
@@ -29,6 +31,7 @@ from accuratum.core.project import (
     project_to_dict,
 )
 from accuratum.core.spec import spec_from_dict, spec_hash
+from accuratum.defaults.titles import default_subtitle, default_title
 
 PROJECT_FILE = "project.json"
 DATASET_FILE = "polylines.npz"
@@ -75,9 +78,11 @@ def load_project(directory: str | Path) -> Project:
     else:
         polylines = build_plot(spec).polylines
 
+    title = data.get("title", default_title(spec))
+    subtitle = data.get("subtitle", default_subtitle(spec))
     project = Project(
         spec=spec,
-        plot=plot_from_parts(polylines, labels),
+        plot=plot_from_parts(polylines, labels, title, subtitle),
         render=hints_from_dict(data.get("render", {})),
         provenance=data.get("provenance", {}),
     )

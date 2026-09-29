@@ -2,8 +2,8 @@
 
 Pure top of the core stack: given a :class:`SundialSpec`, generate the
 time grids, project them through the sundial type's projection, attach
-metadata, select and place the default labels, and return a
-:class:`Plot`.
+metadata, select and place the default labels, add the default title and
+subtitle, and return a :class:`Plot`.
 
 No I/O, no matplotlib. The renderer consumes the returned ``Plot``.
 """
@@ -19,6 +19,7 @@ from accuratum.core.spec import SundialSpec
 from accuratum.core.timegrid import dayline_grid, hourline_grid
 from accuratum.defaults.labels import select_dayline_labels, select_hourline_labels
 from accuratum.defaults.placement import place_labels
+from accuratum.defaults.titles import default_subtitle, default_title
 from accuratum.projections.accuratum import project as project_accuratum
 
 
@@ -50,7 +51,14 @@ def build_plot(spec: SundialSpec) -> Plot:
         data_extent=extent,
     )
 
-    return Plot(polylines=polylines, labels=labels, plumb_xy=(0.0, 0.0), data_extent=extent)
+    return Plot(
+        polylines=polylines,
+        labels=labels,
+        plumb_xy=(0.0, 0.0),
+        data_extent=extent,
+        title=default_title(spec),
+        subtitle=default_subtitle(spec),
+    )
 
 
 # --- internals ---------------------------------------------------------------

@@ -34,12 +34,13 @@ def _project() -> Project:
             Label("07h", 3.0, -2.0, "center", "bottom", "hourline", {**HOUR, "end": "end"}, hidden=True),
         ],
         data_extent=10.0,
+        title="FUP",
+        subtitle="",
     )
     render = RenderHints(
         overlays=[Overlay("logo.png", (0.1, 0.8, 0.1, 0.1))],
         label_fontsize=9.0,
         axes_rect=(0.1, 0.1, 0.8, 0.6),
-        title="FUP",
         title_xy=(0.4, 0.9),
         subtitle_xy=(0.4, 0.85),
     )
@@ -61,6 +62,7 @@ def test_roundtrip_restores_everything(tmp_path):
     assert restored.render == original.render
     assert restored.provenance == original.provenance
     assert restored.plot.labels == original.plot.labels
+    assert (restored.plot.title, restored.plot.subtitle) == ("FUP", "")
     assert len(restored.plot.polylines) == len(original.plot.polylines)
     for a, b in zip(restored.plot.polylines, original.plot.polylines):
         assert a.kind == b.kind
@@ -152,8 +154,17 @@ def test_legacy_render_keys_are_ignored():
     assert not hasattr(hints, "canvas_size_mm")
 
 
-def test_old_render_settings_keep_the_default_titles():
-    from accuratum.core.project import hints_from_dict
+def test_project_json_shows_the_texts_drawn(tmp_path):
+    save_project(_project(), tmp_path)
+    data = json.loads((tmp_path / PROJECT_FILE).read_text())
+    assert (data["title"], data["subtitle"]) == ("FUP", "")
 
-    hints = hints_from_dict({"label_fontsize": 9.0})
-    assert hints.title is None and hints.subtitle is None
+
+def test_project_without_texts_gets_the_defaults(tmp_path):
+    save_project(_project(), tmp_path)
+    path = tmp_path / PROJECT_FILE
+    data = json.loads(path.read_text())
+    del data["title"], data["subtitle"]
+    path.write_text(json.dumps(data))
+    plot = load_project(tmp_path).plot
+    assert (plot.title, plot.subtitle) == ("Planaltina", "2025-12-21 / 2026-06-21")

@@ -44,11 +44,18 @@
       }
     ],
     "figsize": [8.0, 6.0],
+    "axes_rect": [0.07, 0.05, 0.9, 0.75],
     "line_color": "green",
     "line_width": 0.5,
     "label_color": "black",
-    "label_fontsize": 7.0
+    "label_fontsize": 7.0,
+    "title_xy": [0.51, 0.9],
+    "subtitle_xy": [0.51, 0.85],
+    "title_fontsize": 14.0,
+    "subtitle_fontsize": 10.0
   },
+  "title": "Edinburgh",
+  "subtitle": "2025-12-21 / 2026-06-21",
   "labels": [
     {"text": "12/21", "x": -1.0579, "y": -5.5698, "hidden": false, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2025-12-21", "end": "start"}},
     {"text": "12/21", "x": 1.0547, "y": -5.5686, "hidden": false, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2025-12-21", "end": "end"}},

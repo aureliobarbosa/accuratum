@@ -56,10 +56,15 @@ class Label:
 
 @dataclass(frozen=True)
 class Plot:
+    """What a renderer draws. ``title`` and ``subtitle`` are the exact texts
+    for the header band (``""`` for none); their placement is a render hint."""
+
     polylines: list[Polyline]
     labels: list[Label]
     plumb_xy: tuple[float, float] = (0.0, 0.0)
     data_extent: float = 1.0
+    title: str = ""
+    subtitle: str = ""
 
 
 def data_extent(polylines: list[Polyline]) -> float:

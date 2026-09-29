@@ -35,6 +35,7 @@ from timezonefinder import timezone_at  # noqa: E402
 
 from accuratum.core.builder import build_plot  # noqa: E402
 from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
+from accuratum.core.plot import Plot  # noqa: E402
 from accuratum.core.project import Project, hints_from_dict  # noqa: E402
 from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project  # noqa: E402
 from accuratum.core.spec import MAX_LATITUDE, GridConfig, Location, SundialSpec, TimeFrame, spec_from_dict  # noqa: E402
@@ -123,8 +124,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--compass", default=None, metavar="PATH")
     parser.add_argument("--compass-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
     parser.add_argument("--label-fontsize", type=float, default=None, metavar="PT")
-    parser.add_argument("--title", default=None, help="Defaults to the location name, or its coordinates. '' for none.")
-    parser.add_argument("--subtitle", default=None, help="Defaults to the timeframe. '' for none.")
+    parser.add_argument(
+        "--title",
+        default=None,
+        help="Defaults to the location name, or its coordinates. '' for none. With --project: this run only.",
+    )
+    parser.add_argument(
+        "--subtitle", default=None, help="Defaults to the timeframe. '' for none. With --project: this run only."
+    )
     parser.add_argument(
         "--project-dir",
         default=None,
@@ -257,8 +264,6 @@ def _render_hints(args: argparse.Namespace, saved: RenderHints | None) -> Render
         base,
         overlays=overlays,
         label_fontsize=args.label_fontsize if args.label_fontsize is not None else base.label_fontsize,
-        title=args.title if args.title is not None else base.title,
-        subtitle=args.subtitle if args.subtitle is not None else base.subtitle,
     )
 
 
@@ -267,9 +272,8 @@ def _portable_path(path: str) -> str:
     return os.path.abspath(path)
 
 
-def _resolved(hints: RenderHints, spec: SundialSpec) -> RenderHints:
-    """Resolve ``accuratum:`` image paths, check that every overlay file exists,
-    and fill in the default title and subtitle."""
+def _resolved(hints: RenderHints) -> RenderHints:
+    """Resolve ``accuratum:`` image paths and check that every overlay file exists."""
     overlays = []
     for overlay in hints.overlays:
         path = overlay.image_path
@@ -278,12 +282,21 @@ def _resolved(hints: RenderHints, spec: SundialSpec) -> RenderHints:
         if not os.path.isfile(path):
             raise SystemExit(f"error: {overlay.name or 'overlay'} file not found: {path}")
         overlays.append(replace(overlay, image_path=path))
+    return replace(hints, overlays=overlays)
+
+
+def _titled(plot: Plot, args: argparse.Namespace) -> Plot:
+    """Replace the plot's title and subtitle with the ones given by flag."""
     return replace(
-        hints,
-        overlays=overlays,
-        title=default_title(spec) if hints.title is None else hints.title,
-        subtitle=default_subtitle(spec) if hints.subtitle is None else hints.subtitle,
+        plot,
+        title=args.title if args.title is not None else plot.title,
+        subtitle=args.subtitle if args.subtitle is not None else plot.subtitle,
     )
+
+
+def _kept(saved: str | None, old_default: str, new_default: str) -> str:
+    """A text edited by hand survives a regenerate; a default one follows the new spec."""
+    return new_default if saved is None or saved == old_default else saved
 
 
 # --- modes -------------------------------------------------------------------
@@ -297,8 +310,8 @@ def _generate(args: argparse.Namespace) -> tuple[Project, Path]:
             f"error: {folder} already holds a project; use --project {folder} to render it, or --force to overwrite."
         )
     render = _render_hints(args, None)
-    _resolved(render, spec)  # fail on a missing image before the slow computation
-    project = Project(spec=spec, plot=build_plot(spec), render=render, provenance=_provenance())
+    _resolved(render)  # fail on a missing image before the slow computation
+    project = Project(spec=spec, plot=_titled(build_plot(spec), args), render=render, provenance=_provenance())
     save_project(project, folder)
     print(f"Saved project to {folder}/")
     return project, folder
@@ -308,11 +321,18 @@ def _regenerate(folder: Path) -> Project:
     """Recompute *folder*'s project from its spec; the timeframe follows year/period."""
     data = json.loads((folder / PROJECT_FILE).read_text(encoding="utf-8"))
     spec = spec_from_dict(data["spec"])
+    old_title, old_subtitle = default_title(spec), default_subtitle(spec)
     if spec.year is not None and spec.period is not None:
         spec.timeframe = _solstice_timeframe(spec.year, spec.period, ZoneInfo(spec.location.timezone))
     render = hints_from_dict(data.get("render", {}))
     shutil.copyfile(folder / PROJECT_FILE, folder / (PROJECT_FILE + ".bak"))
-    project = Project(spec=spec, plot=build_plot(spec), render=render, provenance=_provenance())
+    plot = build_plot(spec)
+    plot = replace(
+        plot,
+        title=_kept(data.get("title"), old_title, plot.title),
+        subtitle=_kept(data.get("subtitle"), old_subtitle, plot.subtitle),
+    )
+    project = Project(spec=spec, plot=plot, render=render, provenance=_provenance())
     save_project(project, folder)
     print(f"Regenerated {folder}/ (previous file kept as {PROJECT_FILE}.bak)")
     return project
@@ -333,14 +353,14 @@ def _open(args: argparse.Namespace) -> tuple[Project, Path]:
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
     project, folder = _open(args) if args.project is not None else _generate(args)
-    hints = _resolved(_render_hints(args, project.render), project.spec)
+    hints = _resolved(_render_hints(args, project.render))
     output = args.output or str(folder / DEFAULT_OUTPUT_NAME)
-    _save(project.plot, hints, output)
+    _save(_titled(project.plot, args), hints, output)
     print(f"Saved Accuratum clock to {output}")
     return 0
 
 
-def _save(plot, hints: RenderHints, output: str) -> None:
+def _save(plot: Plot, hints: RenderHints, output: str) -> None:
     """Render with matplotlib; the extension (.png, .pdf, .svg, ...) picks the format."""
     fig, _ = matplotlib_backend.render(plot, hints)
     fig.savefig(output, dpi=200, bbox_inches="tight")

@@ -49,8 +49,8 @@ def render(plot: Plot, hints: RenderHints | None = None) -> tuple[Figure, Axes]:
         overlay_ax.axis("off")
 
     for text, (x, y), size in (
-        (hints.title, hints.title_xy, hints.title_fontsize),
-        (hints.subtitle, hints.subtitle_xy, hints.subtitle_fontsize),
+        (plot.title, hints.title_xy, hints.title_fontsize),
+        (plot.subtitle, hints.subtitle_xy, hints.subtitle_fontsize),
     ):
         if text:
             fig.text(x, y, text, fontsize=size, color=hints.label_color, ha="center", va="center")

@@ -29,9 +29,8 @@ class RenderHints:
     drawing's shape changes with latitude and period, so overlays placed on
     top of it would cover lines somewhere.
 
-    ``title`` and ``subtitle`` go in the header too, between the default
-    overlays. ``None`` means the default text (the location and the
-    timeframe, filled in before rendering); ``""`` means none."""
+    The plot's title and subtitle go in the header too, between the default
+    overlays, at ``title_xy`` and ``subtitle_xy``."""
 
     overlays: list[Overlay] = field(default_factory=list)
     figsize: tuple[float, float] = (8.0, 6.0)
@@ -40,8 +39,6 @@ class RenderHints:
     line_width: float = 0.5
     label_color: str = "black"
     label_fontsize: float = 7.0
-    title: str | None = None
-    subtitle: str | None = None
     title_xy: tuple[float, float] = (0.51, 0.9)
     subtitle_xy: tuple[float, float] = (0.51, 0.85)
     title_fontsize: float = 14.0

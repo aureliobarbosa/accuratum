@@ -2,9 +2,11 @@
 
 A project lives in a folder. ``project.json`` holds everything a human edits
 or needs to regenerate the geometry (spec, render hints, labels, provenance);
-``polylines.npz`` holds the computed geometry. Labels are plain data there:
+``polylines.npz`` holds the computed geometry. Labels, the title and the
+subtitle are plain data there:
 move one by editing ``x``/``y``, hide or restore one with ``hidden``, or add
-one by appending ``{"text": ..., "x": ..., "y": ...}``.
+one by appending ``{"text": ..., "x": ..., "y": ...}``; rewrite ``title``
+or ``subtitle``, or set one to ``""`` to leave it out.
 
 This module holds the pure conversions; :mod:`accuratum.core.project_io`
 reads and writes the files.
@@ -41,13 +43,22 @@ def project_to_dict(project: Project) -> dict[str, Any]:
         "spec": spec_to_dict(project.spec),
         "spec_hash": spec_hash(project.spec),
         "render": asdict(project.render),
+        "title": project.plot.title,
+        "subtitle": project.plot.subtitle,
         "labels": [label_to_dict(lbl) for lbl in project.plot.labels],
     }
 
 
-def plot_from_parts(polylines: list[Polyline], labels: list[Label]) -> Plot:
+def plot_from_parts(polylines: list[Polyline], labels: list[Label], title: str = "", subtitle: str = "") -> Plot:
     """Rebuild a :class:`Plot`; ``data_extent`` is derived from the polylines."""
-    return Plot(polylines=polylines, labels=labels, plumb_xy=(0.0, 0.0), data_extent=data_extent(polylines))
+    return Plot(
+        polylines=polylines,
+        labels=labels,
+        plumb_xy=(0.0, 0.0),
+        data_extent=data_extent(polylines),
+        title=title,
+        subtitle=subtitle,
+    )
 
 
 # --- labels -------------------------------------------------------------------
