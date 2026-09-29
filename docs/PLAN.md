@@ -1,7 +1,7 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-29):** Steps 0–3 are closed. Next: Step 4 (DST hour
-> labels). Steps 4–7 are the fast track to a hosted website, so the
+> **Status (2026-09-29):** Steps 0–3 are closed. Next: Step 5 (latitudes
+> −62° to +62°), then 5.1 and 5.2. Steps 4–7 are the fast track to a hosted website, so the
 > collaborators can meet and start the paper.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
@@ -70,27 +70,51 @@ See [PROJECT_KNOWLEDGE.md § SVG backend dropped](PROJECT_KNOWLEDGE.md#svg-backe
 
 See [PROJECT_KNOWLEDGE.md § Label sides](PROJECT_KNOWLEDGE.md#label-sides-step-3).
 
-## Step 4 — Duplicate hour label under daylight saving time
+## Step 4 — Duplicate hour label under daylight saving time — **done**
 
-Edinburgh, period 0, gets two hour lines labelled `12h` and none `14h`, so
-two labels share a selector. Cause: an hour line is a fixed UTC time of day,
-but it is labelled with the local clock at its middle sample, and the middle
-samples fall on both sides of the DST switch (29 March).
+- Hour lines are labelled in the zone's standard time (`utcoffset − dst`),
+  not the DST clock. Lines don't move; zones without DST are unchanged.
+- The README tells dial users to add an hour in summer.
 
-1. Failing test: Edinburgh period 0 has unique, consecutive hour selectors;
-   a unit test for the standard-time conversion across the switch.
-2. Label with the zone's standard offset (`utcoffset − dst`) in
-   `_row_to_hourline` (`core/builder.py`). Lines don't move; zones without
-   DST are unchanged. Dials read standard time, as sundials conventionally do.
-3. Regenerate `example-projects/edinburgh_2026_p0`, render a PNG, look at it,
-   then hand it over for visual approval.
-4. Say in the README that hour labels are standard time.
+See [PROJECT_KNOWLEDGE.md § DST hour labels](PROJECT_KNOWLEDGE.md#dst-hour-labels-step-4).
 
-## Step 5 — Extreme latitudes
+## Step 5 — Latitudes from −62° to +62°
 
-Poles, the Arctic/Antarctic circles and the equator are untested. The label
-tolerances and exclusion radius may break there. A web form will accept any
-location, so this must be safe before Step 6.
+Cover **at least −62° to +62°**. That reaches the Comandante Ferraz Antarctic
+Station (Brazil's station in Antarctica, about 62.08° S, 58.39° W). Poles
+and polar circles are out of scope for now. The website (Step 6) will
+accept only this range.
+
+1. Generate dials at a spread of latitudes in the range (e.g. 0°, ±15°,
+   ±30°, ±45°, ±55°, ±62°) for both periods, plus Ferraz itself.
+2. Fix what breaks: label tolerances, the plumb exclusion radius, empty or
+   degenerate lines near the horizon cut.
+3. Add regression tests for the edges of the range (±62°, the equator).
+4. Reject latitudes outside the range with a clear error (CLI and library).
+
+### Step 5.1 — Logo and compass overlap the drawing at high latitudes
+
+At Edinburgh (55.95° N, 3.19° W; `example-projects/edinburgh_2026_p0`) the
+UnB logo covers the top-left `06/07` date label, and the compass sits on
+top of the lines at the top right. Overlays are fixed figure-coordinate
+rects, while the drawing's shape changes with latitude. The overlap gets
+more likely the farther from the equator, where the drawing grows toward
+the top corners.
+
+- By symmetry, the drawing is upside down in the southern hemisphere. Check
+  whether the overlap happens only in the north (e.g. Edinburgh vs. 55.95° S)
+  before choosing a fix.
+- A fix could place the overlays in free space outside the data bbox, or
+  pick the emptier corners.
+
+### Step 5.2 — Title and subtitle
+
+- **Title:** the location name by default, or a user string (CLI flag or
+  `project.json`).
+- **Subtitle:** the timeframe by default, starting simply as
+  `yyyy-mm-dd / yyyy-mm-dd`, or a user string (CLI flag or `project.json`).
+- When the user gives a title or subtitle, it is written to `project.json`
+  when the project is saved, so `--project` renders it again.
 
 ## Step 6 — Create the website
 

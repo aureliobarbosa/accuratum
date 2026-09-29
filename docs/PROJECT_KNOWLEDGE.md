@@ -254,6 +254,31 @@ ship instead of matching the custom SVG output to matplotlib's.
   Inkscape nudges back would then need the inverse of `ax.transData`
   (figure pt, not data units), e.g. stored in the SVG `<metadata>`.
 
+## DST hour labels (Step 4)
+
+PLAN Step 4, 2026-09-29. Commit 963e20c.
+
+- **The bug.** Edinburgh, period 0: two hour lines labelled `12h` (sharing a
+  selector), none `14h`.
+- **Cause.** An hour line is one fixed UTC time of day across the half-year
+  (`hourline_grid` anchors rows at UTC offsets). It was labelled with the
+  local clock at its middle *valid* sample. Rows have different numbers of
+  valid samples (the horizon cut masks winter mornings and evenings), so
+  their middle samples fall on different dates, on both sides of the
+  29 March switch to BST. Neighbouring rows then read different clocks.
+- **Fix.** `_utc_dt64_to_standard_time` in `core/builder.py` removes
+  `dst()` from the local time, so each line carries the zone's standard
+  hour. Lines don't move. Sundials conventionally read standard time; a
+  line can't carry both clocks, because the DST shift happens partway along
+  the same curve. Splitting each line at the switch was rejected: two clocks
+  on one dial.
+- **Checked.** Edinburgh now runs 05h–19h GMT. `12h` sits just before the
+  centre line, matching solar noon ≈ 12:13 GMT at 3.19° W. Planaltina (no
+  DST) regenerates with identical labels.
+- **Test.** `test_hour_lines_are_unique_and_consecutive_across_dst` needs a
+  fine hourline grid (7-day step, 20-min time step) to reproduce the
+  duplicate; the module's coarse `FAST_GRID` doesn't.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
