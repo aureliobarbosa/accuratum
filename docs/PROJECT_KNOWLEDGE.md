@@ -331,6 +331,33 @@ PLAN Step 5, 2026-09-29. Commits 2966726, a28f3af, a290a3a.
   days (`test_astronomy.py`, `test_timegrid.py`), the wrap at four
   longitudes, and local frame dates in Sydney.
 
+## Header band (Step 5.1)
+
+PLAN Step 5.1, 2026-09-29. Commit 23ab8ea.
+
+- **The bug.** Overlays (logo, compass) are figure-coordinate rects, drawn
+  on top of the axes. The drawing's shape changes with latitude *and*
+  period: Edinburgh p0's logo hid `06/07`, +62° p1's compass covered
+  `06/21` and `08/02`, −62° p0 was just clear, and at ±75° the horseshoe
+  fills both top corners. So "check the southern hemisphere, then pick the
+  emptier corner" had no single answer, and the horseshoe has no empty
+  corner.
+- **Fix.** `RenderHints.axes_rect` (default `(0.07, 0.05, 0.9, 0.75)`) holds
+  the drawing, with `ax.set_anchor("N")` so it hugs the top of that rect
+  whether it is wide (tropics) or tall (high latitudes). The default overlays
+  moved to `y = 0.82`, in the header band above. `bbox_inches="tight"`
+  crops the unused margins.
+- **Old projects keep their saved overlay rects** (`y = 0.75`), which still
+  dip into the new axes area. There is no migration; re-render them with
+  `--logo-rect`/`--compass-rect`, or edit `project.json`. The two example
+  projects were edited.
+- **Cosmetic, left as is.** Overlays are placed relative to the figure, not
+  to the drawn axes, so on a tall (narrower) drawing the logo sits a little
+  left of the frame.
+- **Tests.** The renderer keeps wide, square and tall drawings inside
+  `axes_rect` and pinned to its top; the CLI's default overlays lie above
+  it.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in

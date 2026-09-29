@@ -1,6 +1,6 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-29):** Steps 0–5 are closed. Next: Steps 5.1 and 5.2. Steps 4–7 are the fast track to a hosted website, so the
+> **Status (2026-09-29):** Steps 0–5.1 are closed. Next: Step 5.2. Steps 4–7 are the fast track to a hosted website, so the
 > collaborators can meet and start the paper.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
@@ -91,23 +91,13 @@ See [PROJECT_KNOWLEDGE.md § DST hour labels](PROJECT_KNOWLEDGE.md#dst-hour-labe
 
 See [PROJECT_KNOWLEDGE.md § Latitude range](PROJECT_KNOWLEDGE.md#latitude-range-step-5).
 
-### Step 5.1 — Logo and compass overlap the drawing at high latitudes
+### Step 5.1 — Logo and compass overlap the drawing — **done**
 
-At Edinburgh (55.95° N, 3.19° W; `example-projects/edinburgh_2026_p0`) the
-UnB logo covers the top-left `06/07` date label, and the compass sits on
-top of the lines at the top right. Overlays are fixed figure-coordinate
-rects, while the drawing's shape changes with latitude. The overlap gets
-more likely the farther from the equator, where the drawing grows toward
-the top corners.
+- A header band above the drawing holds the overlays (`RenderHints.axes_rect`,
+  drawing anchored to its top). No corner heuristic: the overlap depended on
+  hemisphere *and* period.
 
-- By symmetry, the drawing is upside down in the southern hemisphere. Check
-  whether the overlap happens only in the north (e.g. Edinburgh vs. 55.95° S)
-  before choosing a fix.
-  Step 5 renders (lon −47.92°): at +62° p1 the compass covers `06/21` and
-  `08/02`; at −62° p0 the logo sits just clear of `05/03`; at ±74–75° the
-  horseshoe reaches both top corners. It depends on hemisphere *and* period.
-- A fix could place the overlays in free space outside the data bbox, or
-  pick the emptier corners.
+See [PROJECT_KNOWLEDGE.md § Header band](PROJECT_KNOWLEDGE.md#header-band-step-51).
 
 ### Step 5.2 — Title and subtitle
 
@@ -117,6 +107,8 @@ the top corners.
   `yyyy-mm-dd / yyyy-mm-dd`, or a user string (CLI flag or `project.json`).
 - When the user gives a title or subtitle, it is written to `project.json`
   when the project is saved, so `--project` renders it again.
+- Place both in the header band (Step 5.1), between the logo and the
+  compass.
 
 ## Step 6 — Create the website
 
