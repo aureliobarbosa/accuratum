@@ -24,8 +24,9 @@ commit that shrinks the step in PLAN.md.
   astronomical units, not local time. The local timezone comes from
   `timezonefinder` (or `--timezone`) and is used only for labels and hour
   selection.
-- **No daylight-saving handling**, at least for now. Hour lines follow the
-  official zone offset.
+- **Hour lines are labelled in standard time** (see § DST hour labels).
+- **Days are local days**, starting at local mean midnight, not 00 UTC
+  (see § Latitude range).
 - **Leap years need no special handling**; astropy takes care of them.
 - **Resolution agreed with Paulo (the creator):** day lines every 7 days
   (`--dayline-day-step` default), hour lines every 20 minutes
@@ -278,6 +279,50 @@ PLAN Step 4, 2026-09-29. Commit 963e20c.
 - **Test.** `test_hour_lines_are_unique_and_consecutive_across_dst` needs a
   fine hourline grid (7-day step, 20-min time step) to reproduce the
   duplicate; the module's coarse `FAST_GRID` doesn't.
+
+## Latitude range (Step 5)
+
+PLAN Step 5, 2026-09-29. Commits 2966726, a28f3af, a290a3a.
+
+- **Sweep.** Dials at 0°, ±15°, ±30°, ±45°, ±55°, ±62° and Ferraz
+  (62.08° S, 58.39° W), both periods, then 64°–80° and lon −170°…+170°.
+  Up to ±55° nothing broke.
+- **Polar-winter days (2966726).** Past |lat| ≈ 56.5° (90° − 23.44° − 10°)
+  the winter noon sun stays below the 10° horizon cut. astroplan then
+  returns *masked* rise times (with a `TargetNeverUpWarning`), and
+  `sun_set_time(masked)` crashed with a `numpy.einsum` TypeError.
+  `get_sunrises_and_sunsets` now returns NaT for those days (and silences
+  the warning), `hourline_grid` ignores them when sizing its window, and
+  `build_plot` drops empty polylines. The dial simply ends before the
+  winter solstice: at ±62° about May–July (south) or Nov–Jan (north) is
+  missing. That's the cut, not a bug; see the backlog for a
+  latitude-dependent cut.
+- **Longitude wrap (a28f3af), found by the sweep.** `hourline_grid`
+  measured each sunset from *its own* UTC date. Wherever the local day
+  straddles 00 UTC (lon ±120°…±170°: US west coast, East Asia, Australia,
+  New Zealand), a sunset after 00 UTC wrapped to a few minutes and the dial
+  had **no hour lines at all**, at any latitude. Days are now local days:
+  rise/set are searched from *local mean midnight* (00 UTC − 4 min per
+  degree of longitude, rounded to the minute, `local_mean_midnights` in
+  `core/astronomy.py`) and measured from it. The frame's days are its
+  local dates (`_frame_days`): 21 Jun 00:00 in Sydney is 20 Jun in UTC.
+  Hour lines where nothing wrapped are identical; day-line ends move by
+  <0.003 plumb lengths (astroplan's solver starting elsewhere).
+- **MAX_LATITUDE = 75° (a290a3a).** With no further code changes, dials are
+  clean at ±75° at every longitude tried. At ±75.5° label selectors repeat.
+  The summer sun then stays above the 10° cut nearly all day, the hour window
+  nears 24 h, and two lines round to the same hour (the selector carries the
+  hour, not `minute_offset`). The theoretical wall is 76.56°
+  (90° − 23.44° + 10°): there the summer sun never drops below 10°, and
+  summer days drop out as well. `Location.__post_init__` rejects |lat| > 75; the CLI
+  exits before the timezone lookup.
+- **Not bugs.** Hooks on early/late hour lines near the cut (e.g. −55° p1,
+  Sydney) are the analemma turning at the solstice. A p0 dial's top line
+  is labelled with June's *first* day line (e.g. `06/07`), not `06/21`:
+  the month-transition label rule.
+- **Tests.** Edge builds at ±62° and ±75° (`test_builder.py`), never-up
+  days (`test_astronomy.py`, `test_timegrid.py`), the wrap at four
+  longitudes, and local frame dates in Sydney.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 
