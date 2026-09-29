@@ -59,3 +59,15 @@ def test_days_without_the_sun_above_the_horizon_are_nat():
     assert list(np.isnat(rises)) == [False, True]
     assert list(np.isnat(sets)) == [False, True]
     assert sets[0] > rises[0]
+
+
+@pytest.mark.parametrize("lon", [-170.0, 170.0])
+def test_rise_and_set_fall_on_the_local_day(lon):
+    """The search starts at local mean midnight, so rise and set are the
+    same local day's, whatever the longitude."""
+    dates = np.array(["2026-03-21"], dtype="datetime64[D]")
+    rises, sets = get_sunrises_and_sunsets(dates, lat=0.0, lon=lon)
+    local_midnight = dates.astype("datetime64[s]") - np.timedelta64(round(lon * 4), "m")
+    hours_after = (rises - local_midnight).astype("timedelta64[m]").astype(int) / 60
+    assert 5 < hours_after[0] < 7
+    assert 11 < (sets - rises).astype("timedelta64[m]").astype(int)[0] / 60 < 13

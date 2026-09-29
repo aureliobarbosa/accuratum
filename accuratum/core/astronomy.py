@@ -25,6 +25,16 @@ def get_sun_altaz(times: np.ndarray, frame: AltAz) -> tuple[np.ndarray, np.ndarr
     return sun.alt.value, sun.az.value  # type: ignore[return-value]
 
 
+def local_mean_midnights(dates: np.ndarray, lon: float) -> np.ndarray:
+    """Local mean midnight of each date, as UTC ``datetime64[s]``.
+
+    That is 00 UTC shifted by the longitude (4 min per degree, rounded to
+    the minute). Anchoring days at 00 UTC instead splits the local day in
+    two wherever it straddles 00 UTC (the Americas' west, Asia, Oceania).
+    """
+    return dates.astype("datetime64[D]").astype("datetime64[s]") - np.timedelta64(round(lon * 4), "m")
+
+
 def get_sunrises_and_sunsets(
     dates: np.ndarray,
     lat: float,
@@ -34,12 +44,14 @@ def get_sunrises_and_sunsets(
     """``(sunrises, sunsets)`` as ``datetime64[s]`` arrays for each date in *dates*.
 
     *dates* is an array of ``datetime64`` (any time-of-day component is
-    ignored). *horizon_deg* is the altitude in degrees that defines
+    ignored). The search starts at each date's local mean midnight (see
+    :func:`local_mean_midnights`), so rise and set belong to the same local
+    day at any longitude. *horizon_deg* is the altitude in degrees that defines
     rise/set; ``0`` is the geometric horizon. Days when the sun never
     climbs above it (high-latitude winters) are ``NaT`` in both arrays.
     """
     observer = Observer(location=EarthLocation(lat=lat * deg, lon=lon * deg))
-    midnights = Time([f"{d}T00:00:00" for d in dates], format="isot", scale="utc")
+    midnights = Time(local_mean_midnights(dates, lon), scale="utc")
     with warnings.catch_warnings():
         # Expected past |lat| ≈ 56.5° with a 10° cut; those days become NaT.
         warnings.simplefilter("ignore", TargetNeverUpWarning)

@@ -176,3 +176,15 @@ def test_build_plot_at_the_edges_of_the_latitude_range(lat, start, end):
         assert poly.xs.size > 0
         assert np.all(np.isfinite(poly.xs)) and np.all(np.isfinite(poly.ys))
     assert any(not label.hidden for label in plot.labels)
+
+
+def test_frame_days_are_local_dates_east_of_greenwich():
+    """21 Jun 00:00 in Sydney is still 20 Jun in UTC; the dial starts on the 21st."""
+    tz = ZoneInfo("Australia/Sydney")
+    spec = SundialSpec(
+        location=Location(lat=-33.87, lon=151.21, timezone="Australia/Sydney"),
+        timeframe=TimeFrame(start=datetime(2026, 6, 21, tzinfo=tz), end=datetime(2026, 12, 21, tzinfo=tz)),
+        grid=FAST_GRID,
+    )
+    dates = [p.metadata["date"] for p in build_plot(spec).polylines if p.kind == "dayline"]
+    assert dates[0] == "2026-06-21"

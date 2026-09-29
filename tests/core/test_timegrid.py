@@ -2,6 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import numpy as np
+import pytest
 
 from accuratum.core.spec import GridConfig, Location, TimeFrame
 from accuratum.core.timegrid import dayline_grid, hourline_grid
@@ -73,3 +74,14 @@ def test_hourline_grid_skips_days_without_sun():
     grid = hourline_grid(WINTER_FRAME, FERRAZ, WEEKLY_GRID)
     assert grid.shape[0] > 0
     assert (~np.isnat(grid)).any()
+
+
+@pytest.mark.parametrize("lon", [-170.0, -120.0, 120.0, 170.0])
+def test_hourline_grid_where_the_local_day_straddles_utc_midnight(lon):
+    """Sunsets after 00 UTC used to wrap to the next date and empty the grid."""
+    greenwich = hourline_grid(TIMEFRAME, Location(lat=0.0, lon=0.0, timezone="UTC"), WEEKLY_GRID)
+    grid = hourline_grid(TIMEFRAME, Location(lat=0.0, lon=lon, timezone="UTC"), WEEKLY_GRID)
+    lit = (~np.isnat(grid)).sum()
+    assert abs(lit - (~np.isnat(greenwich)).sum()) <= 0.05 * lit
+    # No row repeats another's time of day, i.e. the window spans under a day.
+    assert grid.shape[0] * WEEKLY_GRID.time_step_minutes < 24 * 60
