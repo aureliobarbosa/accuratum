@@ -39,7 +39,7 @@ from accuratum.core.project import Project, hints_from_dict  # noqa: E402
 from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project  # noqa: E402
 from accuratum.core.spec import GridConfig, Location, SundialSpec, TimeFrame, spec_from_dict  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
-from accuratum.renderers import matplotlib_backend, svg_backend  # noqa: E402
+from accuratum.renderers import matplotlib_backend  # noqa: E402
 
 DEFAULT_OUTPUT_NAME = "accuratum.png"
 DEFAULT_LINE_POINTS = 500
@@ -116,16 +116,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--compass-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
     parser.add_argument("--label-fontsize", type=float, default=None, metavar="PT")
     parser.add_argument(
-        "--canvas-size-mm",
-        type=_parse_canvas_mm,
-        default=None,
-        metavar="WIDTH,HEIGHT",
-        help=(
-            "SVG canvas size in millimetres, e.g. --canvas-size-mm=6000,2000 for a "
-            "6m x 2m panel. Defaults to 297,210 (A4 landscape). Ignored for raster output."
-        ),
-    )
-    parser.add_argument(
         "--project-dir",
         default=None,
         metavar="DIR",
@@ -138,7 +128,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="DIR",
         help=(
             "Render a saved project folder without recomputing it. Render flags "
-            "(--logo, --canvas-size-mm, ...) override its saved render settings for this run."
+            "(--logo, --label-fontsize, ...) override its saved render settings for this run."
         ),
     )
     parser.add_argument(
@@ -150,16 +140,6 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     return parser
-
-
-def _parse_canvas_mm(value: str) -> tuple[float, float]:
-    parts = [p.strip() for p in value.split(",")]
-    if len(parts) != 2:
-        raise ValueError(f"expected 'WIDTH,HEIGHT', got {value!r}")
-    try:
-        return float(parts[0]), float(parts[1])
-    except ValueError:
-        raise ValueError(f"could not parse {value!r} as two floats.")
 
 
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -265,7 +245,6 @@ def _render_hints(args: argparse.Namespace, saved: RenderHints | None) -> Render
         base,
         overlays=overlays,
         label_fontsize=args.label_fontsize if args.label_fontsize is not None else base.label_fontsize,
-        canvas_size_mm=args.canvas_size_mm if args.canvas_size_mm is not None else base.canvas_size_mm,
     )
 
 
@@ -342,13 +321,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def _save(plot, hints: RenderHints, output: str) -> None:
-    """Pick renderer by *output* extension and write to disk."""
-    ext = os.path.splitext(output)[1].lower()
-    if ext == ".svg":
-        svg = svg_backend.render(plot, hints)
-        with open(output, "w", encoding="utf-8") as fh:
-            fh.write(svg)
-        return
+    """Render with matplotlib; the extension (.png, .pdf, .svg, ...) picks the format."""
     fig, _ = matplotlib_backend.render(plot, hints)
     fig.savefig(output, dpi=200, bbox_inches="tight")
     plt.close(fig)

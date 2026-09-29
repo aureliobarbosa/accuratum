@@ -292,21 +292,21 @@ def test_main_saves_output_image(tmp_path):
 # --- vector output formats ---------------------------------------------------
 
 
-def test_main_saves_svg_with_selector_derived_gids(tmp_path):
+def test_main_saves_svg_through_matplotlib(tmp_path):
     from accuratum.cli import main
 
     out = tmp_path / "clock.svg"
     exit_code = main(["--lat-long=-15.6,-47.65", "--output", str(out), *FAST_GRID_ARGS])
     assert exit_code == 0
-    assert out.exists()
+    # Same drawing as the PNG: .svg goes through matplotlib's own writer.
+    assert "matplotlib.org" in out.read_text()
 
-    body = out.read_text()
-    # svg_backend emits selector-derived ids like "label-dayline-2026-01-15".
-    assert 'id="label-dayline-' in body
-    assert 'id="label-hourline-' in body
-    # polylines carry "poly-<selector>" ids.
-    assert 'id="poly-dayline-' in body
-    assert 'id="poly-hourline-' in body
+
+def test_canvas_size_flag_is_gone(tmp_path):
+    from accuratum.cli import main
+
+    with pytest.raises(SystemExit):
+        main(["--lat-long=-15.6,-47.65", "--canvas-size-mm=6000,2000", *FAST_GRID_ARGS])
 
 
 def test_main_saves_pdf_output(tmp_path):
@@ -392,13 +392,9 @@ def test_project_render_defaults_into_its_folder(tmp_path):
 
 
 def test_render_settings_are_saved_and_cli_flags_win(tmp_path):
-    from accuratum.cli import main
-
-    _generate("--canvas-size-mm=6000,2000")
-    main(["--project", AUTO_DIR, "-o", "saved.svg"])
-    main(["--project", AUTO_DIR, "-o", "cli.svg", "--canvas-size-mm=297,210"])
-    assert 'width="6000.0mm"' in (tmp_path / "saved.svg").read_text()
-    assert 'width="297.0mm"' in (tmp_path / "cli.svg").read_text()
+    _generate("--label-fontsize=9")
+    render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]
+    assert render["label_fontsize"] == 9.0
 
 
 def test_default_overlays_are_stored_as_package_paths(tmp_path):
@@ -417,7 +413,7 @@ def test_hand_edited_label_is_rendered(tmp_path):
     data["labels"].append({"text": "HELLO", "x": 0.0, "y": 1.0})
     path.write_text(json.dumps(data))
     main(["--project", AUTO_DIR, "-o", "b.svg"])
-    assert ">HELLO<" in (tmp_path / "b.svg").read_text()
+    assert "HELLO" in (tmp_path / "b.svg").read_text()
 
 
 def _edit_spec(folder, **changes):

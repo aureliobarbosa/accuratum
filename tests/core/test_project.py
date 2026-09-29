@@ -35,7 +35,7 @@ def _project() -> Project:
         ],
         data_extent=10.0,
     )
-    render = RenderHints(overlays=[Overlay("logo.png", (0.1, 0.8, 0.1, 0.1))], canvas_size_mm=(6000.0, 2000.0))
+    render = RenderHints(overlays=[Overlay("logo.png", (0.1, 0.8, 0.1, 0.1))], label_fontsize=9.0)
     return Project(spec=spec, plot=plot, render=render, provenance={"accuratum": "0.2.0"})
 
 
@@ -135,3 +135,11 @@ def test_missing_dataset_is_rebuilt_and_labels_kept(tmp_path):
     assert (tmp_path / DATASET_FILE).is_file()
     assert restored.plot.labels == original.plot.labels
     assert {p.kind for p in restored.plot.polylines} == {"dayline", "hourline"}
+
+
+def test_legacy_render_keys_are_ignored():
+    from accuratum.core.project import hints_from_dict
+
+    hints = hints_from_dict({"canvas_size_mm": [6000, 2000], "units": "mm", "label_fontsize": 9.0})
+    assert hints.label_fontsize == 9.0
+    assert not hasattr(hints, "canvas_size_mm")

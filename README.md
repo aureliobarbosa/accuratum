@@ -45,8 +45,8 @@ accuratum --lat-long=-15.78,-47.92 --year 2026 --period 1
 # Override the overlay logo and its position/size (figure coords, 0-1)
 accuratum --lat-long=0,0 --logo my_logo.png --logo-rect=0.1,0.8,0.15,0.15
 
-# Vector output in real millimetres, e.g. a 6 m x 2 m panel (.pdf also works)
-accuratum --lat-long=-15.78,-47.92 --canvas-size-mm=6000,2000 --output panel.svg
+# Vector output (.svg or .pdf) that a print shop can scale to any panel size
+accuratum --lat-long=-15.78,-47.92 --output panel.svg
 
 # Hand-edit labels in <folder>/project.json, then render without recomputing
 accuratum --project lat-15.78_lon-47.92_2026_p0 --output clock.svg
@@ -61,8 +61,7 @@ Each run saves a folder (`--project-dir` sets it; an existing one is only
 overwritten with `--force`):
 
 - `project.json` — short and hand-editable: the `spec` (location, year,
-  period, grid, ...), the `render` settings (canvas size, font size, logo and
-  compass) and the `labels`, one per line. Move a label by editing `x`/`y`;
+  period, grid, ...), the `render` settings (font size, logo and compass) and the `labels`, one per line. Move a label by editing `x`/`y`;
   hide or restore one with `hidden` (labels the placement heuristic suppressed
   are kept, hidden); add one by appending `{"text": "...", "x": 0, "y": 3}`.
 - `polylines.npz` — the computed day and hour lines (NumPy arrays).
@@ -94,7 +93,7 @@ from zoneinfo import ZoneInfo
 from accuratum.core.builder import build_plot
 from accuratum.core.hints import RenderHints
 from accuratum.core.spec import Location, SundialSpec, TimeFrame
-from accuratum.renderers import matplotlib_backend, svg_backend
+from accuratum.renderers import matplotlib_backend
 
 tz = ZoneInfo("America/Sao_Paulo")
 spec = SundialSpec(
@@ -105,9 +104,7 @@ plot = build_plot(spec)  # pure data: polylines + labels, no matplotlib
 
 fig, _ = matplotlib_backend.render(plot, RenderHints())
 fig.savefig("clock.png", dpi=200, bbox_inches="tight")
-
-with open("clock.svg", "w", encoding="utf-8") as fh:  # real millimetres, e.g. a 6 m x 2 m panel
-    fh.write(svg_backend.render(plot, RenderHints(canvas_size_mm=(6000, 2000))))
+fig.savefig("clock.svg", bbox_inches="tight")  # vector; .pdf works too
 ```
 
 To save and reload a project folder from Python, use

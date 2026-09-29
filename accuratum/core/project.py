@@ -10,7 +10,7 @@ This module holds the pure conversions; :mod:`accuratum.core.project_io`
 reads and writes the files.
 """
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from typing import Any
 
 import numpy as np
@@ -83,14 +83,17 @@ def label_from_dict(data: dict[str, Any]) -> Label:
 # --- render hints -------------------------------------------------------------
 
 
+_HINT_FIELDS = {f.name for f in fields(RenderHints)}
+
+
 def hints_from_dict(data: dict[str, Any]) -> RenderHints:
     """Inverse of ``asdict(hints)``: rebuilds overlays and re-tuplizes sizes."""
     data = dict(data)
     data["overlays"] = [Overlay(**{**o, "rect": tuple(o["rect"])}) for o in data.get("overlays", [])]
     if "figsize" in data:
         data["figsize"] = tuple(data["figsize"])
-    if data.get("canvas_size_mm") is not None:
-        data["canvas_size_mm"] = tuple(data["canvas_size_mm"])
+    # Keys of removed settings (the custom SVG backend's canvas size) are ignored.
+    data = {k: v for k, v in data.items() if k in _HINT_FIELDS}
     return RenderHints(**data)
 
 

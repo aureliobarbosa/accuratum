@@ -44,8 +44,6 @@
       }
     ],
     "figsize": [8.0, 6.0],
-    "canvas_size_mm": null,
-    "units": "mm",
     "line_color": "green",
     "line_width": 0.5,
     "label_color": "black",
