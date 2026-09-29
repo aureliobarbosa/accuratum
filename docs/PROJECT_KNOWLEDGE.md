@@ -361,6 +361,37 @@ PLAN Step 5.1, 2026-09-29. Commit 23ab8ea.
   `axes_rect` and pinned to its top; the CLI's default overlays lie above
   it.
 
+## Title and subtitle (Step 5.2)
+
+PLAN Step 5.2, 2026-09-29. Commit f61a5b1.
+
+- **Where they live.** `RenderHints.title`/`subtitle` (plus `title_xy`,
+  `subtitle_xy` in figure coords and two font sizes), so they sit in
+  `project.json`'s `render` section, outside `spec_hash`, and are editable
+  like the overlay rects. The renderer draws them with `fig.text`, only
+  when non-empty.
+- **`None` means the default text, `""` means none.** Defaults come from
+  `defaults/titles.py` (`default_title`, `default_subtitle`) and are
+  resolved in the CLI at render time (`_resolved(hints, spec)`), never
+  saved. So renaming `location.name` in `project.json` renames a default
+  title too; a string the user gave is saved and rendered again by
+  `--project`.
+- **Library callers get no title** unless they pass one:
+  `RenderHints()` has `title=None` and the renderer doesn't know the spec.
+  The README example passes `default_title(spec)`.
+- **Default title without a name** (after `--lat-long`):
+  `15.60° S, 47.65° W`. The example projects were given names
+  (`FUP Planaltina`, `Edinburgh`) in `location.name`, which is outside
+  `spec_hash`, and re-rendered.
+- **`--project X --title Y` is not saved**, like every render flag there
+  (see Project folders). The title is saved only when the project is:
+  generation, where the flag becomes part of the saved `render`.
+- **Fit.** At 14 pt, a 38-character title fits between the default logo and
+  compass; longer ones reach the overlays. No shrink-to-fit: edit
+  `title_fontsize` in `project.json`.
+- **Timeframe, not drawn days.** The subtitle shows the spec's timeframe
+  even past 56.5°, where the dial ends before the winter solstice.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in

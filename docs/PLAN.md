@@ -1,6 +1,6 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-29):** Steps 0–5.1 are closed. Next: Step 5.2. Steps 4–7 are the fast track to a hosted website, so the
+> **Status (2026-09-29):** Steps 0–5.2 are closed. Next: Step 6. Steps 4–7 are the fast track to a hosted website, so the
 > collaborators can meet and start the paper.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
@@ -99,16 +99,14 @@ See [PROJECT_KNOWLEDGE.md § Latitude range](PROJECT_KNOWLEDGE.md#latitude-range
 
 See [PROJECT_KNOWLEDGE.md § Header band](PROJECT_KNOWLEDGE.md#header-band-step-51).
 
-### Step 5.2 — Title and subtitle
+### Step 5.2 — Title and subtitle — **done**
 
-- **Title:** the location name by default, or a user string (CLI flag or
-  `project.json`).
-- **Subtitle:** the timeframe by default, starting simply as
-  `yyyy-mm-dd / yyyy-mm-dd`, or a user string (CLI flag or `project.json`).
-- When the user gives a title or subtitle, it is written to `project.json`
-  when the project is saved, so `--project` renders it again.
-- Place both in the header band (Step 5.1), between the logo and the
-  compass.
+- Centered in the header band, between the logo and the compass. Defaults:
+  the location name (coordinates without one) and `yyyy-mm-dd / yyyy-mm-dd`.
+- `--title`/`--subtitle` or `render.title`/`render.subtitle` in
+  `project.json`; `null` is the default text, `""` leaves it out.
+
+See [PROJECT_KNOWLEDGE.md § Title and subtitle](PROJECT_KNOWLEDGE.md#title-and-subtitle-step-52).
 
 ## Step 6 — Create the website
 

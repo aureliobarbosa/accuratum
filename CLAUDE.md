@@ -94,7 +94,7 @@ recomputing.
 | `core/builder.py` | `build_plot(spec) -> Plot`: grids → projection → metadata → default labels |
 | `core/plot.py`, `core/metadata.py`, `core/hints.py` | `Plot`/`Polyline`/`Label` data (labels may be `hidden`); metadata contract; `RenderHints` and overlays |
 | `projections/accuratum.py` | `project(alt, az, plumb_length)`, the plug-in point for other sundial types |
-| `defaults/labels.py`, `defaults/placement.py` | Which labels exist, and the collision/placement heuristic (suppressed → `hidden`) |
+| `defaults/labels.py`, `defaults/placement.py`, `defaults/titles.py` | Which labels exist; the collision/placement heuristic (suppressed → `hidden`); the default title and subtitle texts |
 | `renderers/matplotlib_backend.py` | `render(plot, hints)`: one matplotlib figure; the output extension picks PNG, PDF or SVG |
 | `cli.py`, `location.py` | All I/O: argv, project folders, geocoding (Nominatim), timezone lookup, current time, file output |
 
