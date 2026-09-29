@@ -18,7 +18,7 @@ uv sync --extra dev                                    # environment (Python 3.1
 uv run pytest -q                                       # all tests
 uv run ruff check . && uv run ruff format --check .    # what CI enforces
 uv run accuratum --lat-long=-15.78,-47.92 --year 2026   # generate a project folder (negative coords need '=')
-uv run accuratum --project lat-15.78_lon-47.92_2026_p0 -o panel.svg --canvas-size-mm=6000,2000
+uv run accuratum --project lat-15.78_lon-47.92_2026_p0 -o panel.svg   # .png/.pdf/.svg, all via matplotlib
 uv run accuratum --help
 ```
 
@@ -31,8 +31,8 @@ production code.
   branches.
 - **Test Driven Development:** write the failing test first, see it fail, then
   write the code. The exception is rendered output
-  (`renderers/matplotlib_backend.py`), which is checked visually. Structural facts about the output, such as SVG
-  ids, units and file type, still get tests.
+  (`renderers/matplotlib_backend.py`), which is checked visually. Structural facts about the output, such as the
+  file type, still get tests.
 - **One commit per subtask, with its tests.** Use imperative messages with a
   prefix (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`) and
   explain the *why* in the body. Commit without asking.
@@ -95,7 +95,7 @@ recomputing.
 | `core/plot.py`, `core/metadata.py`, `core/hints.py` | `Plot`/`Polyline`/`Label` data (labels may be `hidden`); metadata contract; `RenderHints` and overlays |
 | `projections/accuratum.py` | `project(alt, az, plumb_length)`, the plug-in point for other sundial types |
 | `defaults/labels.py`, `defaults/placement.py` | Which labels exist, and the collision/placement heuristic (suppressed → `hidden`) |
-| `renderers/matplotlib_backend.py`, `renderers/svg_backend.py` | `render(plot, hints)`: PNG/PDF via matplotlib, and SVG in real mm with selector-derived ids |
+| `renderers/matplotlib_backend.py` | `render(plot, hints)`: one matplotlib figure; the output extension picks PNG, PDF or SVG |
 | `cli.py`, `location.py` | All I/O: argv, project folders, geocoding (Nominatim), timezone lookup, current time, file output |
 
 - **`core/` imports no matplotlib and does no I/O**, except file reads and

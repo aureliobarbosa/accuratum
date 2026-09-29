@@ -1,6 +1,7 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-29):** Steps 1 and 3 are done. Next: Step 2 (SVG parity).
+> **Status (2026-09-29):** Steps 0–3 are closed. Next: pick from the backlog
+> toward goals 4–5 (website, paper).
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -17,8 +18,8 @@ before it.
    complex, fall back to one simple program per sundial type with shared
    plotting.
 2. **Large printed panels**, e.g. 6 m (east–west) × 2 m (north–south) in
-   Brasília. This needs vector output with correct scaling: keep matplotlib,
-   add SVG, no cairo.
+   Brasília. Vector output (SVG/PDF) through matplotlib, scaled to the panel
+   at print time. No cairo, no custom SVG writer.
 3. **Human in the loop.** No single heuristic will place labels well from the
    poles to the equator, so the user gets fine control over which dates and
    hours are drawn and can nudge each label by hand.
@@ -48,21 +49,14 @@ deleted locally and on origin. See
 
 See [PROJECT_KNOWLEDGE.md § Project folders](PROJECT_KNOWLEDGE.md#project-folders-and-editable-labels).
 
-## Step 2 — SVG output as good as matplotlib
+## Step 2 — SVG output as good as matplotlib — **dropped**
 
-User check, 2026-09-28: the SVG comes out at the right physical size
-(6000 × 2000 mm), but its design falls short of the matplotlib output,
-which is much better so far.
+- The custom SVG backend was removed instead of matched to matplotlib.
+  `.svg` goes through `fig.savefig`, the same drawing as the PNG.
+- `--canvas-size-mm` is gone; a print shop scales the vector file.
+- Labels are nudged in `project.json`, not in Inkscape.
 
-1. List the visual differences between `-o x.png` and `-o x.svg` for the
-   same spec: fonts, stroke widths, label anchoring and overlays. Then close
-   the gaps in `renderers/svg_backend.py`.
-2. **Test the default A4 landscape canvas (297 × 210 mm) too**, not only the
-   6 m × 2 m panel. It hasn't been checked yet.
-3. The drawing is about 2.1 : 1 and the SVG keeps its proportions, so a 3 : 1
-   panel gets empty side margins. Decide whether that is acceptable.
-4. Inkscape check at 6 m × 2 m: nudge a label by its id
-   (`label-dayline-2026-01-04-end`). It was carried over from the rewrite.
+See [PROJECT_KNOWLEDGE.md § SVG backend dropped](PROJECT_KNOWLEDGE.md#svg-backend-dropped-step-2).
 
 ## Step 3 — Which side the date labels go on — **done**
 
@@ -94,7 +88,5 @@ See [PROJECT_KNOWLEDGE.md § Label sides](PROJECT_KNOWLEDGE.md#label-sides-step-
 - **Second sundial type**, a prerequisite for goal 5.
 - **Keep label edits across `--regenerate`**, by matching labels by
   `selector`. Today a regenerate resets the labels.
-- **Import label positions nudged in Inkscape** back into `project.json`,
-  through the SVG ids.
 - **Custom overlay images are stored as absolute paths**, so a project folder
   that uses one isn't portable. Copy the image into the folder instead.

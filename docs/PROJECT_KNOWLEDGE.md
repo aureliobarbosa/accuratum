@@ -74,7 +74,7 @@ accuratum/core/        spec.py (SundialSpec + JSON), plot.py (Plot/Polyline/Labe
                        project.py + project_io.py (project folders, since PLAN Step 1)
 accuratum/projections/ accuratum.py — project(alt, az, plumb_length) -> (xs, ys)
 accuratum/defaults/    labels.py (which labels), placement.py (collision heuristic; suppressed → hidden)
-accuratum/renderers/   matplotlib_backend.py, svg_backend.py — render(plot, hints)
+accuratum/renderers/   matplotlib_backend.py — render(plot, hints)
 ```
 
 Public API: `build_plot(SundialSpec) -> Plot`, which is pure data. No
@@ -98,11 +98,10 @@ matplotlib, no I/O and no network inside `core/`.
   `LabelOverride` mechanism it once served was removed in Step 1.
 - **Heuristics run at plot-build time** in `defaults/`. Renderers only draw
   what the `Plot` says.
-- **Two renderers.** `.svg` goes to the custom `svg_backend` (pure
-  `xml.etree`, sizes in real mm through `RenderHints.canvas_size_mm`,
-  default A4 landscape; a 6 m × 2 m panel is `(6000, 2000)`; ids derived from
-  the selector, e.g. `label-hourline-7-start`; overlays embedded as base64). Every
-  other extension, `.pdf` included, goes to matplotlib (ce9a234, 272ab11).
+- **One renderer: matplotlib.** The output extension picks the format
+  (`.png`, `.pdf`, `.svg`, ...) through `fig.savefig`. A custom SVG backend
+  existed until PLAN Step 2 and was dropped; see
+  [SVG backend dropped](#svg-backend-dropped-step-2).
 - **The CLI saves project folders** (Step 1), which replaced the
   `--spec`/`--save-spec` file mode from ad69d87.
 - **Old modules were deleted** after the user approved the visual comparison
@@ -118,12 +117,13 @@ Then an untracked, working `svg_backend.py` with its tests turned up on disk.
 A subagent had written it earlier, and the tests had never been run in the
 main thread. It was kept: it gives mm units and clean selector ids for
 Inkscape, which matplotlib's SVG doesn't. See the workflow lessons below.
+It was dropped for good in PLAN Step 2 (7b778d4).
 
 ### Open when the branch stopped
 
 Resolved by Step 1: the hand-edit round trip, and whether `dx/dy` moves both
 endpoints (each endpoint is now its own label). The Inkscape check moved to
-PLAN Step 2, and the matplotlib guard test is in the PLAN backlog.
+PLAN Step 2 (dropped with the SVG backend), and the matplotlib guard test is in the PLAN backlog.
 
 ## Project folders and editable labels
 
@@ -221,6 +221,38 @@ PLAN Step 3, 2026-09-29. Commit 3589472.
   some sit mid-drawing (Ushuaia 09h), the logo overlaps the top-left date
   when the drawing fills the axes (Edinburgh), and Edinburgh gets a
   duplicate `12h` (backlog).
+
+## SVG backend dropped (Step 2)
+
+PLAN Step 2, 2026-09-29. Commit 7b778d4. The user decided to simplify and
+ship instead of matching the custom SVG output to matplotlib's.
+
+- **Why not match them.** `svg_backend.py` re-implemented matplotlib's
+  layout with guesses: fixed margins (0.4·h top, 0.15·w sides), font size
+  `pt × 0.005 × data_extent`, stroke `0.003 × extent`, and `ha`/`va` mapped
+  to `dominant-baseline`, which Inkscape renders inconsistently. Every
+  renderer change would have had to be made twice.
+- **What it was for, and what replaces it.** The exact-mm canvas: any
+  vector file (PDF/SVG) scales to a panel at print time, with labels and
+  strokes growing with the drawing. Selector ids for nudging labels in
+  Inkscape: labels are hand-editable in `project.json` since Step 1.
+- **Now.** `.svg` falls through to `fig.savefig`, so it is the same drawing
+  as the PNG. `--canvas-size-mm` and `RenderHints.canvas_size_mm`/`units`
+  are gone. `hints_from_dict` ignores unknown keys, so old `project.json`
+  files still load.
+- **PDF page-size limit.** Acrobat caps a page at 14,400 units per side
+  (200 in = 5080 mm) unless the file sets `UserUnit` (PDF 1.6+), and
+  matplotlib doesn't set it. A 6000 mm side is ~17,008 pt, over the cap.
+  For a 6 m panel, prefer SVG (no limit), or a smaller PDF scaled up at print.
+- **If exact-mm files are ever needed** (a print shop insists), it's about
+  half a day in the matplotlib backend, prototyped and working:
+  `figsize = mm / 25.4` (SVG width comes out exact, in pt), scale font and
+  line width by `canvas_w / 297` (or define them in mm), no
+  `bbox_inches="tight"` for that path, `rcParams["svg.fonttype"] = "none"`
+  to keep labels as `<text>`, and `artist.set_gid("label-" + selector_slug)`.
+  matplotlib puts the gid on a `<g>` wrapping the element. Importing
+  Inkscape nudges back would then need the inverse of `ax.transData`
+  (figure pt, not data units), e.g. stored in the SVG `<metadata>`.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 
