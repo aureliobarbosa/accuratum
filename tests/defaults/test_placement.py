@@ -96,6 +96,33 @@ def test_dayline_collision_uses_y_axis_only():
     assert {lbl.text for lbl in labels if not lbl.hidden} == {"01/15"}
 
 
+def test_day_label_does_not_collide_with_its_own_twin():
+    # A dayline's endpoints sit at almost the same y. The left and right labels
+    # are on opposite sides, so they must not suppress each other (Step 3 bug).
+    polys = [_dayline("2026-01-15", xs=[-5.0, 0.0, 5.0], ys=[1.0, 0.0, 1.01])]
+    labels = place_labels(polys, dayline_labels=["01/15"], hourline_labels=[None], data_extent=10.0)
+    assert [lbl.hidden for lbl in labels] == [False, False]
+
+
+def test_hour_label_does_not_collide_with_its_own_twin():
+    # Same bug for hourlines: the labels below and above share x but not a side.
+    polys = [_hourline(16, xs=[1.4, 1.2], ys=[-0.5, 1.0])]
+    labels = place_labels(polys, dayline_labels=[None], hourline_labels=["16h"], data_extent=10.0)
+    assert [lbl.hidden for lbl in labels] == [False, False]
+
+
+def test_hour_labels_collide_only_on_the_same_side():
+    # 16h's bottom label is 0.2 from 15h's top label in x (under the 0.4
+    # tolerance) but on the other side, so it stays; its top label is 0.2
+    # from 15h's top label and is hidden.
+    polys = [
+        _hourline(15, xs=[0.9, 1.2], ys=[-0.3, 1.0]),
+        _hourline(16, xs=[1.4, 1.4], ys=[-0.5, 1.5]),
+    ]
+    labels = place_labels(polys, dayline_labels=[None, None], hourline_labels=["15h", "16h"], data_extent=10.0)
+    assert [lbl.hidden for lbl in labels if lbl.text == "16h"] == [False, True]
+
+
 def test_plumb_exclusion_drops_hour_labels_near_origin():
     polys = [
         _hourline(12, xs=[0.1, 0.1], ys=[0.1, 0.1]),  # well inside default 0.12*10 = 1.2 disk
@@ -146,7 +173,7 @@ def test_hidden_labels_do_not_block_later_labels():
         hourline_labels=["12h", "13h"],
         data_extent=10.0,
     )
-    assert [lbl.hidden for lbl in labels if lbl.text == "13h"] == [False, True]
+    assert [lbl.hidden for lbl in labels if lbl.text == "13h"] == [False, False]
 
 
 def test_every_label_has_a_unique_selector():

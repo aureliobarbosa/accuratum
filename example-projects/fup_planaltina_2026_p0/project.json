@@ -4,7 +4,7 @@
   "provenance": {
     "accuratum": "0.1.0",
     "astropy": "7.2.0",
-    "created": "2026-09-28T23:25:34+00:00"
+    "created": "2026-09-29T00:01:50+00:00"
   },
   "spec": {
     "location": {
@@ -53,25 +53,25 @@
   },
   "labels": [
     {"text": "12/21", "x": -5.2692, "y": -2.0992, "hidden": false, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2025-12-21", "end": "start"}},
-    {"text": "12/21", "x": 5.2685, "y": -2.0989, "hidden": true, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2025-12-21", "end": "end"}},
+    {"text": "12/21", "x": 5.2685, "y": -2.0989, "hidden": false, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2025-12-21", "end": "end"}},
     {"text": "01/04", "x": -5.2986, "y": -2.029, "hidden": true, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-01-04", "end": "start"}},
     {"text": "01/04", "x": 5.2967, "y": -2.0224, "hidden": true, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-01-04", "end": "end"}},
     {"text": "02/01", "x": -5.4773, "y": -1.4732, "hidden": false, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-02-01", "end": "start"}},
-    {"text": "02/01", "x": 5.4793, "y": -1.4594, "hidden": true, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-02-01", "end": "end"}},
+    {"text": "02/01", "x": 5.4793, "y": -1.4594, "hidden": false, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-02-01", "end": "end"}},
     {"text": "03/01", "x": -5.6513, "y": -0.5023, "hidden": false, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-03-01", "end": "start"}},
-    {"text": "03/01", "x": 5.65, "y": -0.4841, "hidden": true, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-03-01", "end": "end"}},
+    {"text": "03/01", "x": 5.65, "y": -0.4841, "hidden": false, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-03-01", "end": "end"}},
     {"text": "04/05", "x": -5.5972, "y": 0.9202, "hidden": false, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-04-05", "end": "start"}},
-    {"text": "04/05", "x": 5.5917, "y": 0.9368, "hidden": true, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-04-05", "end": "end"}},
+    {"text": "04/05", "x": 5.5917, "y": 0.9368, "hidden": false, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-04-05", "end": "end"}},
     {"text": "05/03", "x": -5.3432, "y": 1.9011, "hidden": false, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-05-03", "end": "start"}},
-    {"text": "05/03", "x": 5.3366, "y": 1.9126, "hidden": true, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-05-03", "end": "end"}},
+    {"text": "05/03", "x": 5.3366, "y": 1.9126, "hidden": false, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-05-03", "end": "end"}},
     {"text": "06/07", "x": -5.044, "y": 2.5939, "hidden": false, "ha": "right", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-06-07", "end": "start"}},
-    {"text": "06/07", "x": 5.0404, "y": 2.5968, "hidden": true, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-06-07", "end": "end"}},
+    {"text": "06/07", "x": 5.0404, "y": 2.5968, "hidden": false, "ha": "left", "va": "center", "kind": "dayline", "selector": {"kind": "dayline", "date": "2026-06-07", "end": "end"}},
     {"text": "07h", "x": -2.6993, "y": -0.976, "hidden": false, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 7, "end": "start"}},
     {"text": "07h", "x": -5.3953, "y": 1.6436, "hidden": true, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 7, "end": "end"}},
     {"text": "08h", "x": -1.4706, "y": -0.4817, "hidden": false, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 8, "end": "start"}},
-    {"text": "08h", "x": -2.544, "y": 1.5839, "hidden": true, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 8, "end": "end"}},
+    {"text": "08h", "x": -2.544, "y": 1.5839, "hidden": false, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 8, "end": "end"}},
     {"text": "09h", "x": -0.8997, "y": -0.289, "hidden": true, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 9, "end": "start"}},
-    {"text": "09h", "x": -1.3206, "y": 1.1006, "hidden": true, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 9, "end": "end"}},
+    {"text": "09h", "x": -1.3206, "y": 1.1006, "hidden": false, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 9, "end": "end"}},
     {"text": "10h", "x": -0.5355, "y": -0.1962, "hidden": true, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 10, "end": "start"}},
     {"text": "10h", "x": -0.7375, "y": 0.917, "hidden": true, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 10, "end": "end"}},
     {"text": "11h", "x": -0.2552, "y": -0.1516, "hidden": true, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 11, "end": "start"}},
@@ -84,9 +84,9 @@
     {"text": "14h", "x": 0.6573, "y": 0.8968, "hidden": true, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 14, "end": "end"}},
     {"text": "15h", "x": 0.8727, "y": -0.2811, "hidden": true, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 15, "end": "start"}},
     {"text": "15h", "x": 1.1882, "y": 1.0544, "hidden": false, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 15, "end": "end"}},
-    {"text": "16h", "x": 1.4237, "y": -0.4644, "hidden": true, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 16, "end": "start"}},
+    {"text": "16h", "x": 1.4237, "y": -0.4644, "hidden": false, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 16, "end": "start"}},
     {"text": "16h", "x": 2.2181, "y": 1.4486, "hidden": false, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 16, "end": "end"}},
-    {"text": "17h", "x": 2.5773, "y": -0.9246, "hidden": true, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 17, "end": "start"}},
-    {"text": "17h", "x": 5.344, "y": 1.8163, "hidden": false, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 17, "end": "end"}}
+    {"text": "17h", "x": 2.5773, "y": -0.9246, "hidden": false, "ha": "center", "va": "top", "kind": "hourline", "selector": {"kind": "hourline", "hour": 17, "end": "start"}},
+    {"text": "17h", "x": 5.344, "y": 1.8163, "hidden": true, "ha": "center", "va": "bottom", "kind": "hourline", "selector": {"kind": "hourline", "hour": 17, "end": "end"}}
   ]
 }
