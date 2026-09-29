@@ -295,8 +295,15 @@ PLAN Step 5, 2026-09-29. Commits 2966726, a28f3af, a290a3a.
   the warning), `hourline_grid` ignores them when sizing its window, and
   `build_plot` drops empty polylines. The dial simply ends before the
   winter solstice: at ±62° about May–July (south) or Nov–Jan (north) is
-  missing. That's the cut, not a bug; see the backlog for a
-  latitude-dependent cut.
+  missing. That's the cut, not a bug.
+- **The 10° cut stays; no latitude-dependent cut (user decision).** A
+  lower cut would keep the winter solstice, but shadow length is
+  `plumb / tan(alt)`: 5.7× the plumb at 10°, 12.7× at 4.5°. The panel's
+  size is set by its longest shadow, so a few winter weeks would more than
+  double its north–south extent and shrink the part used all year. Long
+  shadows also have blurry tips (the sun is ~0.5° wide), and a low sun is
+  the first to be blocked by terrain and buildings. A panel you can build
+  beats a full year. Don't add features in that direction.
 - **Longitude wrap (a28f3af), found by the sweep.** `hourline_grid`
   measured each sunset from *its own* UTC date. Wherever the local day
   straddles 00 UTC (lon ±120°…±170°: US west coast, East Asia, Australia,

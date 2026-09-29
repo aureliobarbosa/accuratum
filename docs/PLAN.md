@@ -83,8 +83,11 @@ See [PROJECT_KNOWLEDGE.md § DST hour labels](PROJECT_KNOWLEDGE.md#dst-hour-labe
   skipped; the dial ends before the winter solstice there.
 - Days are local days from local mean midnight: hour lines had vanished
   wherever the local day straddles 00 UTC (lon ±120°…±170°).
-- `MAX_LATITUDE = 75` (target was ±62°): clean at every longitude tried;
-  hour labels repeat from ~75.5°. Library and CLI reject the rest.
+- `MAX_LATITUDE = 75` (target was ±62°; confirmed by the user): clean at
+  every longitude tried; hour labels repeat from ~75.5°. Library and CLI
+  reject the rest.
+- The 10° horizon cut stays fixed. Losing winter weeks at high latitudes is
+  accepted; no feature should lower the cut.
 
 See [PROJECT_KNOWLEDGE.md § Latitude range](PROJECT_KNOWLEDGE.md#latitude-range-step-5).
 
@@ -141,10 +144,6 @@ paper (goal 5).
   user's view (2026-09-29): comparing Accuratum against someone else's
   software may be enough for the paper, and such a package could even serve
   as a backend later. Delivering the website and the paper fast comes first.
-- **Winter solstice missing past |lat| ≈ 56.5°**, because of the fixed 10°
-  horizon cut. A latitude-dependent cut (e.g. `min(10°, winter noon
-  altitude − margin)`) would keep it, at the cost of very long shadows
-  (12.7× the plumb at 4.5°). The user decides if this matters.
 - **Hour-line selectors carry `hour` but not `minute_offset`**, so two
   lines rounding to the same hour collide. Only happens past 75.5° today.
 - **Keep label edits across `--regenerate`**, by matching labels by
