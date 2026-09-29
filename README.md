@@ -72,6 +72,10 @@ that run. If the spec was edited, `--project` refuses and asks for
 `--regenerate`, which recomputes lines and labels (label edits are lost; the
 previous file is kept as `project.json.bak`).
 
+Hour lines are labelled in the zone's **standard time**. Where daylight
+saving applies, add one hour to the dial's reading in summer, as with any
+sundial.
+
 See `accuratum --help` for the full list of options (grid resolution,
 timezone override, plumb length, etc.).
 

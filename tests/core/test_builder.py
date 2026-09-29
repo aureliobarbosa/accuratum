@@ -118,3 +118,43 @@ def test_unsupported_sundial_type_raises():
     )
     with pytest.raises(ValueError):
         build_plot(spec)
+
+
+# --- daylight saving time -----------------------------------------------------
+
+TZ_LON = ZoneInfo("Europe/London")
+EDINBURGH = Location(lat=55.95, lon=-3.19, timezone="Europe/London")
+
+
+def test_standard_time_ignores_daylight_saving():
+    from accuratum.core.builder import _utc_dt64_to_standard_time
+
+    # 29 March 2026 is the switch to BST; both sides read the same standard hour.
+    before = _utc_dt64_to_standard_time(np.datetime64("2026-03-25T14:04"), TZ_LON)
+    after = _utc_dt64_to_standard_time(np.datetime64("2026-04-03T14:04"), TZ_LON)
+    assert (before.hour, before.minute) == (after.hour, after.minute) == (14, 4)
+
+
+def test_standard_time_keeps_zones_without_dst():
+    from accuratum.core.builder import _utc_dt64_to_standard_time
+
+    local = _utc_dt64_to_standard_time(np.datetime64("2026-01-15T15:00"), TZ_SP)
+    assert local.hour == 12
+
+
+def test_hour_lines_are_unique_and_consecutive_across_dst():
+    spec = SundialSpec(
+        location=EDINBURGH,
+        timeframe=TimeFrame(start=datetime(2025, 12, 21, tzinfo=TZ_LON), end=datetime(2026, 6, 21, tzinfo=TZ_LON)),
+        grid=GridConfig(
+            dayline_day_step_days=30,
+            line_points=20,
+            hourline_day_step_days=7,
+            time_step_minutes=20,
+            horizon_degrees=10.0,
+        ),
+    )
+    plot = build_plot(spec)
+    hours = [lab.selector["hour"] for lab in plot.labels if lab.kind == "hourline" and lab.selector["end"] == "start"]
+    assert len(hours) == len(set(hours))
+    assert hours == list(range(hours[0], hours[0] + len(hours)))

@@ -8,7 +8,7 @@ metadata, select and place the default labels, and return a
 No I/O, no matplotlib. The renderer consumes the returned ``Plot``.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -80,7 +80,7 @@ def _row_to_hourline(row: np.ndarray, frame, tz: ZoneInfo, plumb_length: float) 
     alt, az = get_sun_altaz(valid, frame)
     xs, ys = project_accuratum(alt, az, plumb_length)
 
-    local = _utc_dt64_to_local_datetime(valid[valid.size // 2], tz)
+    local = _utc_dt64_to_standard_time(valid[valid.size // 2], tz)
     target_hour, minute_offset = _canonical_hour(local.hour, local.minute)
     return Polyline(
         kind="hourline",
@@ -93,6 +93,18 @@ def _row_to_hourline(row: np.ndarray, frame, tz: ZoneInfo, plumb_length: float) 
 def _utc_dt64_to_local_datetime(dt64: np.datetime64, tz: ZoneInfo) -> datetime:
     utc_dt = dt64.astype("datetime64[s]").astype(datetime).replace(tzinfo=timezone.utc)
     return utc_dt.astimezone(tz)
+
+
+def _utc_dt64_to_standard_time(dt64: np.datetime64, tz: ZoneInfo) -> datetime:
+    """Local *standard* time (DST removed) of *dt64*.
+
+    An hour line is one fixed UTC time of day across the frame, so it can
+    carry only one clock reading; a DST switch mid-frame would otherwise
+    label neighbouring lines with different clocks. Sundials read standard
+    time.
+    """
+    local = _utc_dt64_to_local_datetime(dt64, tz)
+    return local - (local.dst() or timedelta(0))
 
 
 def _canonical_hour(hour: int, minute: int) -> tuple[int, int]:
