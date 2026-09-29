@@ -201,6 +201,27 @@ The Planaltina example lives in `example-projects/fup_planaltina_2026_p0/`.
   `tests/test_cli.py`), and `.gitignore` has `/*_p[01]/` for runs at the
   repo root.
 
+## Label sides (Step 3)
+
+PLAN Step 3, 2026-09-29. Commit 3589472.
+
+- **The bug.** `place_labels` checked each label against every placed label
+  on one axis. A day line's endpoints differ in y by under 0.02 (Planaltina)
+  against a 0.5 tolerance, so each right-side date was hidden behind its own
+  left twin. Hour lines had the same bug on x (16h, 17h lost their bottom
+  label).
+- **The fix.** A label collides only with labels of the same kind and end
+  (left/right dates, below/above hours). Hour labels still yield to every
+  day label on `|Δx|`.
+- **No latitude rule for the side.** Rendered at 0°, 10.5°, −15.6°, −30°,
+  −54.8°, 51.5° and 56°: dates show on both sides everywhere, so the
+  planned rule was dropped. The Planaltina example went from 25 to 16
+  hidden labels of 36.
+- **Seen but not fixed:** at high latitudes the hour labels are sparse and
+  some sit mid-drawing (Ushuaia 09h), the logo overlaps the top-left date
+  when the drawing fills the axes (Edinburgh), and Edinburgh gets a
+  duplicate `12h` (backlog).
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
@@ -218,7 +239,8 @@ Ported to `defaults/placement.py`. Originally recorded in
 - **Plumb exclusion radius, hour labels only** (~12% of the data extent). It
   kills the noon cluster at the plumb base.
 - **Collisions are checked per axis:** day lines compare `|Δy|`, hour lines
-  compare `|Δx|`. A 2-D box check let near-axis stacks slip through.
+  compare `|Δx|`. A 2-D box check let near-axis stacks slip through. Only
+  labels on the same side are compared (Step 3).
 - **Tolerances scale with the data extent** (~4% of `max(range_x, range_y)`).
   Fixed thresholds calibrated on unit-sized prototypes failed on ±6-unit
   plots.

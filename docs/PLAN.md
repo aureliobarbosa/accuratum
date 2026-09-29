@@ -1,8 +1,6 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-28):** Step 1 (project folders, editable labels) is done.
-> Next: Step 2 (SVG parity) or Step 3 (default date-label side), both from
-> the user's review of the output.
+> **Status (2026-09-29):** Steps 1 and 3 are done. Next: Step 2 (SVG parity).
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -66,33 +64,22 @@ which is much better so far.
 4. Inkscape check at 6 m × 2 m: nudge a label by its id
    (`label-dayline-2026-01-04-end`). It was carried over from the rewrite.
 
-## Step 3 — Which side the date labels go on
+## Step 3 — Which side the date labels go on — **done**
 
-With "Brasilia" or "planaltina" as the location, the day-line labels
-(`MM/DD`) appear only on the left edge. The user's view: date labels should
-go on either the left or the right side, and which side is right depends on
-latitude and can be completely different from place to place. **Root cause, found 2026-09-28 — a bug, not a latitude effect.** In
-`defaults/placement.py::place_labels`, day-line labels use a 1-D collision
-check on `|Δy|` against *every* placed label, including the left label of
-the same line. A day line's two endpoints sit at almost the same height. For
-the Planaltina spec the difference is under 0.02, while the tolerance is
-`0.04 × data_extent`, about 0.5. So every right-side label is dropped as
-colliding with its own left twin: 6 left labels, 0 right. The fix is to
-check collisions only among labels on the same side, then define the rule
-for choosing the side. Test it across latitudes (southern and northern
-hemisphere, tropics, high latitudes).
+- It was a bug, not a latitude effect: each label collided with its own
+  twin. Labels now collide only with labels on the same side.
+- No "choose the side by latitude" rule: dates show on both sides at every
+  latitude checked (0° to ±56°).
+- Missing 09h–14h at Planaltina is the plumb exclusion, as expected.
 
-**Since Step 1** the dropped labels are kept as `hidden` in `project.json`,
-so a user can already restore the right-side dates by hand. **Proposed
-simplification:** fix only the same-side collision bug, so both sides show
-by default. Drop the "choose the side by latitude" rule unless the fixed
-output still looks wrong somewhere.
-
-The hour labels show only 07–08h and 15–17h. Missing 09–14h is expected from
-the plumb-exclusion radius, but review it in the same step.
+See [PROJECT_KNOWLEDGE.md § Label sides](PROJECT_KNOWLEDGE.md#label-sides-step-3).
 
 ## Backlog (not scheduled)
 
+- **Duplicate hour label under DST** (bug): Edinburgh, period 0, gets two
+  hour lines labelled `12h` and none `14h`, so two labels share a selector.
+  Look at the hour pick in `defaults/labels.py` (middle sample vs. the DST
+  switch).
 - **Extreme latitudes:** poles, the Arctic/Antarctic circles and the equator
   are untested. The label tolerances and exclusion radius may break there.
 - **Sun map:** a plot of the sun's position (altitude, azimuth), comparing
