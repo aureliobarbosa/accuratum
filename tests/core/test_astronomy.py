@@ -49,3 +49,13 @@ def test_horizon_shifts_rise_and_set():
     rises_10, sets_10 = get_sunrises_and_sunsets(dates, lat=LAT, lon=LON, horizon_deg=10.0)
     assert np.all(rises_10.astype(np.int64) > rises_0.astype(np.int64))
     assert np.all(sets_10.astype(np.int64) < sets_0.astype(np.int64))
+
+
+def test_days_without_the_sun_above_the_horizon_are_nat():
+    # At 62° N the winter-solstice noon altitude is ~4.6°, below a 10° cut.
+    dates = np.array(["2026-11-01", "2026-12-21"], dtype="datetime64[D]")
+    rises, sets = get_sunrises_and_sunsets(dates, lat=62.0, lon=-47.92, horizon_deg=10.0)
+    assert rises.dtype == np.dtype("datetime64[s]")
+    assert list(np.isnat(rises)) == [False, True]
+    assert list(np.isnat(sets)) == [False, True]
+    assert sets[0] > rises[0]

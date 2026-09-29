@@ -45,3 +45,31 @@ def test_hourline_grid_shape_and_dtype():
 def test_hourline_grid_masks_out_of_window_with_nat():
     grid = hourline_grid(TIMEFRAME, PLANALTINA, FAST_GRID)
     assert np.isnat(grid).any()
+
+
+# 62° S in its winter: some days never have the sun above the 10° cut.
+FERRAZ = Location(lat=-62.08, lon=-58.39, timezone="America/Punta_Arenas")
+WINTER_FRAME = TimeFrame(
+    start=datetime(2026, 4, 21, tzinfo=TZ_SP),
+    end=datetime(2026, 7, 21, tzinfo=TZ_SP),
+)
+WEEKLY_GRID = GridConfig(
+    dayline_day_step_days=7,
+    line_points=20,
+    hourline_day_step_days=7,
+    time_step_minutes=60,
+    horizon_degrees=10.0,
+)
+
+
+def test_dayline_grid_rows_without_sun_are_all_nat():
+    grid = dayline_grid(WINTER_FRAME, FERRAZ, WEEKLY_GRID)
+    dark = np.isnat(grid).all(axis=1)
+    assert dark.any() and not dark.all()
+    assert not np.isnat(grid[~dark]).any()
+
+
+def test_hourline_grid_skips_days_without_sun():
+    grid = hourline_grid(WINTER_FRAME, FERRAZ, WEEKLY_GRID)
+    assert grid.shape[0] > 0
+    assert (~np.isnat(grid)).any()

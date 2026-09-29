@@ -48,7 +48,7 @@ def hourline_grid(timeframe: TimeFrame, location: Location, grid: GridConfig) ->
 
     Out-of-window samples (before sunrise / after sunset on a given day,
     relative to ``grid.horizon_degrees``) are masked as ``NaT`` so callers
-    can drop them per row.
+    can drop them per row. So are whole days when the sun stays below it.
     """
     first, last = _frame_to_utc_days(timeframe)
     day_step = np.timedelta64(grid.hourline_day_step_days, "D")
@@ -62,8 +62,10 @@ def hourline_grid(timeframe: TimeFrame, location: Location, grid: GridConfig) ->
     sunrise_hours = (rises - rises.astype("datetime64[D]")).astype("timedelta64[m]") + minute
     sunset_hours = (sets - sets.astype("datetime64[D]")).astype("timedelta64[m]") - minute
 
-    min_sunrise = sunrise_hours.min()
-    max_sunset = sunset_hours.max()
+    # Days without sun above the cut are NaT; they'd poison min/max.
+    lit = ~np.isnat(rises)
+    min_sunrise = sunrise_hours[lit].min()
+    max_sunset = sunset_hours[lit].max()
     days_anchored = days + min_sunrise
 
     time_range = np.timedelta64(max_sunset - min_sunrise, "m")

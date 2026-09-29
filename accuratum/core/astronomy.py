@@ -4,8 +4,10 @@ This is the bottom of the core stack. It knows about astropy and astroplan,
 but nothing about sundial types, grids, or rendering.
 """
 
+import warnings
+
 import numpy as np
-from astroplan import Observer
+from astroplan import Observer, TargetNeverUpWarning
 from astropy.coordinates import AltAz, EarthLocation, get_sun
 from astropy.time import Time
 from astropy.units import deg
@@ -33,13 +35,22 @@ def get_sunrises_and_sunsets(
 
     *dates* is an array of ``datetime64`` (any time-of-day component is
     ignored). *horizon_deg* is the altitude in degrees that defines
-    rise/set; ``0`` is the geometric horizon.
+    rise/set; ``0`` is the geometric horizon. Days when the sun never
+    climbs above it (high-latitude winters) are ``NaT`` in both arrays.
     """
     observer = Observer(location=EarthLocation(lat=lat * deg, lon=lon * deg))
     midnights = Time([f"{d}T00:00:00" for d in dates], format="isot", scale="utc")
-    sunrises = observer.sun_rise_time(midnights, which="next", horizon=horizon_deg * deg)
-    sunsets = observer.sun_set_time(sunrises, which="next", horizon=horizon_deg * deg)
+    with warnings.catch_warnings():
+        # Expected past |lat| ≈ 56.5° with a 10° cut; those days become NaT.
+        warnings.simplefilter("ignore", TargetNeverUpWarning)
+        sunrises = observer.sun_rise_time(midnights, which="next", horizon=horizon_deg * deg)
+        never_up = np.broadcast_to(np.ma.getmaskarray(sunrises.jd), midnights.shape)
+        # A masked Time can't feed sun_set_time, so search from midnight on those days.
+        sunrises = Time(np.where(never_up, midnights.jd, sunrises.unmasked.jd), format="jd", scale="utc")
+        sunsets = observer.sun_set_time(sunrises, which="next", horizon=horizon_deg * deg)
+    never_up = never_up | np.ma.getmaskarray(sunsets.jd)
+    nat = np.datetime64("NaT", "s")
     return (
-        sunrises.datetime64.astype("datetime64[s]"),  # type: ignore[attr-defined]
-        sunsets.datetime64.astype("datetime64[s]"),  # type: ignore[attr-defined]
+        np.where(never_up, nat, sunrises.datetime64.astype("datetime64[s]")),  # type: ignore[attr-defined]
+        np.where(never_up, nat, sunsets.unmasked.datetime64.astype("datetime64[s]")),  # type: ignore[attr-defined]
     )

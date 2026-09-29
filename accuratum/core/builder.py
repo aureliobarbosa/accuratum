@@ -35,7 +35,8 @@ def build_plot(spec: SundialSpec) -> Plot:
 
     dayline_polys = [_row_to_dayline(row, frame, tz, spec.plumb_length) for row in dl_grid]
     hourline_polys = [_row_to_hourline(row, frame, tz, spec.plumb_length) for row in hl_grid]
-    polylines = dayline_polys + hourline_polys
+    # Rows with no sun above the horizon cut (high-latitude winter days) are empty.
+    polylines = [p for p in dayline_polys + hourline_polys if p.xs.size]
 
     extent = data_extent(polylines)
 

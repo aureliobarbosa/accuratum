@@ -158,3 +158,21 @@ def test_hour_lines_are_unique_and_consecutive_across_dst():
     hours = [lab.selector["hour"] for lab in plot.labels if lab.kind == "hourline" and lab.selector["end"] == "start"]
     assert len(hours) == len(set(hours))
     assert hours == list(range(hours[0], hours[0] + len(hours)))
+
+
+@pytest.mark.parametrize("lat", [62.0, -62.0])
+@pytest.mark.parametrize("start, end", [((2025, 12, 21), (2026, 6, 21)), ((2026, 6, 21), (2026, 12, 21))])
+def test_build_plot_at_the_edges_of_the_latitude_range(lat, start, end):
+    """±62° (Ferraz station) has winter days with the sun below the 10° cut."""
+    tz = ZoneInfo("UTC")
+    spec = SundialSpec(
+        location=Location(lat=lat, lon=-58.39, timezone="UTC"),
+        timeframe=TimeFrame(start=datetime(*start, tzinfo=tz), end=datetime(*end, tzinfo=tz)),
+        grid=GridConfig(dayline_day_step_days=7, line_points=20, hourline_day_step_days=7, time_step_minutes=60),
+    )
+    plot = build_plot(spec)
+    assert {p.kind for p in plot.polylines} == {"dayline", "hourline"}
+    for poly in plot.polylines:
+        assert poly.xs.size > 0
+        assert np.all(np.isfinite(poly.xs)) and np.all(np.isfinite(poly.ys))
+    assert any(not label.hidden for label in plot.labels)
