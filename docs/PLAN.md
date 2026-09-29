@@ -1,7 +1,8 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-29):** Steps 0–3 are closed. Next: pick from the backlog
-> toward goals 4–5 (website, paper).
+> **Status (2026-09-29):** Steps 0–3 are closed. Next: Step 4 (DST hour
+> labels). Steps 4–7 are the fast track to a hosted website, so the
+> collaborators can meet and start the paper.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -25,8 +26,9 @@ before it.
    hours are drawn and can nudge each label by hand.
 4. **A web system** for generating sundials, started only after 1–3 succeed.
 5. **A paper**, plus conferences on astronomy education and computer science,
-   after the web system ships. Implement a second sundial type before
-   publishing.
+   after the web system ships. A second sundial type was a prerequisite;
+   since 2026-09-29 comparing against other people's sundial software may
+   replace it (see the backlog).
 
 ---
 
@@ -68,14 +70,40 @@ See [PROJECT_KNOWLEDGE.md § SVG backend dropped](PROJECT_KNOWLEDGE.md#svg-backe
 
 See [PROJECT_KNOWLEDGE.md § Label sides](PROJECT_KNOWLEDGE.md#label-sides-step-3).
 
+## Step 4 — Duplicate hour label under daylight saving time
+
+Edinburgh, period 0, gets two hour lines labelled `12h` and none `14h`, so
+two labels share a selector. Cause: an hour line is a fixed UTC time of day,
+but it is labelled with the local clock at its middle sample, and the middle
+samples fall on both sides of the DST switch (29 March).
+
+1. Failing test: Edinburgh period 0 has unique, consecutive hour selectors;
+   a unit test for the standard-time conversion across the switch.
+2. Label with the zone's standard offset (`utcoffset − dst`) in
+   `_row_to_hourline` (`core/builder.py`). Lines don't move; zones without
+   DST are unchanged. Dials read standard time, as sundials conventionally do.
+3. Regenerate `example-projects/edinburgh_2026_p0`, render a PNG, look at it,
+   then hand it over for visual approval.
+4. Say in the README that hour labels are standard time.
+
+## Step 5 — Extreme latitudes
+
+Poles, the Arctic/Antarctic circles and the equator are untested. The label
+tolerances and exclusion radius may break there. A web form will accept any
+location, so this must be safe before Step 6.
+
+## Step 6 — Create the website
+
+A web front end for generating sundials (goal 4). Scope to be decided at the
+start of the step.
+
+## Step 7 — Host the website in the cloud
+
+Once it's hosted, call the collaborators for a meeting and start writing the
+paper (goal 5).
+
 ## Backlog (not scheduled)
 
-- **Duplicate hour label under DST** (bug): Edinburgh, period 0, gets two
-  hour lines labelled `12h` and none `14h`, so two labels share a selector.
-  Look at the hour pick in `defaults/labels.py` (middle sample vs. the DST
-  switch).
-- **Extreme latitudes:** poles, the Arctic/Antarctic circles and the equator
-  are untested. The label tolerances and exclusion radius may break there.
 - **Sun map:** a plot of the sun's position (altitude, azimuth), comparing
   astropy against skyfield.
 - **Guard test** that `core/` never imports matplotlib.
@@ -85,7 +113,11 @@ See [PROJECT_KNOWLEDGE.md § Label sides](PROJECT_KNOWLEDGE.md#label-sides-step-
 - **Solstices are approximated as the 21st** of June and December
   (`SOLSTICE_DAY` in `cli.py`, the same as v0.1). astropy could compute the
   exact instant.
-- **Second sundial type**, a prerequisite for goal 5.
+- **Second sundial type**, once a prerequisite for goal 5. Before building
+  one, look for open-source packages that draw sundials on the web. The
+  user's view (2026-09-29): comparing Accuratum against someone else's
+  software may be enough for the paper, and such a package could even serve
+  as a backend later. Delivering the website and the paper fast comes first.
 - **Keep label edits across `--regenerate`**, by matching labels by
   `selector`. Today a regenerate resets the labels.
 - **Custom overlay images are stored as absolute paths**, so a project folder
