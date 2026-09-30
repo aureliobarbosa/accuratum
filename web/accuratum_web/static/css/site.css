@@ -1,5 +1,7 @@
 :root {
-  --bg: #fafaf7;
+  /* Always light, whatever the visitor's dark-mode preference (owner's choice). */
+  color-scheme: light;
+  --bg: #ffffff; /* the logo's own white */
   --surface: #ffffff;
   --text: #1c1f23;
   --muted: #5d656e;
@@ -10,20 +12,6 @@
   --thumb-bg: #f1f1ee;
   --radius: 8px;
   --gutter: 16px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14171a;
-    --surface: #1d2126;
-    --text: #e8eaec;
-    --muted: #9ba3ab;
-    --border: #3a4047;
-    --accent: #56a9d8;
-    --accent-text: #0b1319;
-    --accent2: #f0883e;
-    --thumb-bg: #e8e8e4;
-  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -103,11 +91,7 @@ input[type="color"] {
 
 .hero { text-align: center; padding: 2rem 0; }
 .hero h1 { margin: 0 0 1rem; line-height: 0; }
-/* The logo is black line art on white: a white card keeps it legible in dark mode. */
-.hero-logo {
-  width: min(240px, 70vw); height: auto;
-  background: #fff; border-radius: var(--radius); padding: 0.5rem;
-}
+.hero-logo { width: min(240px, 70vw); height: auto; }
 .tagline { color: var(--muted); font-size: 1.15rem; margin: 0 auto 1.5rem; max-width: 34rem; }
 /* Landing carousel: one sundial at a time, arrows on both sides. */
 .carousel { display: flex; align-items: center; gap: 0.5rem; }

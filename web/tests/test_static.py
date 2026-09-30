@@ -40,3 +40,12 @@ def test_no_scripts_or_styles_from_other_sites():
     for ref in re.findall(r'(?:src|href)="([^"]+)"', HTML):
         if ref.startswith("http"):
             assert ref.startswith("https://github.com/"), ref  # links only, nothing loaded
+
+
+def test_always_light_on_the_logo_white():
+    # Owner's choice: white like the logo, whatever the visitor's dark-mode preference.
+    css = (STATIC / "css" / "site.css").read_text(encoding="utf-8")
+    assert "prefers-color-scheme" not in css
+    assert "color-scheme: light" in css
+    assert "--bg: #ffffff" in css
+    assert '<meta name="color-scheme" content="light">' in HTML
