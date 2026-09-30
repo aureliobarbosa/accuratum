@@ -34,3 +34,11 @@ def test_default_render_hints_carry_the_default_overlays():
 def test_package_paths_cannot_leave_the_package(path):
     with pytest.raises(ValueError, match="outside the package"):
         resolve_image_path(path)
+
+
+def test_the_accuratum_logo_ships_with_the_package():
+    from accuratum.defaults.overlays import ACCURATUM_LOGO
+
+    assert ACCURATUM_LOGO.startswith(PACKAGE_PREFIX)
+    with open(resolve_image_path(ACCURATUM_LOGO), "rb") as f:
+        assert f.read(4) == b"\x89PNG"

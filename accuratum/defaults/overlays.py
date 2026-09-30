@@ -12,6 +12,7 @@ from accuratum.core.hints import Overlay, RenderHints
 
 PACKAGE_PREFIX = "accuratum:"
 DEFAULT_LABEL_FONTSIZE = 7.0
+ACCURATUM_LOGO = PACKAGE_PREFIX + "fig/logo.png"  # the project's own logo
 DEFAULT_OVERLAYS = {
     "logo": Overlay(image_path=PACKAGE_PREFIX + "fig/unb_basic.jpg", rect=(0.12, 0.82, 0.12, 0.12), name="logo"),
     "compass": Overlay(image_path=PACKAGE_PREFIX + "fig/rosa.png", rect=(0.78, 0.82, 0.12, 0.12), name="compass"),
