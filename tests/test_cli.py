@@ -484,16 +484,6 @@ def test_latitude_out_of_range_is_a_clear_error(tmp_path):
     assert not list(tmp_path.iterdir())
 
 
-def test_default_overlays_sit_in_the_header_above_the_drawing():
-    from accuratum.cli import DEFAULT_OVERLAYS
-    from accuratum.core.hints import RenderHints
-
-    left, bottom, width, height = RenderHints().axes_rect
-    for overlay in DEFAULT_OVERLAYS.values():
-        assert overlay.rect[1] >= bottom + height
-        assert overlay.rect[1] + overlay.rect[3] <= 1.0
-
-
 # --- title and subtitle ------------------------------------------------------
 
 

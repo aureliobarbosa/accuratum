@@ -22,7 +22,6 @@ import sys
 from dataclasses import replace
 from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
-from importlib.resources import files
 from pathlib import Path
 from typing import Sequence
 from zoneinfo import ZoneInfo
@@ -35,7 +34,7 @@ from matplotlib.colors import to_hex  # noqa: E402
 from timezonefinder import timezone_at  # noqa: E402
 
 from accuratum.core.builder import build_plot  # noqa: E402
-from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
+from accuratum.core.hints import RenderHints  # noqa: E402
 from accuratum.core.plot import Plot  # noqa: E402
 from accuratum.core.project import Project, hints_from_dict  # noqa: E402
 from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project  # noqa: E402
@@ -47,6 +46,7 @@ from accuratum.core.spec import (  # noqa: E402
     solstice_timeframe,
     spec_from_dict,
 )
+from accuratum.defaults.overlays import DEFAULT_OVERLAYS, default_render_hints, resolve_image_path  # noqa: E402
 from accuratum.defaults.titles import default_subtitle, default_title  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
 from accuratum.renderers import matplotlib_backend  # noqa: E402
@@ -56,16 +56,6 @@ DEFAULT_LINE_POINTS = 500
 DEFAULT_TIME_STEP_MIN = 20
 DEFAULT_DAYLINE_DAY_STEP = 7
 DEFAULT_HOURLINE_DAY_STEP = 1
-DEFAULT_LABEL_FONTSIZE = 7.0
-
-# Package images are stored in project files as "accuratum:<path>", so a
-# project folder works on any machine with the package installed. Both sit
-# in the header band above RenderHints.axes_rect.
-PACKAGE_PREFIX = "accuratum:"
-DEFAULT_OVERLAYS = {
-    "logo": Overlay(image_path=PACKAGE_PREFIX + "fig/unb_basic.jpg", rect=(0.12, 0.82, 0.12, 0.12), name="logo"),
-    "compass": Overlay(image_path=PACKAGE_PREFIX + "fig/rosa.png", rect=(0.78, 0.82, 0.12, 0.12), name="compass"),
-}
 
 
 def parse_lat_long(value: str) -> tuple[float, float]:
@@ -263,7 +253,7 @@ def _provenance() -> dict[str, str]:
 
 def _render_hints(args: argparse.Namespace, saved: RenderHints | None) -> RenderHints:
     """Merge render flags over *saved* hints (or the defaults). Flags win."""
-    base = saved or RenderHints(overlays=list(DEFAULT_OVERLAYS.values()), label_fontsize=DEFAULT_LABEL_FONTSIZE)
+    base = saved or default_render_hints()
     overlays = list(base.overlays)
     for name, path, rect in (("logo", args.logo, args.logo_rect), ("compass", args.compass, args.compass_rect)):
         if path is None and rect is None:
@@ -297,9 +287,7 @@ def _resolved(hints: RenderHints) -> RenderHints:
     """Resolve ``accuratum:`` image paths and check that every overlay file exists."""
     overlays = []
     for overlay in hints.overlays:
-        path = overlay.image_path
-        if path.startswith(PACKAGE_PREFIX):
-            path = str(files("accuratum").joinpath(path.removeprefix(PACKAGE_PREFIX)))
+        path = resolve_image_path(overlay.image_path)
         if not os.path.isfile(path):
             raise SystemExit(f"error: {overlay.name or 'overlay'} file not found: {path}")
         overlays.append(replace(overlay, image_path=path))
