@@ -287,7 +287,10 @@ def _resolved(hints: RenderHints) -> RenderHints:
     """Resolve ``accuratum:`` image paths and check that every overlay file exists."""
     overlays = []
     for overlay in hints.overlays:
-        path = resolve_image_path(overlay.image_path)
+        try:
+            path = resolve_image_path(overlay.image_path)
+        except ValueError as exc:
+            raise SystemExit(f"error: {overlay.name or 'overlay'} {exc}")
         if not os.path.isfile(path):
             raise SystemExit(f"error: {overlay.name or 'overlay'} file not found: {path}")
         overlays.append(replace(overlay, image_path=path))

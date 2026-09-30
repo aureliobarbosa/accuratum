@@ -6,6 +6,7 @@ default overlays sit in the header band above ``RenderHints.axes_rect``.
 """
 
 from importlib.resources import files
+from pathlib import Path
 
 from accuratum.core.hints import Overlay, RenderHints
 
@@ -23,7 +24,14 @@ def default_render_hints() -> RenderHints:
 
 
 def resolve_image_path(path: str) -> str:
-    """Turn an ``accuratum:`` path into a file path inside the installed package."""
+    """Turn an ``accuratum:`` path into a file path inside the installed package.
+
+    Raises ``ValueError`` if it points outside the package (``accuratum:../..``),
+    since project files may come from someone else."""
     if not path.startswith(PACKAGE_PREFIX):
         return path
-    return str(files("accuratum").joinpath(path.removeprefix(PACKAGE_PREFIX)))
+    root = Path(str(files("accuratum"))).resolve()
+    resolved = (root / path.removeprefix(PACKAGE_PREFIX)).resolve()
+    if not resolved.is_relative_to(root):
+        raise ValueError(f"{path!r} points outside the package.")
+    return str(resolved)

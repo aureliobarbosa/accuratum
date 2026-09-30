@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from accuratum.core.hints import RenderHints
 from accuratum.defaults.overlays import DEFAULT_OVERLAYS, PACKAGE_PREFIX, default_render_hints, resolve_image_path
 
@@ -26,3 +28,9 @@ def test_default_render_hints_carry_the_default_overlays():
     assert hints.overlays == list(DEFAULT_OVERLAYS.values())
     hints.overlays.clear()
     assert default_render_hints().overlays  # each call gets its own list
+
+
+@pytest.mark.parametrize("path", ["accuratum:../../etc/passwd", "accuratum:/etc/passwd", "accuratum:fig/../../x.png"])
+def test_package_paths_cannot_leave_the_package(path):
+    with pytest.raises(ValueError, match="outside the package"):
+        resolve_image_path(path)

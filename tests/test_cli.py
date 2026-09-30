@@ -524,3 +524,12 @@ def test_regenerate_keeps_edited_texts_and_updates_default_ones(tmp_path):
     main(["--project", AUTO_DIR, "--regenerate"])
     plot = load_project(tmp_path / AUTO_DIR).plot
     assert (plot.title, plot.subtitle) == ("Mine", "2026-06-21 / 2026-12-21")
+
+
+def test_package_path_outside_the_package_is_a_clear_error():
+    from accuratum.cli import _resolved
+    from accuratum.core.hints import Overlay, RenderHints
+
+    hints = RenderHints(overlays=[Overlay(image_path="accuratum:../../x.png", rect=(0, 0, 1, 1), name="logo")])
+    with pytest.raises(SystemExit, match="error: logo.*outside the package"):
+        _resolved(hints)
