@@ -544,9 +544,9 @@ the paper is submitted.
 
 ## Library prep for the website (Step 6.1)
 
-2026-09-30. Commits 34eb211 (solstice_timeframe), b84db52 and 6c7fb4a
-(overlays, path confinement), ae6278d (Figure), bd09178 (IERS), e2438bb
-(validation), 146e245 (wheel smoke test).
+2026-09-30. Commits a65dccd (solstice_timeframe), 0f3e232 and c2ea342
+(overlays, path confinement), e04ef01 (Figure), 2a10cf0 (IERS), c898fa0
+(validation), 0bebd86 (wheel smoke test).
 
 - **Public API for the site.** `core.spec.solstice_timeframe(year,
   period, tz)` (it now rejects periods other than 0/1).
