@@ -174,7 +174,19 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   tables bundled, no downloads; every `SundialSpec` input validated; the
   wheel smoke-tested in CI. See
   [PROJECT_KNOWLEDGE.md § Library prep for the website](PROJECT_KNOWLEDGE.md#library-prep-for-the-website-step-61).
-- **Next: `web/` itself**, following [web/docs/UX.md](../web/docs/UX.md).
+- **Website, first version — done** (2026-09-30): `web/` workspace
+  project; `POST /api/sundial` (both half-years, parallel, 13–15 s);
+  limits, CSP and rate limit; the four-view page in pt-BR/en with map,
+  search, upload and PDF download. See
+  [PROJECT_KNOWLEDGE.md § Website first version](PROJECT_KNOWLEDGE.md#website-first-version-step-61).
+- **Left in Step 6:**
+  - long titles run under the logo (a library renderer issue, the CLI
+    too): shrink the title to fit between the overlays? Needs the owner's
+    visual approval;
+  - the landing carousel of university sundials (UX.md), once the owner
+    says which half-year each image shows;
+  - the project logo, and the one-line description (owner);
+  - About and Contact pages (owner, work in progress).
 - **Security requirements for `web/`** (the trust boundary):
   - no file paths from users: logo and compass uploads with size and type
     limits, re-encoded server-side; never load a user's project folder
@@ -197,8 +209,6 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   `/api/plot` + `/api/render` pair. The logo and compass are uploads.
   UX.md lists its own open questions.
 - **Open decisions:**
-  - whether the grid is fixed server-side (assumed yes: the form doesn't
-    show it);
   - the deploy trigger: a `site-v*` tag, or a push that touches `web/`;
   - whether to reuse Bingo's Google Cloud project.
 

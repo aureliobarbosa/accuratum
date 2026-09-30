@@ -21,6 +21,7 @@ uv run ruff check . && uv run ruff format --check .    # what CI enforces
 uv run accuratum --lat-long=-15.78,-47.92 --year 2026   # generate a project folder (negative coords need '=')
 uv run accuratum --project lat-15.78_lon-47.92_2026_p0 -o panel.svg   # .png/.pdf/.svg, all via matplotlib
 uv run accuratum --help
+(cd web && uv run uvicorn accuratum_web.app:app --reload)   # website at http://127.0.0.1:8000
 ```
 
 Prototype notebooks live in `notebooks/`. They are for exploration, not
@@ -98,11 +99,16 @@ recomputing.
 | `defaults/labels.py`, `defaults/placement.py`, `defaults/titles.py` | Which labels exist; the collision/placement heuristic (suppressed → `hidden`); the default title and subtitle texts |
 | `renderers/matplotlib_backend.py` | `render(plot, hints)`: one matplotlib figure; the output extension picks PNG, PDF or SVG |
 | `cli.py`, `location.py` | All I/O: argv, project folders, geocoding (Nominatim), timezone lookup, current time, file output |
+| `web/accuratum_web/sundial.py` | The website's trust boundary: one request → both half-years → two PNGs + a two-page PDF |
+| `web/accuratum_web/app.py`, `static/` | FastAPI (`POST /api/sundial`, limits, CSP) and the page (plain JS, `locales/*.json`) |
 
 - **`core/` imports no matplotlib and does no I/O**, except file reads and
   writes in `core/project_io.py`.
 - **Renderers draw only what the `Plot` says;** no geometry lives in them.
-- `tests/` mirrors the package structure.
+- `tests/` mirrors the package structure; `web/tests/` covers the website.
+- **The website is its own uv workspace project** (`web/pyproject.toml`)
+  and imports only the library's public API. Its flow is fixed in
+  [web/docs/UX.md](web/docs/UX.md).
 
 ## Traps
 

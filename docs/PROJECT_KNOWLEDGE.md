@@ -592,6 +592,64 @@ the paper is submitted.
   `MPLCONFIGDIR` to a writable folder. CI's tag-only `build` job
   repeats this check.
 
+## Website first version (Step 6.1)
+
+2026-09-30. Commits 0a7c182 (workspace), 67c4f8e (service), 244676d
+(route), f5f250e (headers, rate limit), a89b43b (page). The flow is in
+[web/docs/UX.md](../web/docs/UX.md).
+
+- **Workspace.** `web/pyproject.toml` is `accuratum-web`, a uv workspace
+  member with `accuratum = { workspace = true }`; one `uv.lock`. Sync
+  with `uv sync --all-packages --extra dev --group dev`: a plain
+  `uv sync --extra dev` removes the website's packages (`uv run` is
+  inexact and leaves them). ruff needs `known-first-party` for
+  `accuratum_web`, or isort sorts it as third-party. CI has a
+  `test-web` job.
+- **One route, `POST /api/sundial`.** Multipart form in, JSON out (two
+  base64 PNGs at 150 dpi, one base64 two-page PDF via `PdfPages`; about
+  690 kB). No label editing, so no live render route. The grid is fixed
+  server-side (`GridConfig()` defaults).
+- **Trust boundary in `sundial.py`:** colors `#rrggbb` only; titles and
+  subtitles ≤ 80 characters with `$` escaped (matplotlib parses `$…$`
+  as mathtext; `\$` shows a dollar); uploads PNG/JPEG ≤ 2 MB and ≤ 2000
+  px a side (checked before decoding pixels), re-encoded as PNG into a
+  per-request temp folder. The spec's own validation covers the rest.
+- **Limits in `app.py`:** request ≤ 4.1 MB (413), POST without
+  Content-Length is a 411, ≤ 2 files and 20 fields; 6 sundials per client
+  per 10 min (in memory, per instance; client = first X-Forwarded-For
+  entry, forgeable, revisit in Step 7); one computation per instance,
+  held by a thread semaphore **inside** the worker thread until the
+  computation really ends, so a 504 can't lift the cap; 50 s timeout.
+- **Parallel half-years:** a 2-process `ProcessPoolExecutor` with the
+  *spawn* context (forking a threaded server can copy held locks):
+  13–15 s instead of 23 s. `create_app(workers=0)` runs them in the
+  thread, which the tests use with a fast grid.
+- **CSP:** `default-src 'self'`, plus `img-src data:
+  https://tile.openstreetmap.org` and `connect-src
+  https://nominatim.openstreetmap.org`; no inline script or style (a test
+  checks the markup). Leaflet 1.9.4 is vendored (hashes match its
+  published SRI). Leaflet sets styles through the CSSOM, which the CSP
+  allows. Upload thumbnails use FileReader data: URIs, since `blob:`
+  images aren't allowed; the PDF download uses a `blob:` link, which
+  isn't a CSP-governed load. `Referrer-Policy:
+  strict-origin-when-cross-origin`, since OSM's tile policy needs a
+  Referer.
+- **Nominatim from the browser**, only on a search submit or a map click
+  (reverse geocoding for the default title), spaced ≥ 1.1 s. Nothing
+  geocodes on the server.
+- **i18n:** markup carries only `data-i18n*` keys; `locales/pt-BR.json`
+  (default) and `en.json`; the choice is kept in `localStorage` when
+  allowed. Tests check that the tables match and cover every key used.
+- **Checked in a browser** with Playwright (`uv run --with playwright`,
+  Chromium headless, not a project dependency): the whole flow, no
+  console errors, CSP violations or failed requests, no horizontal
+  scroll at 360 px. `pt-BR.json` and `site.css` were written by a Sonnet
+  subagent and reviewed here.
+- **Found:** a long title (e.g. "Universidade de Brasília - Campus UnB
+  Ceilândia") runs under the logo. The renderer centers the title in the
+  header without fitting it between the overlays; the CLI has the same
+  issue.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
