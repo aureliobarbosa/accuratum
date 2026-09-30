@@ -11,6 +11,14 @@ from astroplan import Observer, TargetNeverUpWarning
 from astropy.coordinates import AltAz, EarthLocation, get_sun
 from astropy.time import Time
 from astropy.units import deg
+from astropy.utils import iers
+
+# Use the IERS and leap-second tables bundled with astropy (astropy-iers-data,
+# pinned by uv.lock) instead of downloading fresh ones at run time. A server
+# instance then needs no network, no writable home and no IERS server. The
+# cost is up to ~0.9 s of UT1-UTC error, invisible on a sundial.
+iers.conf.auto_download = False
+iers.conf.auto_max_age = None
 
 
 def build_altaz_frame(lat: float, lon: float) -> AltAz:

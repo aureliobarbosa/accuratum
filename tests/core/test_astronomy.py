@@ -71,3 +71,33 @@ def test_rise_and_set_fall_on_the_local_day(lon):
     hours_after = (rises - local_midnight).astype("timedelta64[m]").astype(int) / 60
     assert 5 < hours_after[0] < 7
     assert 11 < (sets - rises).astype("timedelta64[m]").astype(int)[0] / 60 < 13
+
+
+def test_sun_positions_need_no_download(tmp_path):
+    # A new server instance has an empty cache and must not fetch IERS or
+    # leap-second tables at run time: it uses the ones bundled with astropy.
+    import os
+    import subprocess
+    import sys
+
+    script = """
+import socket, warnings
+
+def offline(*args, **kwargs):
+    raise OSError("network access attempted")
+
+socket.socket.connect = offline
+socket.create_connection = offline
+warnings.simplefilter("error")  # a failed download only warns
+
+import numpy as np
+from accuratum.core.astronomy import build_altaz_frame, get_sun_altaz, get_sunrises_and_sunsets
+
+times = np.array(["2026-03-21T15:00:00"], dtype="datetime64[s]")
+get_sun_altaz(times, build_altaz_frame(-15.6, -47.66))
+get_sunrises_and_sunsets(np.array(["2026-03-21"], dtype="datetime64[D]"), -15.6, -47.66)
+"""
+    env = {k: v for k, v in os.environ.items() if not k.startswith("XDG_")}
+    env["HOME"] = str(tmp_path)  # astropy's cache lives in ~/.astropy
+    result = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr[-2000:]
