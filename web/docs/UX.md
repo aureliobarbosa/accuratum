@@ -45,30 +45,39 @@ that can be worked out automatically:
   there is none; see `defaults/titles.py`);
 - **subtitle**: the date range (default: `yyyy-mm-dd / yyyy-mm-dd`);
 - **year**: the current year;
-- **period**: Dec→Jun or Jun→Dec;
 - **dayline color** and **hourline color**: two `<input type="color">`
   pickers, set to the library's defaults (`#d55e00`, `#0072b2`, chosen to
   stay distinct for color-blind readers; see PROJECT_KNOWLEDGE.md § Line
   colors).
+
+There is no period field: the user always gets both halves of the year
+(Dec→Jun and Jun→Dec), one page each, in a single PDF.
 
 Two buttons change the images:
 
 - **Customize logo**, which picks the logo image;
 - a matching button for the **compass** image.
 
+Each image can also be put back to the default (the package's logo or
+compass).
+
 **Next** is a button that spins while the sundial is computed (about 10 s),
 then leads to step 4.
 
 ## 4. Result
 
-A PNG preview of the sundial (a plain `<img>`) and a **Download PDF**
-button. The same request returns both, so the sundial isn't computed
-twice.
+A PNG preview of each half-year (plain `<img>`s) and a **Download PDF**
+button for the two-page PDF. The same request returns all of them, so
+the sundial isn't computed twice. There is no SVG download.
 
 That is the end of the flow.
 
 ## Consequences for the implementation
 
+- **Two sundials per request.** Both halves take about 20 s one after
+  the other, or about 10 s if they're computed in parallel (two
+  processes, so more memory per request). That is still under the 60 s
+  timeouts.
 - **No label editing on the website.** Goal 3 (human in the loop) stays
   with the CLI and project folders for now. So the planned live
   `/api/render` route is not needed: one call, spec + texts + images →
@@ -91,16 +100,11 @@ That is the end of the flow.
 
 ## Open questions
 
+Answered 2026-09-30: both halves, one page each in one PDF; the logo and
+compass can go back to the default; no SVG download.
+
 1. **About and Contact:** what text do they hold? Should Contact show an
    e-mail address, or link to GitHub issues?
 2. **Sundial photo and one-line description:** the owner supplies them.
-3. **Logo and compass buttons:** is the only choice to upload a file? Or
-   should there also be a way to keep the default image or have no image
-   at all?
-4. **Period:** does the user choose one half-year, or get both halves (two
-   pages) in one PDF?
-5. **SVG download:** should there be a Download SVG button next to the
-   PDF? It's a vector file with no page-size limit, for print shops (see
-   PROJECT_KNOWLEDGE.md § SVG backend dropped).
-6. **Map search:** is clicking the map enough, or does it also need a place
+3. **Map search:** is clicking the map enough, or does it also need a place
    search box or typed coordinates?
