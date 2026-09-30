@@ -7,6 +7,28 @@ on:
       - "v*"
 
 jobs:
+  secrets:
+    name: Secret scan (full history)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Pinned binary instead of gitleaks-action (which needs a license for organizations).
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
+          tar xzf gitleaks.tgz gitleaks
+
+      - name: Scan history
+        run: ./gitleaks git --redact -v --no-banner --log-opts=--all .
+
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest

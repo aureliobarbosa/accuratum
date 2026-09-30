@@ -187,6 +187,9 @@ nohup.out
 
 # Claude Code data (synced via Dropbox, see .devcontainer/devcontainer.json)
 .claude-data/
+.claude/settings.local.json
+.credentials.json
+.env.*
 # Generated CLI outputs at the repo root (subdir assets like accuratum/fig/*.png stay tracked)
 /*.png
 /*.svg
