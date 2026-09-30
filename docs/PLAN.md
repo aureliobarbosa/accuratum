@@ -131,11 +131,14 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   library + CLI only. Bingo's approach carries over, except two routes
   (`/api/plot` slow, `/api/render` live) instead of regenerating on every
   edit.
+
+  **Before anything**, check whether internal data data can release online while making this repository public, since the folde .claude-data was pushed to the github repository in previous branches and commits. Make the necessary steps to clean this project from sensitive data before proceeding.
+
 - **First, in the library:**
   - move `_solstice_timeframe`, `DEFAULT_OVERLAYS` and the `accuratum:`
     path resolution out of `cli.py` into the public API;
   - render with `matplotlib.figure.Figure()`, not pyplot;
-  - turn off astropy's IERS auto-download;
+  - turn off astropy's IERS auto-download; Decide where the file(s) downloaded by astropy should live in production; Give options to the owner.
   - check that the wheel contains `accuratum/fig/` and that the CLI runs
     from a clean install of it.
 - **Open decisions:**
