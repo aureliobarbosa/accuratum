@@ -57,8 +57,9 @@ then leads to step 4.
 
 ## 4. Result
 
-A PDF viewer showing the sundial. The user downloads the file with the
-viewer's own buttons.
+A PNG preview of the sundial (a plain `<img>`) and a **Download PDF**
+button. The same request returns both, so the sundial isn't computed
+twice.
 
 That is the end of the flow.
 
@@ -67,13 +68,14 @@ That is the end of the flow.
 - **No label editing on the website.** Goal 3 (human in the loop) stays
   with the CLI and project folders for now. So the planned live
   `/api/render` route is not needed: one call, spec + texts + images →
-  PDF, is enough.
-- **PDF in the page, not an SVG preview.** This goes against the note in
-  PROJECT_KNOWLEDGE.md § Website groundwork. Bingo's traps apply:
-  `blob:` URLs vs. the CSP, and Firefox's pdf.js. Serve the PDF from a
-  URL the CSP allows, or embed it with `<object>`/`<iframe>` and test in
-  Firefox, Chrome and Safari, desktop and mobile. Mobile browsers often
-  don't show PDFs inline, so a download link is the fallback.
+  PNG + PDF, is enough.
+- **PNG preview, not a PDF viewer or an SVG preview** (owner's choice,
+  2026-09-30). A PNG shows the same in every browser, mobile included,
+  and it is the output that gets checked visually. It avoids Bingo's PDF
+  traps (`blob:` URLs vs. the CSP, Firefox's pdf.js, mobile browsers that
+  don't show PDFs inline). matplotlib's SVG hasn't been checked in a
+  browser yet. The cost: no sharp zoom, and the page needs its own
+  download button.
 - **The logo and compass are uploads**, from the visitor's disk. They need
   size and type limits (PNG/JPEG only, decoded and re-encoded server-side),
   and never a server file path.
@@ -93,5 +95,8 @@ That is the end of the flow.
    at all?
 4. **Period:** does the user choose one half-year, or get both halves (two
    pages) in one PDF?
-5. **Map search:** is clicking the map enough, or does it also need a place
+5. **SVG download:** should there be a Download SVG button next to the
+   PDF? It's a vector file with no page-size limit, for print shops (see
+   PROJECT_KNOWLEDGE.md § SVG backend dropped).
+6. **Map search:** is clicking the map enough, or does it also need a place
    search box or typed coordinates?

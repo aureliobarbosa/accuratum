@@ -186,8 +186,8 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     memory and concurrency limits.
 - **User experience decided** (2026-09-30), in
   [web/docs/UX.md](../web/docs/UX.md): landing page → world map → form
-  → PDF viewer. pt-BR by default, multilingual from the start. No label
-  editing on the site, so a single spec → PDF route replaces the
+  → PNG preview + Download PDF. pt-BR by default, multilingual from the start. No label
+  editing on the site, so a single spec → PNG + PDF route replaces the
   `/api/plot` + `/api/render` pair. The logo and compass are uploads.
   UX.md lists its own open questions.
 - **Open decisions:**
