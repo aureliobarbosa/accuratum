@@ -181,10 +181,10 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   [PROJECT_KNOWLEDGE.md § Website first version](PROJECT_KNOWLEDGE.md#website-first-version-step-61).
 - **Done since** (2026-09-30): long titles and their subtitles shrink by
   one factor to fit between the overlays (b471546); a one-image carousel
-  of ten university sundials on the landing page (bf6caa1).
+  of ten university sundials on the landing page (bf6caa1), titled by
+  city, with the Accuratum logo except at UnB; the project logo
+  (`fig/logo.png`, `ACCURATUM_LOGO`) on the landing page (17aeb6e).
 - **Left in Step 6:**
-  - the project logo: the owner's image as `logo.png`, shown large and
-    readable on the landing page instead of the "Accuratum" heading;
   - the one-line description (owner);
   - About and Contact pages (owner, work in progress).
 - **Security requirements for `web/`** (the trust boundary):
