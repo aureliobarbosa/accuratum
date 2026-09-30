@@ -132,7 +132,20 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   (`/api/plot` slow, `/api/render` live) instead of regenerating on every
   edit.
 
-  **Before anything**, check whether internal data data can release online while making this repository public, since the folde .claude-data was pushed to the github repository in previous branches and commits. Make the necessary steps to clean this project from sensitive data before proceeding.
+- **Before going public** (manual owner steps; the cleaned history is
+  prepared and CI scans for secrets; see
+  [PROJECT_KNOWLEDGE.md § Security cleanup](PROJECT_KNOWLEDGE.md#security-cleanup-before-going-public-step-6)):
+  - [ ] a. Revoke the leaked Claude credentials: `/logout` then `/login` in
+    Claude Code on each machine, and revoke old sessions in claude.ai
+    account settings. Rotate anything else found.
+  - [ ] b. Check GitHub for pull requests (`refs/pull/*` cannot be rewritten
+    by force-push; if any contain the leaked commit, ask GitHub Support to
+    purge them or publish as a fresh repo), forks and collaborators.
+  - [ ] c. Approve the swap: force-push the cleaned `main` (and `v0.1` if its
+    hash changed) from the clean clone; delete stale remote branches.
+  - [ ] d. Re-clone on all 3 machines (old clones still hold the leaked
+    objects); delete the old local branches.
+  - [ ] e. Only then make the repo public.
 
 - **First, in the library:**
   - move `_solstice_timeframe`, `DEFAULT_OVERLAYS` and the `accuratum:`

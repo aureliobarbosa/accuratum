@@ -599,3 +599,37 @@ Ported to `defaults/placement.py`. Originally recorded in
   untracked files as possibly agent-written until you have checked them.
   Unverified agent output was almost deleted as "speculation" during the
   rewrite.
+
+## Security cleanup before going public (Step 6)
+
+- **What leaked:** commit 6537c05 (2026-07-03, "add claude-data") committed
+  all of `.claude-data/` (the Claude Code config dir): `.credentials.json`
+  (OAuth tokens), `.claude.json` + `backups/`, `projects/` (session
+  transcripts), `file-history/`, `shell-snapshots/`, `ide/`, `settings.json`,
+  `mcp-needs-auth-cache.json`, `.last-cleanup`. 74b0a0f, b556631 and 7b9b70f
+  untracked it, but it stays in history of `main`, `origin/main` and the
+  local branch `restore-claude-sessions`. Tag `v0.1` does not contain it. The
+  repo was private, so only people with access could see it. Claude data now
+  syncs through Dropbox bind mounts (`.devcontainer/devcontainer.json`).
+- **Scan (gitleaks 8.30.1, 195 commits, all refs):** one rule hit,
+  `generic-api-key` in `.claude-data/ide/34437.lock` (6537c05). Trap:
+  gitleaks did NOT flag the OAuth tokens in `.claude-data/.credentials.json`
+  (6537c05, 74b0a0f); a pickaxe (`git log --all -S'sk-ant'`) found them.
+  Treat the tokens as leaked regardless. The current tree (tracked and
+  untracked) is clean. Non-secret personal data outside `.claude-data`:
+  `/home/vscode` paths (harmless devcontainer user) and two emails (the
+  author's, and the creator's credit in the docs).
+- **Hardening (03b4d8c):** `.gitignore` covers `.claude-data/`,
+  `.claude/settings.local.json` (now untracked), `.credentials.json`, `.env*`.
+  CI has a `secrets` job: gitleaks (pinned version and checksum, not the
+  action, which needs a license for organizations) over the full history
+  (`fetch-depth: 0`). It fails on the old history until it is rewritten.
+- **Rewrite procedure** (never in the working repo): `git clone --no-local`
+  into a separate folder, `git filter-repo --invert-paths --path
+  .claude-data/`, keep `.git/filter-repo/commit-map`, verify (`git log --all
+  -- .claude-data` empty, no `.claude-data` in `git rev-list --all
+  --objects`, gitleaks clean, tests pass), then rewrite the short hashes cited
+  in the docs through the commit-map.
+- **Manual owner steps** are the checklist in PLAN.md Step 6 (revoke
+  credentials, check PRs/forks, force-push the clean clone, re-clone on all
+  machines, then make the repo public).
