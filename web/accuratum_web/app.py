@@ -16,11 +16,12 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
 
 from accuratum.core.spec import GridConfig
+from accuratum.defaults.overlays import DEFAULT_OVERLAYS, resolve_image_path
 from accuratum_web.sundial import GRID, MAX_IMAGE_BYTES, PageTexts, SundialRequest, make_sundial
 
 MAX_REQUEST_BYTES = 2 * MAX_IMAGE_BYTES + 64 * 1024  # two uploads plus the text fields
@@ -152,6 +153,13 @@ def create_app(
     @app.get("/api/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/api/default-image/{name}")
+    def default_image(name: str):
+        """The package's default logo or compass, shown in the form."""
+        if name not in DEFAULT_OVERLAYS:
+            return JSONResponse({"detail": "not found."}, status_code=404)
+        return FileResponse(resolve_image_path(DEFAULT_OVERLAYS[name].image_path))
 
     @app.post("/api/sundial")
     async def sundial(request: Request):

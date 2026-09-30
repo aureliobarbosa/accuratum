@@ -124,3 +124,15 @@ def test_the_page_is_served_at_the_root(client):
     response = client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
+
+
+@pytest.mark.parametrize("name, magic", [("logo", b"\xff\xd8"), ("compass", b"\x89PNG")])
+def test_default_images_are_served_from_the_package(client, name, magic):
+    response = client.get(f"/api/default-image/{name}")
+    assert response.status_code == 200
+    assert response.content.startswith(magic)
+
+
+def test_only_the_default_images_are_served(client):
+    assert client.get("/api/default-image/..%2F..%2Fetc%2Fpasswd").status_code == 404
+    assert client.get("/api/default-image/unknown").status_code == 404
