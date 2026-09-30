@@ -539,9 +539,58 @@ the paper is submitted.
   outside pull requests after publication.
 - The workspace shares one `uv.lock`, so the website's dependencies must
   install on the library's Python 3.11 baseline.
-- The website imports only the library's public API. Today
-  `_solstice_timeframe`, `DEFAULT_OVERLAYS` and the `accuratum:` image path
-  resolution are private to `cli.py`.
+- The website imports only the library's public API. What it needed from
+  `cli.py` became public in Step 6.1 (next section).
+
+## Library prep for the website (Step 6.1)
+
+2026-09-30. Commits 34eb211 (solstice_timeframe), b84db52 and 6c7fb4a
+(overlays, path confinement), ae6278d (Figure), bd09178 (IERS), e2438bb
+(validation), 146e245 (wheel smoke test).
+
+- **Public API for the site.** `core.spec.solstice_timeframe(year,
+  period, tz)` (it now rejects periods other than 0/1).
+  `defaults.overlays`: `DEFAULT_OVERLAYS`, `default_render_hints()` (fresh
+  overlay list per call), `resolve_image_path()`. The CLI keeps only
+  argv, file checks and output.
+- **`accuratum:` paths are confined to the package.** The resolved path
+  must stay under the package root; `accuratum:../..` raises
+  `ValueError`, which the CLI prints as an error.
+- **Bare `Figure`, no pyplot.** pyplot's global figure list isn't
+  thread-safe. A bare `Figure` saves PNG/PDF/SVG without a backend, so
+  the CLI dropped `matplotlib.use("Agg")` and `plt.close`. The PNG came
+  out identical pixel for pixel.
+- **IERS: bundled tables, no downloads** (option *a* of three; the
+  others were fresh tables baked into the Docker image, or fetched from
+  Cloud Storage at startup). `core/astronomy.py` sets
+  `iers.conf.auto_download = False` **and** `auto_max_age = None`.
+  Without the second, every computation raised, because the bundled
+  predictions (astropy-iers-data 0.2026.4.13) are older than 30 days.
+  Geometry vs. the downloaded tables: at most 6.3e-5 plumb lengths
+  (0.06 mm with a 1 m plumb). Past the table's end (about April 2027)
+  astropy warns and falls back to mean polar motion, as it did with
+  downloads on. The tables refresh when `uv lock --upgrade` bumps
+  astropy-iers-data. The test runs a subprocess with `HOME` at an empty
+  folder and sockets blocked; astropy ignores `XDG_*` when
+  `~/.astropy` exists, so `HOME` is what works.
+- **Spec validation** (in `__post_init__`, so `spec_from_dict` gets it
+  too; it also turns `KeyError`/`TypeError` into `ValueError`, so callers
+  catch one error): finite lat/lon, lon within ±180°, a known IANA zone
+  (also blocks `../` names), timeframe 0 < span ≤ 366 days,
+  `line_points` 2–10,000, `time_step_minutes` 1–240, day steps 1–183,
+  `horizon_degrees` 0–45, `plumb_length` finite and > 0, `year`
+  1901–2100 (ERFA's `epv00` warns outside 1900–2100; period 0 starts in
+  December of the year before), `period` 0/1. Integers reject bools and
+  floats. `sundial_type` stays checked in `build_plot`, the plug-in point.
+  The bounds stop absurd values, not slow ones, so the site must not
+  expose the grid. A `SundialSpec` is mutable, so assignment after
+  construction skips the checks.
+- **The wheel from a clean install works offline**: `fig/` is in it, the
+  PDF has both overlays, and astropy writes nothing to an empty home.
+  matplotlib and fontconfig do write their font caches to `~/.cache`,
+  so the site's Docker image should build them at build time or set
+  `MPLCONFIGDIR` to a writable folder. CI's tag-only `build` job
+  repeats this check.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 

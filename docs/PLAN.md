@@ -168,25 +168,19 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   - [ ] g. Only then make the repo public, and only once the project's
     collaborators approve it. Not approved yet (2026-09-30).
 
-- **First, in the library:**
-  - move `_solstice_timeframe`, `DEFAULT_OVERLAYS` and the `accuratum:`
-    path resolution out of `cli.py` into the public API;
-  - render with `matplotlib.figure.Figure()`, not pyplot;
-  - turn off astropy's IERS auto-download; Decide where the file(s) downloaded by astropy should live in production; Give options to the owner.
-  - check that the wheel contains `accuratum/fig/` and that the CLI runs
-    from a clean install of it.
-  - validate inputs in `SundialSpec` (TDD; the CLI needs no attack
-    filtering, since it runs with the user's own rights): finite numbers
-    only (`NaN` passes today's latitude check), longitude in ±180°, and
-    bounds on `line_points`, `time_step_minutes`, the day steps,
-    `plumb_length` and `year`, so one request can't exhaust the server.
-    Check the same on `SundialSpec.from_dict`.
-  - confine `accuratum:` paths to the package (`accuratum:../..` escapes
-    it today).
+- **Library prep — done** (2026-09-30): `solstice_timeframe` in
+  `core/spec`, default overlays and `resolve_image_path` (confined to the
+  package) in `defaults/overlays`; rendering on a bare `Figure`; IERS
+  tables bundled, no downloads; every `SundialSpec` input validated; the
+  wheel smoke-tested in CI. See
+  [PROJECT_KNOWLEDGE.md § Library prep for the website](PROJECT_KNOWLEDGE.md#library-prep-for-the-website-step-61).
+- **Next: `web/` itself**, following [web/docs/UX.md](../web/docs/UX.md).
 - **Security requirements for `web/`** (the trust boundary):
-  - no file paths from users: overlays fixed server-side (uploads, if
-    ever, with size and type limits); never load a user's project folder
+  - no file paths from users: logo and compass uploads with size and type
+    limits, re-encoded server-side; never load a user's project folder
     as-is, since its overlay paths would be trusted;
+  - never expose the grid: the spec bounds stop absurd values, not slow
+    ones (1-minute steps at 10,000 points would take minutes);
   - cap the length of the title, subtitle and label texts (matplotlib
     parses `$…$` as math);
   - accept line colors only as `#rrggbb` (a regex), not any string
