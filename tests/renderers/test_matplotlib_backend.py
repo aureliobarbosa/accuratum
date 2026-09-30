@@ -101,3 +101,53 @@ def test_render_leaves_pyplot_alone_and_saves_without_it():
         buf = io.BytesIO()
         fig.savefig(buf, format=fmt)
         assert buf.getvalue().startswith(magic)
+
+
+# --- title and subtitle fit between the overlays -----------------------------
+
+
+def _hints_with_default_overlays() -> RenderHints:
+    from dataclasses import replace
+
+    from accuratum.defaults.overlays import default_render_hints, resolve_image_path
+
+    hints = default_render_hints()
+    return replace(hints, overlays=[replace(o, image_path=resolve_image_path(o.image_path)) for o in hints.overlays])
+
+
+def _header_texts(fig):
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    return {t.get_text(): (t, t.get_window_extent(renderer).transformed(fig.transFigure.inverted())) for t in fig.texts}
+
+
+LONG_TITLE = "Universidade de Brasília - Campus UnB Ceilândia, Distrito Federal"
+
+
+def test_a_long_title_shrinks_to_fit_between_the_overlays():
+    hints = _hints_with_default_overlays()
+    fig, _ = render(_outline(12.0, 5.0, LONG_TITLE, "2025-12-21 / 2026-06-21"), hints)
+    texts = _header_texts(fig)
+    title, box = texts[LONG_TITLE]
+    logo = next(o for o in hints.overlays if o.name == "logo").rect
+    compass = next(o for o in hints.overlays if o.name == "compass").rect
+    assert box.x0 >= logo[0] + logo[2]
+    assert box.x1 <= compass[0]
+    assert title.get_fontsize() < hints.title_fontsize
+
+
+def test_the_subtitle_shrinks_in_the_same_proportion():
+    hints = _hints_with_default_overlays()
+    fig, _ = render(_outline(12.0, 5.0, LONG_TITLE, "2025-12-21 / 2026-06-21"), hints)
+    texts = _header_texts(fig)
+    title, subtitle = texts[LONG_TITLE][0], texts["2025-12-21 / 2026-06-21"][0]
+    assert title.get_fontsize() / hints.title_fontsize == pytest.approx(
+        subtitle.get_fontsize() / hints.subtitle_fontsize
+    )
+
+
+def test_a_short_title_keeps_its_size():
+    hints = _hints_with_default_overlays()
+    fig, _ = render(_outline(12.0, 5.0, "Planaltina", "2025-12-21 / 2026-06-21"), hints)
+    sizes = sorted(t.get_fontsize() for t in fig.texts)
+    assert sizes == [hints.subtitle_fontsize, hints.title_fontsize]
