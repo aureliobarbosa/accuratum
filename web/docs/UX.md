@@ -38,20 +38,31 @@ button leads to step 3.
 
 ## 3. Details
 
-A form with the remaining inputs. It is already filled with every value
-that can be worked out automatically:
+The user always gets both halves of the year, one page each, in a single
+PDF: period 0 (Dec→Jun) and period 1 (Jun→Dec). There is no period field.
 
-- **title**: the place's name (default: the name, or the coordinates when
-  there is none; see `defaults/titles.py`);
-- **subtitle**: the date range (default: `yyyy-mm-dd / yyyy-mm-dd`);
+The page holds the remaining inputs, already filled with every value that
+can be worked out automatically.
+
+**Shared by both pages**, entered once:
+
 - **year**: the current year;
 - **dayline color** and **hourline color**: two `<input type="color">`
   pickers, set to the library's defaults (`#d55e00`, `#0072b2`, chosen to
   stay distinct for color-blind readers; see PROJECT_KNOWLEDGE.md § Line
-  colors).
+  colors);
+- the logo and compass (below).
 
-There is no period field: the user always gets both halves of the year
-(Dec→Jun and Jun→Dec), one page each, in a single PDF.
+**One form per period** (Dec→Jun, Jun→Dec), like the CLI's `--title` and
+`--subtitle` on each project:
+
+- **title**: the place's name (default: the name, or the coordinates when
+  there is none; see `defaults/titles.py`);
+- **subtitle**: that period's date range (default:
+  `yyyy-mm-dd / yyyy-mm-dd`). Changing the year updates a subtitle the
+  user hasn't edited.
+
+The date and hour labels are not editable on the site (see below).
 
 Two buttons change the images:
 
