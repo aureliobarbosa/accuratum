@@ -80,6 +80,17 @@ jobs:
       - name: Build
         run: uv build
 
+      # A clean install, outside the repo, with an empty home: catches files
+      # missing from the wheel (accuratum/fig/) and any run-time download.
+      - name: Smoke-test the wheel
+        run: |
+          uv venv /tmp/wheel-venv
+          VIRTUAL_ENV=/tmp/wheel-venv uv pip install dist/*.whl
+          mkdir /tmp/wheel-home /tmp/wheel-run && cd /tmp/wheel-run
+          HOME=/tmp/wheel-home /tmp/wheel-venv/bin/accuratum --lat-long=-15.78,-47.92 --year 2026 \
+            --line-points 50 --time-step 60 -o out.pdf
+          test -s out.pdf
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist
