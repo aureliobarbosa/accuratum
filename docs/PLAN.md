@@ -179,13 +179,13 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   limits, CSP and rate limit; the four-view page in pt-BR/en with map,
   search, upload and PDF download. See
   [PROJECT_KNOWLEDGE.md § Website first version](PROJECT_KNOWLEDGE.md#website-first-version-step-61).
+- **Done since** (2026-09-30): long titles and their subtitles shrink by
+  one factor to fit between the overlays (b471546); a one-image carousel
+  of ten university sundials on the landing page (bf6caa1).
 - **Left in Step 6:**
-  - long titles run under the logo (a library renderer issue, the CLI
-    too): shrink the title to fit between the overlays? Needs the owner's
-    visual approval;
-  - the landing carousel of university sundials (UX.md), once the owner
-    says which half-year each image shows;
-  - the project logo, and the one-line description (owner);
+  - the project logo: the owner's image as `logo.png`, shown large and
+    readable on the landing page instead of the "Accuratum" heading;
+  - the one-line description (owner);
   - About and Contact pages (owner, work in progress).
 - **Security requirements for `web/`** (the trust boundary):
   - no file paths from users: logo and compass uploads with size and type
