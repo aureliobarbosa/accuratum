@@ -4,9 +4,9 @@ Generated once, not per visit, and served as static files::
 
     cd web && uv run python -m accuratum_web.gallery
 
-Each image shows the half-year in progress on the day it is generated. The
-default logo is UnB's, so it is left out: on another university's dial it
-would read as an affiliation. The compass stays.
+Each image shows the half-year in progress on the day it is generated and
+is titled with its city. The logo is the project's own, except at UnB, which
+keeps its university logo (the package default).
 """
 
 import json
@@ -22,7 +22,7 @@ from timezonefinder import timezone_at
 
 from accuratum.core.builder import build_plot
 from accuratum.core.spec import SOLSTICE_DAY, GridConfig, Location, SundialSpec, solstice_timeframe
-from accuratum.defaults.overlays import default_render_hints, resolve_image_path
+from accuratum.defaults.overlays import ACCURATUM_LOGO, DEFAULT_OVERLAYS, default_render_hints, resolve_image_path
 from accuratum.renderers.matplotlib_backend import render
 
 GALLERY_DIR = Path(__file__).parent / "static" / "gallery"
@@ -63,6 +63,14 @@ def half_year(today: date) -> tuple[int, int]:
     return today.year + 1, 0
 
 
+def title_for(uni: University) -> str:
+    return uni.city
+
+
+def logo_for(uni: University) -> str:
+    return DEFAULT_OVERLAYS["logo"].image_path if uni.name == "Universidade de Brasília" else ACCURATUM_LOGO
+
+
 def _slug(text: str) -> str:
     """``Ciudad de México`` → ``ciudad-de-mexico``: accents dropped, not the letters."""
     ascii_text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
@@ -75,26 +83,24 @@ def generate(
     """Write one PNG per university and ``index.json``; return the index."""
     out_dir.mkdir(parents=True, exist_ok=True)
     year, period = half_year(today)
-    hints = default_render_hints()
-    hints = replace(
-        hints,
-        overlays=[replace(o, image_path=resolve_image_path(o.image_path)) for o in hints.overlays if o.name != "logo"],
-    )
     entries = []
     for uni in universities:
         tz_name = timezone_at(lat=uni.lat, lng=uni.lon) or "UTC"
         spec = SundialSpec(
-            location=Location(lat=uni.lat, lon=uni.lon, timezone=tz_name, name=uni.name),
+            location=Location(lat=uni.lat, lon=uni.lon, timezone=tz_name, name=title_for(uni)),
             timeframe=solstice_timeframe(year, period, ZoneInfo(tz_name)),
             grid=grid,
             year=year,
             period=period,
         )
-        plot = build_plot(spec)  # its default title is the university's name
+        plot = build_plot(spec)  # its default title is the location name: the city
+        hints = default_render_hints()
+        overlays = [replace(o, image_path=logo_for(uni)) if o.name == "logo" else o for o in hints.overlays]
+        hints = replace(hints, overlays=[replace(o, image_path=resolve_image_path(o.image_path)) for o in overlays])
         fig, _ = render(plot, hints)
         image = f"{_slug(uni.city)}.png"
         fig.savefig(out_dir / image, dpi=PNG_DPI, bbox_inches="tight")
-        entries.append({"name": uni.name, "city": uni.city, "image": image, "subtitle": plot.subtitle})
+        entries.append({"city": uni.city, "image": image, "subtitle": plot.subtitle})
         print(f"{uni.city}: {image}", file=sys.stderr)
     (out_dir / "index.json").write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return entries

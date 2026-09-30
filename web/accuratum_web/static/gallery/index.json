@@ -1,60 +1,50 @@
 [
   {
-    "name": "Universidade de Brasília",
     "city": "Brasília",
     "image": "brasilia.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "Universidad de Chile",
     "city": "Santiago",
     "image": "santiago.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "Universidad Central de Venezuela",
     "city": "Caracas",
     "image": "caracas.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "Universidad Nacional Autónoma de México",
     "city": "Ciudad de México",
     "image": "ciudad-de-mexico.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "Columbia University",
     "city": "New York",
     "image": "new-york.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "University of Toronto",
     "city": "Toronto",
     "image": "toronto.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "Universidade de Lisboa",
     "city": "Lisboa",
     "image": "lisboa.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "Sorbonne Université",
     "city": "Paris",
     "image": "paris.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "The University of Tokyo",
     "city": "Tokyo",
     "image": "tokyo.png",
     "subtitle": "2026-06-21 / 2026-12-21"
   },
   {
-    "name": "Peking University",
     "city": "Beijing",
     "image": "beijing.png",
     "subtitle": "2026-06-21 / 2026-12-21"

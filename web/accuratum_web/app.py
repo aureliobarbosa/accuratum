@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
 
 from accuratum.core.spec import GridConfig
-from accuratum.defaults.overlays import DEFAULT_OVERLAYS, resolve_image_path
+from accuratum.defaults.overlays import ACCURATUM_LOGO, DEFAULT_OVERLAYS, resolve_image_path
 from accuratum_web.sundial import GRID, MAX_IMAGE_BYTES, PageTexts, SundialRequest, make_sundial
 
 MAX_REQUEST_BYTES = 2 * MAX_IMAGE_BYTES + 64 * 1024  # two uploads plus the text fields
@@ -30,6 +30,13 @@ WORKERS = 2  # one process per half-year
 MAX_CONCURRENT = 1  # sundials computed at once per instance (~260 MB each)
 RATE_LIMIT = (6, 600.0)  # sundials per client per 10 minutes
 STATIC_DIR = Path(__file__).parent / "static"
+# Package images the page shows: the form's default logo and compass, and the
+# project's logo on the landing page. Served from the package, not copied.
+PACKAGE_IMAGES = {
+    "logo": DEFAULT_OVERLAYS["logo"].image_path,
+    "compass": DEFAULT_OVERLAYS["compass"].image_path,
+    "accuratum": ACCURATUM_LOGO,
+}
 
 # The page loads only its own files. The exceptions: OpenStreetMap tiles for
 # the map, Nominatim for the place search (run from the visitor's browser),
@@ -154,12 +161,11 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/api/default-image/{name}")
-    def default_image(name: str):
-        """The package's default logo or compass, shown in the form."""
-        if name not in DEFAULT_OVERLAYS:
+    @app.get("/api/image/{name}")
+    def package_image(name: str):
+        if name not in PACKAGE_IMAGES:
             return JSONResponse({"detail": "not found."}, status_code=404)
-        return FileResponse(resolve_image_path(DEFAULT_OVERLAYS[name].image_path))
+        return FileResponse(resolve_image_path(PACKAGE_IMAGES[name]))
 
     @app.post("/api/sundial")
     async def sundial(request: Request):

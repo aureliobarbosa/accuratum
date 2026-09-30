@@ -102,19 +102,11 @@ input[type="color"] {
 .view[hidden], [hidden] { display: none !important; }
 
 .hero { text-align: center; padding: 2rem 0; }
-.hero h1 { font-size: 2.5rem; }
-.logo-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 8rem;
-  height: 8rem;
-  margin: 0 auto 1rem;
-  border: 3px solid var(--accent2);
-  border-radius: 50%;
-  color: var(--accent2);
-  font-size: 4.5rem;
-  line-height: 1;
+.hero h1 { margin: 0 0 1rem; line-height: 0; }
+/* The logo is black line art on white: a white card keeps it legible in dark mode. */
+.hero-logo {
+  width: min(240px, 70vw); height: auto;
+  background: #fff; border-radius: var(--radius); padding: 0.5rem;
 }
 .tagline { color: var(--muted); font-size: 1.15rem; margin: 0 auto 1.5rem; max-width: 34rem; }
 /* Landing carousel: one sundial at a time, arrows on both sides. */
@@ -240,7 +232,7 @@ legend { padding: 0 0.5rem; font-weight: 600; }
 
 @media (min-width: 720px) {
   .view { padding-top: 2rem; }
-  .hero h1 { font-size: 3.5rem; }
+  .hero-logo { width: 340px; }
   .hero { padding: 3rem 0; }
   .periods { grid-template-columns: 1fr 1fr; gap: 1rem; }
   .image-choice > span { flex: 0 0 8rem; }

@@ -279,8 +279,8 @@ async function setupGallery() {
     index = (i + entries.length) % entries.length;
     const entry = entries[index];
     $("#gallery-img").src = `gallery/${entry.image}`;
-    $("#gallery-img").alt = `${entry.name}, ${entry.city}`;
-    $("#gallery-caption").textContent = `${entry.name} — ${entry.city}`;
+    $("#gallery-img").alt = entry.city;
+    $("#gallery-caption").textContent = entry.city;
   };
   document.querySelectorAll(".carousel-step").forEach((button) =>
     button.addEventListener("click", () => {
