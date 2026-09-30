@@ -10,6 +10,8 @@
   "common.wip": "Work in progress.",
   "home.tagline": "Draw an Accuratum sundial for any place on Earth.",
   "home.generate": "Generate sundial",
+  "home.previous": "Previous sundial",
+  "home.next": "Next sundial",
   "location.heading": "Where will the sundial be?",
   "location.search": "Search",
   "location.searchPlaceholder": "City, university, address…",

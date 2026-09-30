@@ -258,6 +258,43 @@ function showResult(result, title, year) {
   location.hash = "#/result";
 }
 
+// --- landing carousel --------------------------------------------------------
+// One sundial at a time, generated beforehand (accuratum_web/gallery.py).
+
+const CAROUSEL_MS = 6000;
+
+async function setupGallery() {
+  let entries;
+  try {
+    const response = await fetch("gallery/index.json");
+    if (!response.ok) return;
+    entries = await response.json();
+  } catch {
+    return;
+  }
+  if (!entries.length) return;
+  let index = 0;
+  let timer = null;
+  const show = (i) => {
+    index = (i + entries.length) % entries.length;
+    const entry = entries[index];
+    $("#gallery-img").src = `gallery/${entry.image}`;
+    $("#gallery-img").alt = `${entry.name}, ${entry.city}`;
+    $("#gallery-caption").textContent = `${entry.name} — ${entry.city}`;
+  };
+  document.querySelectorAll(".carousel-step").forEach((button) =>
+    button.addEventListener("click", () => {
+      clearInterval(timer); // the visitor took over
+      show(index + Number(button.dataset.step));
+    }),
+  );
+  show(0);
+  $("#gallery").hidden = false;
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    timer = setInterval(() => show(index + 1), CAROUSEL_MS);
+  }
+}
+
 // --- start -------------------------------------------------------------------
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -282,4 +319,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.addEventListener("hashchange", route);
   route();
+  setupGallery();
 });

@@ -10,6 +10,8 @@
   "common.wip": "Em construção.",
   "home.tagline": "Desenhe um relógio de sol Accuratum para qualquer lugar da Terra.",
   "home.generate": "Gerar relógio de sol",
+  "home.previous": "Relógio de sol anterior",
+  "home.next": "Próximo relógio de sol",
   "location.heading": "Onde ficará o relógio de sol?",
   "location.search": "Buscar",
   "location.searchPlaceholder": "Cidade, universidade, endereço…",

@@ -39,7 +39,18 @@
         <p class="tagline" data-i18n="home.tagline"></p>
         <a class="button primary" href="#/location" data-i18n="home.generate"></a>
       </div>
-      <div class="gallery" id="gallery" hidden></div>
+      <div class="carousel" id="gallery" hidden>
+        <button type="button" class="carousel-step" data-step="-1">
+          <span aria-hidden="true">‹</span><span class="visually-hidden" data-i18n="home.previous"></span>
+        </button>
+        <figure>
+          <img id="gallery-img" alt="">
+          <figcaption id="gallery-caption"></figcaption>
+        </figure>
+        <button type="button" class="carousel-step" data-step="1">
+          <span aria-hidden="true">›</span><span class="visually-hidden" data-i18n="home.next"></span>
+        </button>
+      </div>
     </section>
 
     <!-- 2. Location -->
