@@ -1,7 +1,9 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-29):** Steps 0–5.3 are closed. Next: Step 6. Steps 4–7 are the fast track to a hosted website, so the
-> collaborators can meet and start the paper.
+> **Status (2026-09-30):** Steps 0–5.3 are closed. Next: Step 6 (layout
+> decided: monorepo, with `web/` as its own uv workspace project). Steps 4–7
+> are the fast track to a hosted website, so the collaborators can meet and
+> start the paper.
 
 This file holds only what is **still to do**. When a step closes, it shrinks
 here to one line per decision plus a pointer. The detail (findings, traps,
@@ -28,6 +30,9 @@ before it.
    after the web system ships. A second sundial type was a prerequisite;
    since 2026-09-29 comparing against other people's sundial software may
    replace it (see the backlog).
+
+The wheel (library + CLI) goes out through the `v*` GitHub Releases. PyPI
+waits until the first version of the paper is submitted.
 
 ---
 
@@ -121,10 +126,33 @@ See [PROJECT_KNOWLEDGE.md § Title and subtitle](PROJECT_KNOWLEDGE.md#title-and-
 A web front end for generating sundials (goal 4). Scope to be decided at the
 start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
 
+- **Decided:** one repo. `web/` is its own project (own `pyproject.toml`,
+  uv workspace member); the library stays at the root and its wheel stays
+  library + CLI only. Bingo's approach carries over, except two routes
+  (`/api/plot` slow, `/api/render` live) instead of regenerating on every
+  edit.
+- **First, in the library:**
+  - move `_solstice_timeframe`, `DEFAULT_OVERLAYS` and the `accuratum:`
+    path resolution out of `cli.py` into the public API;
+  - render with `matplotlib.figure.Figure()`, not pyplot;
+  - turn off astropy's IERS auto-download;
+  - check that the wheel contains `accuratum/fig/` and that the CLI runs
+    from a clean install of it.
+- **Open decisions:**
+  - which inputs the page shows (grid fixed?);
+  - how labels are edited: form fields, or dragging;
+  - how the location is entered: coordinates, a map, or a search box;
+  - the page's language;
+  - the deploy trigger: a `site-v*` tag, or a push that touches `web/`;
+  - whether to reuse Bingo's Google Cloud project.
+
+See [PROJECT_KNOWLEDGE.md § Website groundwork](PROJECT_KNOWLEDGE.md#website-groundwork-step-6).
+
 ## Step 7 — Host the website in the cloud
 
-Once it's hosted, call the collaborators for a meeting and start writing the
-paper (goal 5).
+Bingo's Docker, Cloud Run, Firebase Hosting and WIF deploy setup carries
+over (see the section above). Once it's hosted, call the collaborators for a
+meeting and start writing the paper (goal 5).
 
 ## Backlog (not scheduled)
 

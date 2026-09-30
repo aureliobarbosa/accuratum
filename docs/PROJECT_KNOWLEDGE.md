@@ -401,6 +401,115 @@ e84ee45 (moved into the `Plot`).
   `Edinburgh`) and were re-saved, so their `project.json` shows the texts
   and every render hint. Their PNGs didn't change between 5.2 and 5.3.
 
+## Website groundwork (Step 6)
+
+Prepared 2026-09-30, before Step 6 starts. Nothing is built yet.
+
+**Reference: Bingo** ([github.com/aureliobarbosa/bingo](https://github.com/aureliobarbosa/bingo),
+live at bingo410.web.app), the same author's earlier web service:
+
+- A stateless FastAPI service: each request carries the whole config and
+  gets a PDF back. The page is Bootstrap and plain JavaScript, with no
+  build step.
+- The user saves and opens a JSON config file; `localStorage` keeps the
+  last one. An uploaded logo travels as a data URI inside the JSON.
+- A multi-stage Dockerfile, with every stage on one base image.
+- Cloud Run in `southamerica-east1`, behind Firebase Hosting for a free
+  HTTPS address.
+- `deploy.yml` logs in to Google without keys (WIF) and deploys the image
+  by digest. It is kept apart from `ci.yml` so it never runs on pull
+  requests.
+- A CI job starts the container and runs a smoke test.
+- Security headers (CSP), request size limits and a per-IP rate limit.
+
+**Measurements** (this dev container; Brasília, one half-year, default
+grid):
+
+| | |
+|---|---|
+| `build_plot` | 10.2–10.5 s |
+| Render (SVG, PNG or PDF) | 0.13–0.18 s |
+| Output size | SVG 82 kB, PDF 31 kB, PNG 334 kB (200 dpi) |
+| Geometry | 62 lines, 19,276 points; 321 kB as JSON with 4 decimals |
+| Project folder | `project.json` 8 kB, `polylines.npz` 296 kB |
+| Peak memory | 260 MB (Bingo: 47 MB) |
+| Imports | 0.9 s |
+
+**Where the time goes.** About 85% of `build_plot` is astropy's
+high-precision ICRS→AltAz transform, mostly erfa `epv00` (Earth position)
+and `pnm06a` (precession-nutation). astroplan's sunrise and sunset take
+6.2 s of the 10, through the same transform. astropy's
+`ErfaAstromInterpolator(300 s)` made it slower (13.0 s against 10.5 s),
+with the same result to 1e-6 plumb lengths. Getting to about 1 s would
+take grouping the 66 transform calls into a few, or a simpler
+sun-position formula. The website doesn't need that.
+
+**What must differ from Bingo:**
+
+- **Two routes, not one.** Bingo regenerates everything on each edit
+  (0.25 s, 400 ms debounce). Here, `/api/plot` (spec → geometry, labels,
+  title) takes about 10 s and runs from a button. `/api/render` (project →
+  SVG) is fast enough to update live. This is the CLI's own split between
+  generating a project and `--project`. The browser keeps the geometry and
+  sends it back with each preview (321 kB, under Bingo's 4 MB request
+  cap), so the service stays stateless.
+- **No astropy downloads at run time.** On first use astropy fetched
+  `finals2000A.all` and `Leap_Second.dat` (they are in
+  `~/.astropy/cache`). On Cloud Run every new instance would download them
+  again, need a writable home folder, and fail when the server is down.
+  `iers.conf.auto_download = False` uses the tables bundled in
+  `astropy-iers-data`. The error is under 0.9 s of time (UT1−UTC), which
+  doesn't matter for a sundial.
+- **Renderer without pyplot.** `render` calls `plt.figure()`, whose global
+  state isn't safe when FastAPI runs requests in parallel threads. Use
+  `matplotlib.figure.Figure()`.
+- **Resources.** At least 512 MiB of memory, few requests at a time per
+  instance, and a much stricter rate limit on `/api/plot` than Bingo's 120
+  per minute. Cap the grid settings or keep them off the page: small steps
+  would pass the 60 s timeout of Cloud Run and of Firebase Hosting.
+- **Place search.** Nominatim allows 1 request per second, forbids
+  search-as-you-type, and would see every visitor's search from the
+  server's IP. The alternatives are coordinates, a map click (Leaflet and
+  OpenStreetMap tiles, allowed in the CSP), or a search from the visitor's
+  browser.
+- **Preview as an SVG image**, not a PDF in an `<iframe>`. That avoids
+  Bingo's `blob:`/CSP/Firefox pdf.js traps.
+
+**Repo layout: monorepo, with `web/` as its own project** (user's
+decision, 2026-09-30). `web/` has its own `pyproject.toml` and joins the
+library through a uv workspace. The library stays at the repo root.
+
+- *Two repos* were rejected, though they have real advantages: a library
+  repo that shows only the library (for the paper, PyPI and a DOI archive),
+  independent release timing, no cloud deploy setup in the library repo,
+  and a site that can only use the public API. Against them: most early
+  changes touch both parts, which means two commits plus a tag or pin each
+  time; a local-path override to try unreleased library code; and two sets
+  of docs and CI to maintain.
+- *The website inside the package* (`accuratum/web/`, an `accuratum[web]`
+  extra) was rejected because the PyPI wheel would carry a web server,
+  HTML and JavaScript, and every website change would become a library
+  version.
+- *Why this layout:* one developer, early changes touch both parts, one
+  set of docs drives the sessions, and the wheel stays library + CLI only.
+  Splitting later is one `git filter-repo --subdirectory-filter web`.
+
+**Wheel and PyPI.** The wheel goes out through the existing `v*` GitHub
+Releases (`ci.yml` runs `uv build`). PyPI waits until the first version of
+the paper is submitted.
+
+**Traps to carry into Step 6:**
+
+- `v*` tags are library releases. Website deploys need another trigger: a
+  `site-v*` tag, or a push that touches `web/`.
+- `deploy.yml` must never run on pull requests; the library repo will take
+  outside pull requests after publication.
+- The workspace shares one `uv.lock`, so the website's dependencies must
+  install on the library's Python 3.11 baseline.
+- The website imports only the library's public API. Today
+  `_solstice_timeframe`, `DEFAULT_OVERLAYS` and the `accuratum:` image path
+  resolution are private to `cli.py`.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
