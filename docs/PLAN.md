@@ -142,11 +142,12 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     by force-push; if any contain the leaked commit, ask GitHub Support to
     purge them or publish as a fresh repo), forks and collaborators. No PR after #7 (2026-05-11,
     before the leak).
-  - [ ] c. Approve the swap: force-push the cleaned `main` (and `v0.1` if its
+  - [x] c. Approve the swap: force-push the cleaned `main` (and `v0.1` if its
     hash changed) from the clean clone; delete stale remote branches.
   - [ ] d. Re-clone on all 3 machines (old clones still hold the leaked
     objects); delete the old local branches.
-  - [ ] e. Only then make the repo public.
+  - [ ] e. Only then make the repo public, and only once the project's
+    collaborators approve it. Not approved yet (2026-09-30).
 
 - **First, in the library:**
   - move `_solstice_timeframe`, `DEFAULT_OVERLAYS` and the `accuratum:`
