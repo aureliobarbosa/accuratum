@@ -25,7 +25,7 @@ FORM = {
 
 @pytest.fixture(scope="module")
 def client():
-    with TestClient(create_app(grid=FAST_GRID, workers=0)) as c:
+    with TestClient(create_app(grid=FAST_GRID, workers=0, rate_limit=(1000, 60.0))) as c:
         yield c
 
 
@@ -88,3 +88,39 @@ def test_parallel_workers_give_the_same_pages():
         response = c.post("/api/sundial", data=FORM)
     assert response.status_code == 200, response.text
     assert len(response.json()["pngs"]) == 2
+
+
+# --- security headers, rate limit, static page -------------------------------
+
+
+def test_security_headers_on_every_response(client):
+    for path in ("/api/health", "/"):
+        headers = client.get(path).headers
+        csp = headers["content-security-policy"]
+        assert "default-src 'self'" in csp
+        assert "frame-ancestors 'none'" in csp
+        assert "object-src 'none'" in csp
+        assert headers["x-content-type-options"] == "nosniff"
+        assert headers["referrer-policy"] == "strict-origin-when-cross-origin"
+
+
+def test_csp_allows_only_the_map_tiles_and_place_search():
+    from accuratum_web.app import CSP
+
+    assert "img-src 'self' data: https://tile.openstreetmap.org" in CSP
+    assert "connect-src 'self' https://nominatim.openstreetmap.org" in CSP
+    assert "unsafe-inline" not in CSP and "unsafe-eval" not in CSP
+
+
+def test_sundial_requests_are_rate_limited_per_client():
+    with TestClient(create_app(grid=FAST_GRID, workers=0, rate_limit=(1, 60.0))) as c:
+        assert c.post("/api/sundial", data=FORM).status_code == 200
+        response = c.post("/api/sundial", data=FORM)
+        assert response.status_code == 429
+        assert c.get("/api/health").status_code == 200  # only the costly route is limited
+
+
+def test_the_page_is_served_at_the_root(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")

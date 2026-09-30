@@ -7,13 +7,17 @@ web/docs/UX.md and returns both half-years as base64 PNGs and a PDF.
 import asyncio
 import base64
 import threading
+import time
+from collections import defaultdict, deque
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import asynccontextmanager
 from multiprocessing import get_context
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
 
 from accuratum.core.spec import GridConfig
@@ -23,10 +27,61 @@ MAX_REQUEST_BYTES = 2 * MAX_IMAGE_BYTES + 64 * 1024  # two uploads plus the text
 TIMEOUT_SECONDS = 50.0  # under the 60 s of Cloud Run and Firebase Hosting
 WORKERS = 2  # one process per half-year
 MAX_CONCURRENT = 1  # sundials computed at once per instance (~260 MB each)
+RATE_LIMIT = (6, 600.0)  # sundials per client per 10 minutes
+STATIC_DIR = Path(__file__).parent / "static"
+
+# The page loads only its own files. The exceptions: OpenStreetMap tiles for
+# the map, Nominatim for the place search (run from the visitor's browser),
+# and data: URIs for the PNG previews.
+CSP = "; ".join(
+    [
+        "default-src 'self'",
+        "img-src 'self' data: https://tile.openstreetmap.org",
+        "connect-src 'self' https://nominatim.openstreetmap.org",
+        "object-src 'none'",
+        "base-uri 'none'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    ]
+)
+SECURITY_HEADERS = {
+    "Content-Security-Policy": CSP,
+    "X-Content-Type-Options": "nosniff",
+    # OSM's tile policy needs a Referer; send only the origin to other sites.
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+}
 
 
 class Busy(Exception):
     pass
+
+
+class RateLimiter:
+    """At most *limit* hits per client in a sliding *window* of seconds. In memory, per instance."""
+
+    def __init__(self, limit: int, window: float) -> None:
+        self.limit, self.window = limit, window
+        self.hits: dict[str, deque[float]] = defaultdict(deque)
+        self.lock = threading.Lock()
+
+    def allow(self, client: str) -> bool:
+        now = time.monotonic()
+        with self.lock:
+            hits = self.hits[client]
+            while hits and hits[0] <= now - self.window:
+                hits.popleft()
+            if len(hits) >= self.limit:
+                return False
+            hits.append(now)
+            return True
+
+
+def _client(request: Request) -> str:
+    # Behind Firebase Hosting and Cloud Run the visitor is the first
+    # X-Forwarded-For entry. A client can forge it to dodge its own limit;
+    # the per-instance concurrency cap still bounds the load (Step 7 revisits).
+    forwarded = request.headers.get("x-forwarded-for", "")
+    return forwarded.split(",")[0].strip() or (request.client.host if request.client else "unknown")
 
 
 def _request_from_form(form, uploads: dict[str, bytes | None]) -> SundialRequest:
@@ -49,9 +104,11 @@ def create_app(
     workers: int = WORKERS,
     timeout_seconds: float = TIMEOUT_SECONDS,
     max_concurrent: int = MAX_CONCURRENT,
+    rate_limit: tuple[int, float] = RATE_LIMIT,
 ) -> FastAPI:
     """``workers=0`` computes the two half-years one after the other, in the request's thread."""
     slots = threading.BoundedSemaphore(max_concurrent)
+    limiter = RateLimiter(*rate_limit)
     pool: dict[str, ProcessPoolExecutor] = {}
 
     @asynccontextmanager
@@ -77,6 +134,12 @@ def create_app(
             slots.release()
 
     @app.middleware("http")
+    async def security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers.update(SECURITY_HEADERS)
+        return response
+
+    @app.middleware("http")
     async def limit_request_size(request: Request, call_next):
         if request.method == "POST":
             length = request.headers.get("content-length")
@@ -92,6 +155,8 @@ def create_app(
 
     @app.post("/api/sundial")
     async def sundial(request: Request):
+        if not limiter.allow(_client(request)):
+            return JSONResponse({"detail": "too many sundials; try again in a few minutes."}, status_code=429)
         async with request.form(max_files=2, max_fields=20) as form:
             uploads = {}
             for name in ("logo", "compass"):
@@ -112,6 +177,7 @@ def create_app(
             "pdf": base64.b64encode(result.pdf).decode("ascii"),
         }
 
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
     return app
 
 
