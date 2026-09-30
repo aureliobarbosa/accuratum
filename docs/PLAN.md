@@ -130,7 +130,7 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   uv workspace member); the library stays at the root and its wheel stays
   library + CLI only. Bingo's approach carries over, except two routes
   (`/api/plot` slow, `/api/render` live) instead of regenerating on every
-  edit.
+  edit (superseded by the single route in UX.md, see below).
 
 - **Before going public** (the cleaned history is
   prepared and CI scans for secrets; see
@@ -184,11 +184,15 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   - the server picks the output file name and format;
   - a timeout per request, a cap on concurrent renders, and Cloud Run
     memory and concurrency limits.
+- **User experience decided** (2026-09-30), in
+  [web/docs/UX.md](../web/docs/UX.md): landing page → world map → form
+  → PDF viewer. pt-BR by default, multilingual from the start. No label
+  editing on the site, so a single spec → PDF route replaces the
+  `/api/plot` + `/api/render` pair. The logo and compass are uploads.
+  UX.md lists its own open questions.
 - **Open decisions:**
-  - which inputs the page shows (grid fixed?);
-  - how labels are edited: form fields, or dragging;
-  - how the location is entered: coordinates, a map, or a search box;
-  - the page's language;
+  - whether the grid is fixed server-side (assumed yes: the form doesn't
+    show it);
   - the deploy trigger: a `site-v*` tag, or a push that touches `web/`;
   - whether to reuse Bingo's Google Cloud project.
 
