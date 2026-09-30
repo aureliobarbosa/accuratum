@@ -1,6 +1,6 @@
 # Accuratum — what's left to do
 
-> **Status (2026-09-30):** Steps 0–5.3 are closed. Next: Step 6 (layout
+> **Status (2026-09-30):** Steps 0–5.4 are closed. Next: Step 6 (layout
 > decided: monorepo, with `web/` as its own uv workspace project). Steps 4–7
 > are the fast track to a hosted website, so the collaborators can meet and
 > start the paper.
@@ -121,6 +121,16 @@ See [PROJECT_KNOWLEDGE.md § Header band](PROJECT_KNOWLEDGE.md#header-band-step-
 
 See [PROJECT_KNOWLEDGE.md § Title and subtitle](PROJECT_KNOWLEDGE.md#title-and-subtitle-steps-5253).
 
+### Step 5.4 — Dayline and hourline colors — **done**
+
+- Two colors instead of one green: daylines Okabe–Ito vermillion
+  `#d55e00`, hourlines blue `#0072b2`. They stay apart under protan-,
+  deutan- and tritanopia.
+- `--dayline-color`/`--hourline-color` take any matplotlib color and save
+  it as `#rrggbb`, the format of a browser's `<input type="color">`.
+
+See [PROJECT_KNOWLEDGE.md § Line colors](PROJECT_KNOWLEDGE.md#line-colors-step-54).
+
 ## Step 6 — Create the website
 
 A web front end for generating sundials (goal 4). Scope to be decided at the
@@ -179,6 +189,8 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     as-is, since its overlay paths would be trusted;
   - cap the length of the title, subtitle and label texts (matplotlib
     parses `$…$` as math);
+  - accept line colors only as `#rrggbb` (a regex), not any string
+    matplotlib would parse;
   - geocoding: cache or rate-limit Nominatim (1 req/s per app), or geocode
     in the browser;
   - the server picks the output file name and format;

@@ -401,6 +401,39 @@ PLAN Steps 5.2 and 5.3, 2026-09-29. Commits a6f7cf3 (first version),
   `Edinburgh`) and were re-saved, so their `project.json` shows the texts
   and every render hint. Their PNGs didn't change between 5.2 and 5.3.
 
+## Line colors (Step 5.4)
+
+PLAN Step 5.4, 2026-09-30.
+
+- **Why two colors.** Every line was `green`, so the date grid and the hour
+  grid were told apart only by direction, which is hard where they cross
+  at shallow angles (the dial's edges, high latitudes).
+- **Why vermillion and blue.** They come from the Okabe–Ito palette, which
+  was made for color-blind readers. A simulation (Machado et al. 2009,
+  full severity, CIELAB distance) kept them far apart for every type:
+  ΔE ≈ 115 normal, 92 protan, 108 deutan, 102 tritan. Red/green drops to
+  ΔE ≈ 7 for deutans. Okabe–Ito orange `#e69f00` scores higher for
+  protans but drops to 79 for tritans, and it is too light (L\* 71) for
+  0.5 pt lines on white. Vermillion (L\* 54) and blue (L\* 46) both read
+  well as thin lines. In deutan and protan vision they look olive and
+  grey-blue; in tritan vision, pink and teal.
+- **Which is which.** Hourlines are blue and daylines vermillion. There is
+  no strong reason for this choice; swap them by flag if the collaborators
+  prefer.
+- **Labels stay black.** Colored labels were not asked for, and thin
+  colored text is harder to read than thin colored lines.
+- **Storage.** `RenderHints.dayline_color` and `hourline_color` replace
+  `line_color`. They are render hints, so changing them never invalidates
+  the geometry. The renderer picks the color by `Polyline.kind`. An old
+  `project.json` with `line_color` loads with the new defaults (the old key
+  is dropped like the SVG canvas keys), since no flag ever set it.
+- **CLI.** `--dayline-color`/`--hourline-color` accept any matplotlib color
+  (`orange`, `C1`, `#123ABC`) and `parse_color` saves it as lowercase
+  `#rrggbb` through `matplotlib.colors.to_hex`, which drops any alpha. So
+  `project.json` always holds the format that `<input type="color">`
+  reads and writes. The website should accept that format only (see
+  PLAN's security list).
+
 ## Website groundwork (Step 6)
 
 Prepared 2026-09-30, before Step 6 starts. Nothing is built yet.

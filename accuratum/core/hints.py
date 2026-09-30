@@ -30,12 +30,17 @@ class RenderHints:
     top of it would cover lines somewhere.
 
     The plot's title and subtitle go in the header too, between the default
-    overlays, at ``title_xy`` and ``subtitle_xy``."""
+    overlays, at ``title_xy`` and ``subtitle_xy``.
+
+    Daylines and hourlines differ in color so the two families read apart.
+    The defaults are the Okabe-Ito vermillion and blue, which stay distinct
+    under protan-, deutan- and tritanopia. Colors are ``#rrggbb`` strings."""
 
     overlays: list[Overlay] = field(default_factory=list)
     figsize: tuple[float, float] = (8.0, 6.0)
     axes_rect: tuple[float, float, float, float] = (0.07, 0.05, 0.9, 0.75)
-    line_color: str = "green"
+    dayline_color: str = "#d55e00"
+    hourline_color: str = "#0072b2"
     line_width: float = 0.5
     label_color: str = "black"
     label_fontsize: float = 7.0

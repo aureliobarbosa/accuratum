@@ -73,3 +73,16 @@ def test_title_and_subtitle_sit_in_the_header_band():
 def test_empty_title_means_no_text():
     fig, ax = render(_outline(12.0, 5.0))
     assert not fig.texts
+
+
+def test_daylines_and_hourlines_take_their_own_colors():
+    plot = Plot(
+        polylines=[
+            Polyline("dayline", np.array([0.0, 1.0]), np.array([0.0, 0.0]), {"kind": "dayline"}),
+            Polyline("hourline", np.array([0.0, 0.0]), np.array([0.0, 1.0]), {"kind": "hourline"}),
+        ],
+        labels=[],
+        data_extent=1.0,
+    )
+    fig, ax = render(plot, RenderHints(dayline_color="#d55e00", hourline_color="#0072b2"))
+    assert [line.get_color() for line in ax.lines] == ["#d55e00", "#0072b2"]

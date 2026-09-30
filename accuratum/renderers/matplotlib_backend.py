@@ -24,10 +24,11 @@ def render(plot: Plot, hints: RenderHints | None = None) -> tuple[Figure, Axes]:
     for spine in ax.spines.values():
         spine.set_visible(False)
 
+    colors = {"dayline": hints.dayline_color, "hourline": hints.hourline_color}
     for poly in plot.polylines:
         if poly.xs.size == 0:
             continue
-        ax.plot(poly.xs, poly.ys, "-", color=hints.line_color, linewidth=hints.line_width)
+        ax.plot(poly.xs, poly.ys, "-", color=colors[poly.kind], linewidth=hints.line_width)
 
     for label in plot.labels:
         if label.hidden:

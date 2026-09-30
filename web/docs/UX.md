@@ -45,7 +45,11 @@ that can be worked out automatically:
   there is none; see `defaults/titles.py`);
 - **subtitle**: the date range (default: `yyyy-mm-dd / yyyy-mm-dd`);
 - **year**: the current year;
-- **period**: Dec→Jun or Jun→Dec.
+- **period**: Dec→Jun or Jun→Dec;
+- **dayline color** and **hourline color**: two `<input type="color">`
+  pickers, set to the library's defaults (`#d55e00`, `#0072b2`, chosen to
+  stay distinct for color-blind readers; see PROJECT_KNOWLEDGE.md § Line
+  colors).
 
 Two buttons change the images:
 

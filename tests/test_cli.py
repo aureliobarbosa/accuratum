@@ -397,6 +397,27 @@ def test_render_settings_are_saved_and_cli_flags_win(tmp_path):
     assert render["label_fontsize"] == 9.0
 
 
+def test_line_colors_are_saved_as_hex(tmp_path):
+    _generate("--dayline-color=orange", "--hourline-color=#123ABC")
+    render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]
+    assert (render["dayline_color"], render["hourline_color"]) == ("#ffa500", "#123abc")
+
+
+def test_line_color_flag_overrides_a_saved_project(tmp_path):
+    from accuratum.cli import main
+
+    _generate()
+    with patch("accuratum.cli._save") as save:
+        main(["--project", AUTO_DIR, "--hourline-color", "black"])
+    hints = save.call_args.args[1]
+    assert (hints.dayline_color, hints.hourline_color) == ("#d55e00", "#000000")
+
+
+def test_unknown_color_is_rejected():
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["--dayline-color", "not-a-color"])
+
+
 def test_default_overlays_are_stored_as_package_paths(tmp_path):
     _generate()
     render = json.loads((tmp_path / AUTO_DIR / PROJECT_FILE).read_text())["render"]

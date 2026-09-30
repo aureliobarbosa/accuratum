@@ -31,6 +31,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.colors import to_hex  # noqa: E402
 from timezonefinder import timezone_at  # noqa: E402
 
 from accuratum.core.builder import build_plot  # noqa: E402
@@ -83,6 +84,14 @@ def parse_rect(value: str) -> tuple[float, float, float, float]:
         raise ValueError(f"could not parse {value!r} as four floats.")
 
 
+def parse_color(value: str) -> str:
+    """Any matplotlib color (``orange``, ``#123ABC``, ``C0``), saved as ``#rrggbb``."""
+    try:
+        return to_hex(value)
+    except ValueError:
+        raise ValueError(f"not a color: {value!r}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="accuratum",
@@ -124,6 +133,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--compass", default=None, metavar="PATH")
     parser.add_argument("--compass-rect", type=parse_rect, default=None, metavar="LEFT,BOTTOM,WIDTH,HEIGHT")
     parser.add_argument("--label-fontsize", type=float, default=None, metavar="PT")
+    parser.add_argument(
+        "--dayline-color",
+        type=parse_color,
+        default=None,
+        metavar="COLOR",
+        help=f"Name or #rrggbb. Default {RenderHints.dayline_color}.",
+    )
+    parser.add_argument(
+        "--hourline-color",
+        type=parse_color,
+        default=None,
+        metavar="COLOR",
+        help=f"Name or #rrggbb. Default {RenderHints.hourline_color}.",
+    )
     parser.add_argument(
         "--title",
         default=None,
@@ -264,6 +287,8 @@ def _render_hints(args: argparse.Namespace, saved: RenderHints | None) -> Render
         base,
         overlays=overlays,
         label_fontsize=args.label_fontsize if args.label_fontsize is not None else base.label_fontsize,
+        dayline_color=args.dayline_color or base.dayline_color,
+        hourline_color=args.hourline_color or base.hourline_color,
     )
 
 

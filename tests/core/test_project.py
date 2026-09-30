@@ -154,6 +154,22 @@ def test_legacy_render_keys_are_ignored():
     assert not hasattr(hints, "canvas_size_mm")
 
 
+def test_old_single_line_color_gives_the_default_pair():
+    """Before 0.3 every line was green; old projects render in the new colors."""
+    from accuratum.core.project import hints_from_dict
+
+    hints = hints_from_dict({"line_color": "green"})
+    assert (hints.dayline_color, hints.hourline_color) == (
+        RenderHints().dayline_color,
+        RenderHints().hourline_color,
+    )
+
+
+def test_default_line_colors_are_okabe_ito_vermillion_and_blue():
+    """A pair told apart under protan-, deutan- and tritanopia (see PROJECT_KNOWLEDGE)."""
+    assert (RenderHints().dayline_color, RenderHints().hourline_color) == ("#d55e00", "#0072b2")
+
+
 def test_project_json_shows_the_texts_drawn(tmp_path):
     save_project(_project(), tmp_path)
     data = json.loads((tmp_path / PROJECT_FILE).read_text())

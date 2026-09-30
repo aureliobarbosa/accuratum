@@ -104,7 +104,8 @@ def hints_from_dict(data: dict[str, Any]) -> RenderHints:
     for key in ("figsize", "axes_rect", "title_xy", "subtitle_xy"):
         if key in data:
             data[key] = tuple(data[key])
-    # Keys of removed settings (the custom SVG backend's canvas size) are ignored.
+    # Keys of removed settings are ignored: the custom SVG backend's canvas
+    # size, and the single ``line_color`` that daylines and hourlines shared.
     data = {k: v for k, v in data.items() if k in _HINT_FIELDS}
     return RenderHints(**data)
 
