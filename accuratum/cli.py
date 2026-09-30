@@ -39,7 +39,14 @@ from accuratum.core.hints import Overlay, RenderHints  # noqa: E402
 from accuratum.core.plot import Plot  # noqa: E402
 from accuratum.core.project import Project, hints_from_dict  # noqa: E402
 from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project  # noqa: E402
-from accuratum.core.spec import MAX_LATITUDE, GridConfig, Location, SundialSpec, TimeFrame, spec_from_dict  # noqa: E402
+from accuratum.core.spec import (  # noqa: E402
+    MAX_LATITUDE,
+    GridConfig,
+    Location,
+    SundialSpec,
+    solstice_timeframe,
+    spec_from_dict,
+)
 from accuratum.defaults.titles import default_subtitle, default_title  # noqa: E402
 from accuratum.location import location_to_latitude_longitude  # noqa: E402
 from accuratum.renderers import matplotlib_backend  # noqa: E402
@@ -50,7 +57,6 @@ DEFAULT_TIME_STEP_MIN = 20
 DEFAULT_DAYLINE_DAY_STEP = 7
 DEFAULT_HOURLINE_DAY_STEP = 1
 DEFAULT_LABEL_FONTSIZE = 7.0
-SOLSTICE_DAY = 21
 
 # Package images are stored in project files as "accuratum:<path>", so a
 # project folder works on any machine with the package installed. Both sit
@@ -205,16 +211,6 @@ def resolve_location(args: argparse.Namespace) -> tuple[float, float]:
     return latlon
 
 
-def _solstice_timeframe(year: int, period: int, tz: ZoneInfo) -> TimeFrame:
-    """The canonical solstice-to-solstice frame for *year* and *period*."""
-    dec_prev = datetime(year - 1, 12, SOLSTICE_DAY, tzinfo=tz)
-    jun_curr = datetime(year, 6, SOLSTICE_DAY, tzinfo=tz)
-    dec_curr = datetime(year, 12, SOLSTICE_DAY, tzinfo=tz)
-    if period == 0:
-        return TimeFrame(start=dec_prev, end=jun_curr)
-    return TimeFrame(start=jun_curr, end=dec_curr)
-
-
 def _spec_from_args(args: argparse.Namespace) -> SundialSpec:
     """Build a SundialSpec from CLI args."""
     lat, lon = resolve_location(args)
@@ -225,7 +221,7 @@ def _spec_from_args(args: argparse.Namespace) -> SundialSpec:
     year = args.year if args.year is not None else datetime.now(tz=tz).year
     return SundialSpec(
         location=Location(lat=lat, lon=lon, timezone=tz_str, name=args.location),
-        timeframe=_solstice_timeframe(year, args.period, tz),
+        timeframe=solstice_timeframe(year, args.period, tz),
         plumb_length=args.plumb_length,
         grid=GridConfig(
             dayline_day_step_days=args.dayline_day_step,
@@ -348,7 +344,7 @@ def _regenerate(folder: Path) -> Project:
     spec = spec_from_dict(data["spec"])
     old_title, old_subtitle = default_title(spec), default_subtitle(spec)
     if spec.year is not None and spec.period is not None:
-        spec.timeframe = _solstice_timeframe(spec.year, spec.period, ZoneInfo(spec.location.timezone))
+        spec.timeframe = solstice_timeframe(spec.year, spec.period, ZoneInfo(spec.location.timezone))
     render = hints_from_dict(data.get("render", {}))
     shutil.copyfile(folder / PROJECT_FILE, folder / (PROJECT_FILE + ".bak"))
     plot = build_plot(spec)

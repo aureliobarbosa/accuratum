@@ -225,7 +225,7 @@ meeting and start writing the paper (goal 5).
   (`accuratum.astronomy`, `datetime_utils`, `graph`). Port it to
   `build_plot`, or delete it.
 - **Solstices are approximated as the 21st** of June and December
-  (`SOLSTICE_DAY` in `cli.py`, the same as v0.1). astropy could compute the
+  (`SOLSTICE_DAY` in `core/spec.py`, the same as v0.1). astropy could compute the
   exact instant.
 - **Second sundial type**, once a prerequisite for goal 5. Before building
   one, look for open-source packages that draw sundials on the web. The

@@ -95,3 +95,26 @@ def test_location_accepts_latitudes_in_range(lat):
 def test_location_rejects_latitudes_out_of_range(lat):
     with pytest.raises(ValueError, match=f"±{MAX_LATITUDE:g}°"):
         Location(lat=lat, lon=0.0, timezone="UTC")
+
+
+# --- solstice timeframe ------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "period, start, end",
+    [
+        (0, datetime(2025, 12, 21, tzinfo=TZ_SP), datetime(2026, 6, 21, tzinfo=TZ_SP)),
+        (1, datetime(2026, 6, 21, tzinfo=TZ_SP), datetime(2026, 12, 21, tzinfo=TZ_SP)),
+    ],
+)
+def test_solstice_timeframe_spans_half_a_year(period, start, end):
+    from accuratum.core.spec import solstice_timeframe
+
+    assert solstice_timeframe(2026, period, TZ_SP) == TimeFrame(start=start, end=end)
+
+
+def test_solstice_timeframe_rejects_an_unknown_period():
+    from accuratum.core.spec import solstice_timeframe
+
+    with pytest.raises(ValueError, match="period"):
+        solstice_timeframe(2026, 2, TZ_SP)

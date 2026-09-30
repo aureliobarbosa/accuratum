@@ -16,13 +16,16 @@ they stay out of :func:`spec_hash`. A saved project keeps both (see
 import hashlib
 import json
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import datetime, tzinfo
 from typing import Any
 
 # Past ~75.5° the summer sun stays above the 10° horizon cut nearly all day,
 # and the hour lines of one clock hour start to repeat. Up to here the dial
 # is only shortened: the winter weeks with the sun below the cut drop out.
 MAX_LATITUDE = 75.0
+
+# The solstices are approximated as the 21st of June and December.
+SOLSTICE_DAY = 21
 
 
 @dataclass(frozen=True)
@@ -73,6 +76,18 @@ class SundialSpec:
     sundial_type: str = "accuratum"
     year: int | None = None
     period: int | None = None
+
+
+def solstice_timeframe(year: int, period: int, tz: tzinfo) -> TimeFrame:
+    """The solstice-to-solstice frame: period 0 is Dec(year-1)→Jun(year), 1 is Jun→Dec(year)."""
+    dec_prev = datetime(year - 1, 12, SOLSTICE_DAY, tzinfo=tz)
+    jun_curr = datetime(year, 6, SOLSTICE_DAY, tzinfo=tz)
+    dec_curr = datetime(year, 12, SOLSTICE_DAY, tzinfo=tz)
+    if period == 0:
+        return TimeFrame(start=dec_prev, end=jun_curr)
+    if period == 1:
+        return TimeFrame(start=jun_curr, end=dec_curr)
+    raise ValueError(f"period must be 0 or 1, got {period!r}.")
 
 
 # --- JSON-roundtrip helpers --------------------------------------------------
