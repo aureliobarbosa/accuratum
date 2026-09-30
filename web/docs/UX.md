@@ -40,7 +40,6 @@ From top to bottom:
    | Toronto | University of Toronto |
    | Lisbon | Universidade de Lisboa |
    | Paris | Sorbonne Université |
-   | Kyiv | Taras Shevchenko National University of Kyiv |
    | Tokyo | University of Tokyo |
    | Beijing | Peking University |
 
