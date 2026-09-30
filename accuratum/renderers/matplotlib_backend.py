@@ -6,7 +6,6 @@ resolved upstream. No geometry, no label heuristics here.
 """
 
 import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
@@ -17,7 +16,7 @@ from accuratum.core.plot import Plot
 def render(plot: Plot, hints: RenderHints | None = None) -> tuple[Figure, Axes]:
     """Render *plot* to a matplotlib ``(Figure, Axes)``."""
     hints = hints or RenderHints()
-    fig = plt.figure(figsize=hints.figsize)
+    fig = Figure(figsize=hints.figsize)  # not pyplot: no global state, safe across threads
     ax = fig.add_axes(hints.axes_rect)
     ax.set_aspect("equal")
     ax.set_anchor("N")  # hug the header band, whatever the drawing's shape

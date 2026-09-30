@@ -26,19 +26,15 @@ from pathlib import Path
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
-import matplotlib
+from matplotlib.colors import to_hex
+from timezonefinder import timezone_at
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.colors import to_hex  # noqa: E402
-from timezonefinder import timezone_at  # noqa: E402
-
-from accuratum.core.builder import build_plot  # noqa: E402
-from accuratum.core.hints import RenderHints  # noqa: E402
-from accuratum.core.plot import Plot  # noqa: E402
-from accuratum.core.project import Project, hints_from_dict  # noqa: E402
-from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project  # noqa: E402
-from accuratum.core.spec import (  # noqa: E402
+from accuratum.core.builder import build_plot
+from accuratum.core.hints import RenderHints
+from accuratum.core.plot import Plot
+from accuratum.core.project import Project, hints_from_dict
+from accuratum.core.project_io import PROJECT_FILE, StaleProjectError, load_project, save_project
+from accuratum.core.spec import (
     MAX_LATITUDE,
     GridConfig,
     Location,
@@ -46,10 +42,10 @@ from accuratum.core.spec import (  # noqa: E402
     solstice_timeframe,
     spec_from_dict,
 )
-from accuratum.defaults.overlays import DEFAULT_OVERLAYS, default_render_hints, resolve_image_path  # noqa: E402
-from accuratum.defaults.titles import default_subtitle, default_title  # noqa: E402
-from accuratum.location import location_to_latitude_longitude  # noqa: E402
-from accuratum.renderers import matplotlib_backend  # noqa: E402
+from accuratum.defaults.overlays import DEFAULT_OVERLAYS, default_render_hints, resolve_image_path
+from accuratum.defaults.titles import default_subtitle, default_title
+from accuratum.location import location_to_latitude_longitude
+from accuratum.renderers import matplotlib_backend
 
 DEFAULT_OUTPUT_NAME = "accuratum.png"
 DEFAULT_LINE_POINTS = 500
@@ -376,7 +372,6 @@ def _save(plot: Plot, hints: RenderHints, output: str) -> None:
     """Render with matplotlib; the extension (.png, .pdf, .svg, ...) picks the format."""
     fig, _ = matplotlib_backend.render(plot, hints)
     fig.savefig(output, dpi=200, bbox_inches="tight")
-    plt.close(fig)
 
 
 __all__ = ["build_parser", "main", "parse_lat_long", "parse_rect", "resolve_location"]

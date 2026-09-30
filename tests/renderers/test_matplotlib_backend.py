@@ -86,3 +86,18 @@ def test_daylines_and_hourlines_take_their_own_colors():
     )
     fig, ax = render(plot, RenderHints(dayline_color="#d55e00", hourline_color="#0072b2"))
     assert [line.get_color() for line in ax.lines] == ["#d55e00", "#0072b2"]
+
+
+def test_render_leaves_pyplot_alone_and_saves_without_it():
+    # pyplot's global figure list isn't thread-safe; the website renders in parallel threads.
+    import io
+
+    import matplotlib.pyplot as plt
+
+    before = plt.get_fignums()
+    fig, _ = render(_outline(12.0, 5.0, title="T"))
+    assert plt.get_fignums() == before
+    for fmt, magic in (("png", b"\x89PNG"), ("pdf", b"%PDF"), ("svg", b"<?xml")):
+        buf = io.BytesIO()
+        fig.savefig(buf, format=fmt)
+        assert buf.getvalue().startswith(magic)
