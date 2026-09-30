@@ -588,6 +588,14 @@ Ported to `defaults/placement.py`. Originally recorded in
 - **Generated PNG/SVG at the repo root are ignored** (`/*.png`, `/*.svg`,
   1f10f86). Assets in subfolders (`accuratum/fig/`, `images/`)
   stay tracked.
+- **A stale `accuratum.egg-info/` at the repo root hides the real
+  version.** It's left over from the old setuptools build, and it's
+  git-ignored. The repo root is on `sys.path`, so
+  `importlib.metadata.version("accuratum")` reads it before the uv-build
+  metadata. Found at 0.2.0: it still said 0.1.0, and so did the
+  provenance in every new `project.json`. Delete it on each machine
+  (`rm -rf accuratum.egg-info`). Bumping the version also needs
+  `uv lock` (0b569cd).
 
 ## Workflow lessons
 
