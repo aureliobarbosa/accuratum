@@ -38,7 +38,7 @@ waits until the first version of the paper is submitted.
 
 ## Step 0 — Consolidate the trunk — **done**
 
-`rewrite-core` was merged into `main` (c003354), and the stale branches were
+`rewrite-core` was merged into `main` (fbe6857), and the stale branches were
 deleted locally and on origin. See
 [PROJECT_KNOWLEDGE.md § Core rewrite](PROJECT_KNOWLEDGE.md#core-rewrite-spec--plot--renderer).
 
@@ -135,12 +135,13 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
 - **Before going public** (manual owner steps; the cleaned history is
   prepared and CI scans for secrets; see
   [PROJECT_KNOWLEDGE.md § Security cleanup](PROJECT_KNOWLEDGE.md#security-cleanup-before-going-public-step-6)):
-  - [ ] a. Revoke the leaked Claude credentials: `/logout` then `/login` in
+  - [x] a. Revoke the leaked Claude credentials: `/logout` then `/login` in
     Claude Code on each machine, and revoke old sessions in claude.ai
     account settings. Rotate anything else found.
-  - [ ] b. Check GitHub for pull requests (`refs/pull/*` cannot be rewritten
+  - [x] b. Check GitHub for pull requests (`refs/pull/*` cannot be rewritten
     by force-push; if any contain the leaked commit, ask GitHub Support to
-    purge them or publish as a fresh repo), forks and collaborators.
+    purge them or publish as a fresh repo), forks and collaborators. No PR after #7 (2026-05-11,
+    before the leak).
   - [ ] c. Approve the swap: force-push the cleaned `main` (and `v0.1` if its
     hash changed) from the clean clone; delete stale remote branches.
   - [ ] d. Re-clone on all 3 machines (old clones still hold the leaked

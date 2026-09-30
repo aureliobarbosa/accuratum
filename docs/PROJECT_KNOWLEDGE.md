@@ -57,7 +57,7 @@ replaced by the rewrite, but the grid logic carried over into
 
 ## Core rewrite: Spec → Plot → Renderer
 
-Commits c81b9f4 … ad69d87 (May 2026), merged into `main` in **c003354**
+Commits c81b9f4 … ad69d87 (May 2026), merged into `main` in **fbe6857**
 (2026-09-28, PLAN Step 0). The only conflict was in `.gitignore`. 104 tests
 pass after the merge (66 before). Motivation: v0.1 tangled geometry, label
 heuristics and matplotlib in one module. The original step-by-step plan was
@@ -118,7 +118,7 @@ Then an untracked, working `svg_backend.py` with its tests turned up on disk.
 A subagent had written it earlier, and the tests had never been run in the
 main thread. It was kept: it gives mm units and clean selector ids for
 Inkscape, which matplotlib's SVG doesn't. See the workflow lessons below.
-It was dropped for good in PLAN Step 2 (7b778d4).
+It was dropped for good in PLAN Step 2 (1543af6).
 
 ### Open when the branch stopped
 
@@ -128,8 +128,8 @@ PLAN Step 2 (dropped with the SVG backend), and the matplotlib guard test is in 
 
 ## Project folders and editable labels
 
-PLAN Step 1, 2026-09-28. Commits: ff6d444 (labels), f8a9637 (project I/O),
-8131f06 (CLI).
+PLAN Step 1, 2026-09-28. Commits: 3c1cfa3 (labels), f6effd8 (project I/O),
+adb38de (CLI).
 
 **Why.** Before, the spec kept only parameters plus `overrides`, and
 `build_plot` recomputed the labels on every render. An override ran after
@@ -204,7 +204,7 @@ The Planaltina example lives in `example-projects/fup_planaltina_2026_p0/`.
 
 ## Label sides (Step 3)
 
-PLAN Step 3, 2026-09-29. Commit 3589472.
+PLAN Step 3, 2026-09-29. Commit bd3bc8d.
 
 - **The bug.** `place_labels` checked each label against every placed label
   on one axis. A day line's endpoints differ in y by under 0.02 (Planaltina)
@@ -225,7 +225,7 @@ PLAN Step 3, 2026-09-29. Commit 3589472.
 
 ## SVG backend dropped (Step 2)
 
-PLAN Step 2, 2026-09-29. Commit 7b778d4. The user decided to simplify and
+PLAN Step 2, 2026-09-29. Commit 1543af6. The user decided to simplify and
 ship instead of matching the custom SVG output to matplotlib's.
 
 - **Why not match them.** `svg_backend.py` re-implemented matplotlib's
@@ -257,7 +257,7 @@ ship instead of matching the custom SVG output to matplotlib's.
 
 ## DST hour labels (Step 4)
 
-PLAN Step 4, 2026-09-29. Commit 963e20c.
+PLAN Step 4, 2026-09-29. Commit 5e58d54.
 
 - **The bug.** Edinburgh, period 0: two hour lines labelled `12h` (sharing a
   selector), none `14h`.
@@ -282,12 +282,12 @@ PLAN Step 4, 2026-09-29. Commit 963e20c.
 
 ## Latitude range (Step 5)
 
-PLAN Step 5, 2026-09-29. Commits 2966726, a28f3af, a290a3a.
+PLAN Step 5, 2026-09-29. Commits 77831fd, b113142, 1ce757f.
 
 - **Sweep.** Dials at 0°, ±15°, ±30°, ±45°, ±55°, ±62° and Ferraz
   (62.08° S, 58.39° W), both periods, then 64°–80° and lon −170°…+170°.
   Up to ±55° nothing broke.
-- **Polar-winter days (2966726).** Past |lat| ≈ 56.5° (90° − 23.44° − 10°)
+- **Polar-winter days (77831fd).** Past |lat| ≈ 56.5° (90° − 23.44° − 10°)
   the winter noon sun stays below the 10° horizon cut. astroplan then
   returns *masked* rise times (with a `TargetNeverUpWarning`), and
   `sun_set_time(masked)` crashed with a `numpy.einsum` TypeError.
@@ -304,7 +304,7 @@ PLAN Step 5, 2026-09-29. Commits 2966726, a28f3af, a290a3a.
   shadows also have blurry tips (the sun is ~0.5° wide), and a low sun is
   the first to be blocked by terrain and buildings. A panel you can build
   beats a full year. Don't add features in that direction.
-- **Longitude wrap (a28f3af), found by the sweep.** `hourline_grid`
+- **Longitude wrap (b113142), found by the sweep.** `hourline_grid`
   measured each sunset from *its own* UTC date. Wherever the local day
   straddles 00 UTC (lon ±120°…±170°: US west coast, East Asia, Australia,
   New Zealand), a sunset after 00 UTC wrapped to a few minutes and the dial
@@ -315,7 +315,7 @@ PLAN Step 5, 2026-09-29. Commits 2966726, a28f3af, a290a3a.
   local dates (`_frame_days`): 21 Jun 00:00 in Sydney is 20 Jun in UTC.
   Hour lines where nothing wrapped are identical; day-line ends move by
   <0.003 plumb lengths (astroplan's solver starting elsewhere).
-- **MAX_LATITUDE = 75° (a290a3a).** With no further code changes, dials are
+- **MAX_LATITUDE = 75° (1ce757f).** With no further code changes, dials are
   clean at ±75° at every longitude tried. At ±75.5° label selectors repeat.
   The summer sun then stays above the 10° cut nearly all day, the hour window
   nears 24 h, and two lines round to the same hour (the selector carries the
@@ -333,7 +333,7 @@ PLAN Step 5, 2026-09-29. Commits 2966726, a28f3af, a290a3a.
 
 ## Header band (Step 5.1)
 
-PLAN Step 5.1, 2026-09-29. Commit 23ab8ea.
+PLAN Step 5.1, 2026-09-29. Commit 2c2ef86.
 
 - **The bug.** Overlays (logo, compass) are figure-coordinate rects, drawn
   on top of the axes. The drawing's shape changes with latitude *and*
@@ -363,8 +363,8 @@ PLAN Step 5.1, 2026-09-29. Commit 23ab8ea.
 
 ## Title and subtitle (Steps 5.2–5.3)
 
-PLAN Steps 5.2 and 5.3, 2026-09-29. Commits f61a5b1 (first version),
-e84ee45 (moved into the `Plot`).
+PLAN Steps 5.2 and 5.3, 2026-09-29. Commits a6f7cf3 (first version),
+6e9ec89 (moved into the `Plot`).
 
 - **Defaults.** Title: the location name, or `15.60° S, 47.65° W` without
   one (`--lat-long`). Subtitle: the spec's timeframe as
@@ -545,8 +545,8 @@ Ported to `defaults/placement.py`. Originally recorded in
   and `pytest` on pull requests and `v*` tags only. **A `v*` tag builds the
   wheel and publishes a GitHub Release.** A plain push to `main` triggers
   nothing.
-- **Claude sessions sync through Dropbox** (d941f09, 380e420, b556631,
-  7b9b70f).
+- **Claude sessions sync through Dropbox** (1be0946, 3ca820c, b556631,
+  3be533e).
   - The folders `projects, file-history, skills, agents, commands, plans,
     todos` are bind-mounted from `~/Dropbox/claude-code/` into
     `/home/vscode/.claude-code/`, with `CLAUDE_CONFIG_DIR` pointing there.
@@ -606,7 +606,7 @@ Ported to `defaults/placement.py`. Originally recorded in
   all of `.claude-data/` (the Claude Code config dir): `.credentials.json`
   (OAuth tokens), `.claude.json` + `backups/`, `projects/` (session
   transcripts), `file-history/`, `shell-snapshots/`, `ide/`, `settings.json`,
-  `mcp-needs-auth-cache.json`, `.last-cleanup`. 74b0a0f, b556631 and 7b9b70f
+  `mcp-needs-auth-cache.json`, `.last-cleanup`. 8b32634, b556631 and 3be533e
   untracked it, but it stays in history of `main`, `origin/main` and the
   local branch `restore-claude-sessions`. Tag `v0.1` does not contain it. The
   repo was private, so only people with access could see it. Claude data now
@@ -614,22 +614,25 @@ Ported to `defaults/placement.py`. Originally recorded in
 - **Scan (gitleaks 8.30.1, 195 commits, all refs):** one rule hit,
   `generic-api-key` in `.claude-data/ide/34437.lock` (6537c05). Trap:
   gitleaks did NOT flag the OAuth tokens in `.claude-data/.credentials.json`
-  (6537c05, 74b0a0f); a pickaxe (`git log --all -S'sk-ant'`) found them.
+  (6537c05, 8b32634); a pickaxe (`git log --all -S'sk-ant'`) found them.
   Treat the tokens as leaked regardless. The current tree (tracked and
   untracked) is clean. Non-secret personal data outside `.claude-data`:
   `/home/vscode` paths (harmless devcontainer user) and two emails (the
   author's, and the creator's credit in the docs).
-- **Hardening (03b4d8c):** `.gitignore` covers `.claude-data/`,
+- **Hardening (5636ae0):** `.gitignore` covers `.claude-data/`,
   `.claude/settings.local.json` (now untracked), `.credentials.json`, `.env*`.
   CI has a `secrets` job: gitleaks (pinned version and checksum, not the
   action, which needs a license for organizations) over the full history
   (`fetch-depth: 0`). It fails on the old history until it is rewritten.
 - **Rewrite procedure** (never in the working repo): `git clone --no-local`
-  into a separate folder, `git filter-repo --invert-paths --path
-  .claude-data/`, keep `.git/filter-repo/commit-map`, verify (`git log --all
-  -- .claude-data` empty, no `.claude-data` in `git rev-list --all
-  --objects`, gitleaks clean, tests pass), then rewrite the short hashes cited
-  in the docs through the commit-map.
+  into a separate folder, then `git filter-repo --invert-paths --path
+  .claude-data/ --refs 6537c05^..main`. Trap: a full-history filter-repo
+  strips the GPG signatures GitHub puts on web-made commits, so it rewrote
+  212 of 216 commits, `v0.1` and every PR ref. The range limit rewrote only
+  the 42 commits from the leak on; older hashes, `v0.1` and the other
+  branches kept theirs. Verify (`git log --all -- .claude-data` empty, main's
+  tree unchanged, gitleaks clean), then map the doc hashes through
+  `.git/filter-repo/commit-map`.
 - **Manual owner steps** are the checklist in PLAN.md Step 6 (revoke
   credentials, check PRs/forks, force-push the clean clone, re-clone on all
   machines, then make the repo public).
