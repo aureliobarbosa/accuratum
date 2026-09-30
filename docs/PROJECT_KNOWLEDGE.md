@@ -638,8 +638,11 @@ the paper is submitted.
   (reverse geocoding for the default title), spaced ≥ 1.1 s. Nothing
   geocodes on the server.
 - **i18n:** markup carries only `data-i18n*` keys; `locales/pt-BR.json`
-  (default) and `en.json`; the choice is kept in `localStorage` when
-  allowed. Tests check that the tables match and cover every key used.
+  (default), `en.json`, `es.json` and `fr.json`; the choice is kept in
+  `localStorage` when allowed. Tests check that the tables match, cover
+  every key used, and that each language is in the selector and in
+  `i18n.js`'s `LANGUAGES`. Only the page is translated; the drawing and
+  PDF are not. Nominatim gets the same code as `accept-language`.
 - **Checked in a browser** with Playwright (`uv run --with playwright`,
   Chromium headless, not a project dependency): the whole flow, no
   console errors, CSP violations or failed requests, no horizontal

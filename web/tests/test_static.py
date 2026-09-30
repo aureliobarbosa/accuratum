@@ -18,12 +18,22 @@ def _used_keys() -> set[str]:
     return set(in_html) | set(in_js) | {"page.title"}
 
 
+LANGUAGES = ["pt-BR", "en", "es", "fr"]
+
+
 def test_every_language_has_the_same_keys():
-    assert set(LOCALES) == {"pt-BR", "en"}
-    assert list(LOCALES["pt-BR"]) == list(LOCALES["en"])
+    assert set(LOCALES) == set(LANGUAGES)
+    for lang in LANGUAGES:
+        assert list(LOCALES[lang]) == list(LOCALES["pt-BR"]), lang
 
 
-@pytest.mark.parametrize("lang", ["pt-BR", "en"])
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_every_language_is_offered(lang):
+    assert f'<option value="{lang}">' in HTML
+    assert f'"{lang}"' in (STATIC / "js" / "i18n.js").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("lang", LANGUAGES)
 def test_every_key_in_the_page_is_translated(lang):
     assert _used_keys() <= set(LOCALES[lang])
 

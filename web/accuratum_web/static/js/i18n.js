@@ -4,7 +4,7 @@
 "use strict";
 
 const I18N = (() => {
-  const LANGUAGES = ["pt-BR", "en"];
+  const LANGUAGES = ["pt-BR", "en", "es", "fr"];
   const DEFAULT = "pt-BR";
   let table = {};
   let current = DEFAULT;

@@ -10,7 +10,7 @@ The top bar stays on every page. It holds:
 - **Home**, which goes to the landing page;
 - **About**;
 - **Contact**;
-- **a language selector**: `pt-BR` (the default) and `en`;
+- **a language selector**: `pt-BR` (the default), `en`, `es` and `fr`;
 - **a GitHub icon** linking to
   [github.com/aureliobarbosa/accuratum](https://github.com/aureliobarbosa/accuratum).
   It is there even while the repo is private.
