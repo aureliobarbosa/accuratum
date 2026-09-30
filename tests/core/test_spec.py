@@ -118,3 +118,102 @@ def test_solstice_timeframe_rejects_an_unknown_period():
 
     with pytest.raises(ValueError, match="period"):
         solstice_timeframe(2026, 2, TZ_SP)
+
+
+# --- input validation --------------------------------------------------------
+# Specs arrive from project files and, later, from web requests: reject
+# anything that isn't a sane sundial, so one request can't exhaust a server.
+
+NAN, INF = float("nan"), float("inf")
+
+
+def _dict_with(path: str, value) -> dict:
+    """``_sample_spec()`` as a dict, with the dotted *path* set to *value*."""
+    data = spec_to_dict(_sample_spec())
+    *parents, key = path.split(".")
+    target = data
+    for parent in parents:
+        target = target[parent]
+    target[key] = value
+    return data
+
+
+INVALID = [
+    ("location.lat", NAN),
+    ("location.lat", INF),
+    ("location.lon", NAN),
+    ("location.lon", 180.01),
+    ("location.lon", -180.01),
+    ("location.timezone", "Mars/Olympus_Mons"),
+    ("location.timezone", "../../etc/passwd"),
+    ("timeframe.end", "2025-12-20T00:00:00-03:00"),  # before the start
+    ("timeframe.end", "2027-12-22T00:00:00-03:00"),  # longer than a year
+    ("grid.line_points", 1),
+    ("grid.line_points", 10_001),
+    ("grid.line_points", 500.5),
+    ("grid.line_points", True),
+    ("grid.time_step_minutes", 0),
+    ("grid.time_step_minutes", 241),
+    ("grid.dayline_day_step_days", 0),
+    ("grid.dayline_day_step_days", 184),
+    ("grid.hourline_day_step_days", 0),
+    ("grid.hourline_day_step_days", 184),
+    ("grid.horizon_degrees", NAN),
+    ("grid.horizon_degrees", -1.0),
+    ("grid.horizon_degrees", 46.0),
+    ("plumb_length", 0.0),
+    ("plumb_length", -1.0),
+    ("plumb_length", NAN),
+    ("plumb_length", INF),
+    ("year", 1900),
+    ("year", 2101),
+    ("year", 2026.0),
+    ("period", 2),
+]
+
+
+@pytest.mark.parametrize("path, value", INVALID)
+def test_spec_from_dict_rejects_invalid_inputs(path, value):
+    with pytest.raises(ValueError, match=path.split(".")[-1]):
+        spec_from_dict(_dict_with(path, value))
+
+
+@pytest.mark.parametrize(
+    "path, value",
+    [
+        ("location.lon", 180.0),
+        ("location.lon", -180.0),
+        ("grid.line_points", 2),
+        ("grid.line_points", 10_000),
+        ("grid.time_step_minutes", 240),
+        ("grid.horizon_degrees", 0),
+        ("plumb_length", 3),
+        ("year", 1901),
+        ("year", 2100),
+        ("period", 1),
+        ("period", None),
+    ],
+)
+def test_spec_from_dict_accepts_inputs_at_the_bounds(path, value):
+    spec_from_dict(_dict_with(path, value))
+
+
+def test_nan_latitude_is_rejected_when_built_directly():
+    with pytest.raises(ValueError, match="lat"):
+        Location(lat=NAN, lon=0.0, timezone="UTC")
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda d: d.pop("location"),
+        lambda d: d["grid"].update(unknown_knob=1),
+        lambda d: d["timeframe"].update(start=12345),
+        lambda d: d.update(location="Brasilia"),
+    ],
+)
+def test_spec_from_dict_reports_malformed_data_as_value_error(mutate):
+    data = spec_to_dict(_sample_spec())
+    mutate(data)
+    with pytest.raises(ValueError, match="spec"):
+        spec_from_dict(data)

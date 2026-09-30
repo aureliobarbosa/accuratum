@@ -205,19 +205,22 @@ def _spec_from_args(args: argparse.Namespace) -> SundialSpec:
     tz_str = args.timezone or timezone_at(lat=lat, lng=lon) or "UTC"
     tz = ZoneInfo(tz_str)
     year = args.year if args.year is not None else datetime.now(tz=tz).year
-    return SundialSpec(
-        location=Location(lat=lat, lon=lon, timezone=tz_str, name=args.location),
-        timeframe=solstice_timeframe(year, args.period, tz),
-        plumb_length=args.plumb_length,
-        grid=GridConfig(
-            dayline_day_step_days=args.dayline_day_step,
-            line_points=args.line_points,
-            hourline_day_step_days=args.hourline_day_step,
-            time_step_minutes=args.time_step,
-        ),
-        year=year,
-        period=args.period,
-    )
+    try:
+        return SundialSpec(
+            location=Location(lat=lat, lon=lon, timezone=tz_str, name=args.location),
+            timeframe=solstice_timeframe(year, args.period, tz),
+            plumb_length=args.plumb_length,
+            grid=GridConfig(
+                dayline_day_step_days=args.dayline_day_step,
+                line_points=args.line_points,
+                hourline_day_step_days=args.hourline_day_step,
+                time_step_minutes=args.time_step,
+            ),
+            year=year,
+            period=args.period,
+        )
+    except ValueError as exc:
+        raise SystemExit(f"error: {exc}")
 
 
 def _default_project_dir(spec: SundialSpec) -> Path:
@@ -350,12 +353,14 @@ def _open(args: argparse.Namespace) -> tuple[Project, Path]:
     folder = Path(args.project)
     if not (folder / PROJECT_FILE).is_file():
         raise SystemExit(f"error: no {PROJECT_FILE} in {folder}")
-    if args.regenerate:
-        return _regenerate(folder), folder
     try:
+        if args.regenerate:
+            return _regenerate(folder), folder
         return load_project(folder), folder
     except StaleProjectError as exc:
         raise SystemExit(f"error: {exc} Run with --project {folder} --regenerate.")
+    except ValueError as exc:
+        raise SystemExit(f"error: {folder / PROJECT_FILE}: {exc}")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

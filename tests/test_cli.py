@@ -533,3 +533,20 @@ def test_package_path_outside_the_package_is_a_clear_error():
     hints = RenderHints(overlays=[Overlay(image_path="accuratum:../../x.png", rect=(0, 0, 1, 1), name="logo")])
     with pytest.raises(SystemExit, match="error: logo.*outside the package"):
         _resolved(hints)
+
+
+def test_invalid_grid_is_a_clear_error(tmp_path):
+    from accuratum.cli import main
+
+    with pytest.raises(SystemExit, match="error: line_points"):
+        main(["--lat-long=-15.78,-47.92", "--timezone", "America/Sao_Paulo", "--line-points", "0"])
+
+
+@pytest.mark.parametrize("regenerate", [[], ["--regenerate"]])
+def test_invalid_spec_in_a_project_is_a_clear_error(tmp_path, regenerate):
+    from accuratum.cli import main
+
+    _generate()
+    _edit_spec(tmp_path / AUTO_DIR, year=3000)
+    with pytest.raises(SystemExit, match="error: .*project.json: year"):
+        main(["--project", AUTO_DIR, *regenerate])
