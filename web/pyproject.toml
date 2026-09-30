@@ -1,0 +1,33 @@
+[build-system]
+requires = ["uv_build>=0.11.6,<0.13"]
+build-backend = "uv_build"
+
+[project]
+name = "accuratum-web"
+version = "0.1.0"
+description = "The Accuratum sundial website: a FastAPI service and a static page"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "accuratum",
+    "fastapi>=0.115",
+    "pillow>=11.0",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.34",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "pytest>=8.3.5",
+]
+
+[tool.uv.sources]
+accuratum = { workspace = true }
+
+[tool.uv.build-backend]
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short"

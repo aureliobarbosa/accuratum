@@ -14,8 +14,9 @@ Grep it when you touch a finished area; don't read it whole.
 ## How to run
 
 ```bash
-uv sync --extra dev                                    # environment (Python 3.11 baseline)
-uv run pytest -q                                       # all tests
+uv sync --all-packages --extra dev --group dev         # environment: library + web/ (Python 3.11 baseline)
+uv run pytest -q                                       # library tests
+(cd web && uv run pytest -q)                           # website tests
 uv run ruff check . && uv run ruff format --check .    # what CI enforces
 uv run accuratum --lat-long=-15.78,-47.92 --year 2026   # generate a project folder (negative coords need '=')
 uv run accuratum --project lat-15.78_lon-47.92_2026_p0 -o panel.svg   # .png/.pdf/.svg, all via matplotlib

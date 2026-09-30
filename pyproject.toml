@@ -65,6 +65,11 @@ Issues = "https://github.com/aureliobarbosa/accuratum/issues"
 [tool.uv.build-backend]
 module-root = ""
 
+# The website is its own project (web/pyproject.toml), so the library's wheel
+# stays library + CLI only. One uv.lock covers both.
+[tool.uv.workspace]
+members = ["web"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--tb=short"
@@ -78,3 +83,6 @@ extend-exclude = [
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["accuratum", "accuratum_web"]

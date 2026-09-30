@@ -64,6 +64,23 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+  test-web:
+    name: Test website (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv sync --all-packages --extra dev --group dev
+
+      - name: Run tests
+        run: cd web && uv run pytest
+
   build:
     name: Build wheel
     runs-on: ubuntu-latest
