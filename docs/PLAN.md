@@ -165,6 +165,25 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   - turn off astropy's IERS auto-download; Decide where the file(s) downloaded by astropy should live in production; Give options to the owner.
   - check that the wheel contains `accuratum/fig/` and that the CLI runs
     from a clean install of it.
+  - validate inputs in `SundialSpec` (TDD; the CLI needs no attack
+    filtering, since it runs with the user's own rights): finite numbers
+    only (`NaN` passes today's latitude check), longitude in ±180°, and
+    bounds on `line_points`, `time_step_minutes`, the day steps,
+    `plumb_length` and `year`, so one request can't exhaust the server.
+    Check the same on `SundialSpec.from_dict`.
+  - confine `accuratum:` paths to the package (`accuratum:../..` escapes
+    it today).
+- **Security requirements for `web/`** (the trust boundary):
+  - no file paths from users: overlays fixed server-side (uploads, if
+    ever, with size and type limits); never load a user's project folder
+    as-is, since its overlay paths would be trusted;
+  - cap the length of the title, subtitle and label texts (matplotlib
+    parses `$…$` as math);
+  - geocoding: cache or rate-limit Nominatim (1 req/s per app), or geocode
+    in the browser;
+  - the server picks the output file name and format;
+  - a timeout per request, a cap on concurrent renders, and Cloud Run
+    memory and concurrency limits.
 - **Open decisions:**
   - which inputs the page shows (grid fixed?);
   - how labels are edited: form fields, or dragging;
