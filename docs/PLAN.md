@@ -132,7 +132,7 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   (`/api/plot` slow, `/api/render` live) instead of regenerating on every
   edit.
 
-- **Before going public** (manual owner steps; the cleaned history is
+- **Before going public** (the cleaned history is
   prepared and CI scans for secrets; see
   [PROJECT_KNOWLEDGE.md § Security cleanup](PROJECT_KNOWLEDGE.md#security-cleanup-before-going-public-step-6)):
   - [x] a. Revoke the leaked Claude credentials: `/logout` then `/login` in
@@ -146,7 +146,16 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     hash changed) from the clean clone; delete stale remote branches.
   - [ ] d. Re-clone on all 3 machines (old clones still hold the leaked
     objects); delete the old local branches.
-  - [ ] e. Only then make the repo public, and only once the project's
+  - [ ] e. Drop the Dropbox sync of Claude sessions (the `~/Dropbox/claude-code/*`
+    bind mounts in `.devcontainer/devcontainer.json`, see
+    [PROJECT_KNOWLEDGE.md § Dev environment](PROJECT_KNOWLEDGE.md#dev-environment-and-multi-machine-sync)). Each machine and
+    session then starts with its own clean memory; `docs/` stays the only
+    shared context. Delete the leftover `.claude-data/` folder too.
+  - [ ] f. Investigate how to keep the useful parts of the Claude setup in
+    the public repo (skills, plans, agents, commands, memory worth
+    sharing), e.g. under `.claude/`, reviewed for private data before each
+    commit. Add them in new commits only: **no more history rewriting.**
+  - [ ] g. Only then make the repo public, and only once the project's
     collaborators approve it. Not approved yet (2026-09-30).
 
 - **First, in the library:**
