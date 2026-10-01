@@ -434,6 +434,51 @@ PLAN Step 5.4, 2026-09-30.
   reads and writes. The website should accept that format only (see
   PLAN's security list).
 
+## PyPI publishing (Step 5.5)
+
+PLAN Step 5.5, 2026-10-01. Commits 24e6381 (plan, README), 6551fcc
+(`publish.yml`), 0094653 (0.2.1), 5a197e8 (approval gate to the backlog),
+0d5765b (moved into `ci.yml`). First upload: `v0.2.1`, about 3.5 minutes
+after the tag; https://pypi.org/p/accuratum.
+
+- **Why now.** PyPI was to wait for the paper. The user moved it ahead to
+  secure the name: a PyPI *pending* publisher does not reserve it, and if
+  someone else registers it first the pending publisher is invalidated.
+  Accepted at the time: the wheel made the library's source public while
+  the repo was still private, so the PyPI page's GitHub links didn't
+  resolve yet.
+- **Trusted Publishing, no token.** The `pypi` job (`id-token: write`, on
+  that job only) gets a GitHub OIDC token. PyPI trades it for a short-lived
+  upload token because it matches the registered publisher: owner
+  `aureliobarbosa`, repo `accuratum`, workflow **`ci.yml`**, environment
+  `pypi`. Renaming `ci.yml` or the environment breaks publishing until the
+  publisher on PyPI is edited to match. The PEP 740 attestation on PyPI names
+  these same four values.
+- **Why in `ci.yml`, not `publish.yml`.** The first version was a separate
+  `publish.yml` on the same `v*` tag. It ran in parallel with the tests,
+  and `needs:` can't wait on a job in another workflow. A PyPI version can
+  never be reused, only yanked, so the upload must follow the tests. In
+  `ci.yml` the `pypi` job follows `build`, which waits for `test` and
+  `lint`, and uploads the same wheel as the GitHub Release. Rejected:
+  `workflow_run` (artifacts from another run, a trigger zizmor flags) and
+  a reusable workflow (PyPI matches the caller's workflow, not the
+  reusable one).
+- **Wheel only.** `build` still makes the sdist for the GitHub Release; the
+  `pypi` job deletes `dist/*.tar.gz` before uploading. The wheel is pure
+  Python (`py3-none-any`), so no platform needs the sdist.
+- **Tag = version.** `build` fails unless the tag is `v` + `uv version
+  --short`, so a mistyped tag stops before PyPI.
+- **No approval gate.** The GitHub environment `pypi` allows only `v*`
+  tags. Required reviewers need a public repo on the owner's plan (the
+  checkbox doesn't show on a private repo), so a tag whose tests pass
+  uploads without a click. On the backlog for when the repo goes public.
+  Creating a `v*` tag stays an ask-first action in CLAUDE.md.
+- **Hardening.** `ci.yml` got a read-only default token
+  (`permissions: contents: read`); `release` and `pypi` widen it for
+  themselves. The publish action is pinned by SHA.
+- **README is the PyPI description,** so its relative links became full
+  GitHub URLs.
+
 ## Website groundwork (Step 6)
 
 Prepared 2026-09-30, before Step 6 starts. Nothing is built yet.

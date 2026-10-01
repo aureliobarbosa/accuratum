@@ -1,7 +1,7 @@
 # Accuratum — what's left to do
 
-> **Status (2026-10-01):** Steps 0–5.4 are closed. Now: Step 5.5 (PyPI).
-> Then the rest of Step 6 (layout decided: monorepo, with `web/` as its own
+> **Status (2026-10-01):** Steps 0–5.5 are closed (0.2.1 is on PyPI).
+> Next: the rest of Step 6 (layout decided: monorepo, with `web/` as its own
 > uv workspace project). Steps 4–7 are the fast track to a hosted website,
 > so the collaborators can meet and start the paper.
 
@@ -31,9 +31,9 @@ before it.
    since 2026-09-29 comparing against other people's sundial software may
    replace it (see the backlog).
 
-The wheel (library + CLI) goes out through the `v*` GitHub Releases and,
-from 0.2.1 on, to PyPI (Step 5.5). The user moved PyPI ahead of the paper on
-2026-10-01.
+The wheel (library + CLI) goes out on every `v*` tag, to the GitHub Releases
+and, from 0.2.1 on, to PyPI (Step 5.5). The user moved PyPI ahead of the
+paper on 2026-10-01.
 
 ---
 
@@ -132,40 +132,16 @@ See [PROJECT_KNOWLEDGE.md § Title and subtitle](PROJECT_KNOWLEDGE.md#title-and-
 
 See [PROJECT_KNOWLEDGE.md § Line colors](PROJECT_KNOWLEDGE.md#line-colors-step-54).
 
-### Step 5.5 — Publish the wheel on PyPI
+### Step 5.5 — Publish the wheel on PyPI — **done**
 
-A `pypi` job in `.github/workflows/ci.yml` uploads the **wheel only**
-(library + CLI) to PyPI through Trusted Publishing (OIDC), so no API token
-is stored in GitHub.
+- A `pypi` job in `ci.yml` uploads the wheel only, through Trusted
+  Publishing (no token), after the tests. It runs on every `v*` tag.
+- It's in `ci.yml`, not in its own workflow, because `needs:` can't wait on
+  another workflow's tests.
+- First upload: 0.2.1 (2026-10-01), ahead of the paper, to secure the name.
+- No approval gate until the repo is public (backlog).
 
-- **Decided** (2026-10-01): it runs on the same `v*` tag as the GitHub
-  Release, in the GitHub environment `pypi`, limited to `v*` tags. First
-  upload: 0.2.1, done now, which also secures the name.
-- **In `ci.yml`, not a separate `publish.yml`:** `needs:` can't reach
-  across workflows, and the upload must wait for the tests. In `ci.yml` it
-  follows `build`, which already waits for `test` and `lint`, and it uploads
-  the same wheel as the GitHub Release.
-- **No approval gate yet:** required reviewers need a public repo on the
-  owner's GitHub plan, so a tag whose tests pass uploads without a click.
-  Accepted until the repo goes public (see the backlog).
-- **Accepted:** the wheel makes the library's source public while the repo
-  is still private, and the PyPI page's GitHub links won't resolve until the
-  repo goes public.
-- **Workflow:** `build` now fails unless the tag is `v` + `uv version
-  --short` (a PyPI version can't be reused). The `pypi` job (`needs: build`,
-  environment `pypi`, `id-token: write` on this job only) drops the sdist and
-  runs `pypa/gh-action-pypi-publish`, pinned by SHA.
-- [x] a. Add Step 5.5 here and make the README ready for PyPI.
-- [x] b. Add the `pypi` job (first as `publish.yml`, then moved into `ci.yml`).
-- [ ] c. By hand (owner): on GitHub, Settings → Environments → `pypi`,
-  with deployments limited to `v*` tags (done). On
-  PyPI, account → Publishing → add a pending GitHub publisher with project
-  `accuratum`, owner `aureliobarbosa`, repo `accuratum`, workflow
-  `ci.yml`, environment `pypi`. A pending publisher does **not**
-  reserve the name, so upload soon after.
-- [ ] d. Bump to 0.2.1 (0094653), push, tag `v0.2.1` (ask first), then
-  check https://pypi.org/p/accuratum and `uvx accuratum --help`.
-- [ ] e. Close the step: shrink it here and record it in PROJECT_KNOWLEDGE.md.
+See [PROJECT_KNOWLEDGE.md § PyPI publishing](PROJECT_KNOWLEDGE.md#pypi-publishing-step-55).
 
 ## Step 6 — Create the website
 
