@@ -3,7 +3,8 @@ name: Publish to PyPI
 # Uploads the wheel (library + CLI, no sdist) to PyPI through Trusted
 # Publishing: PyPI accepts the GitHub OIDC token of this file, in the
 # environment `pypi`, and no API token is stored in the repo. The environment
-# requires the maintainer's approval; approve once ci.yml passed on the tag.
+# has no required reviewer yet (a private repo can't have one on our plan), so
+# tag only commits whose tests pass; ci.yml tests the tag at the same time.
 on:
   push:
     tags:

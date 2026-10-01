@@ -139,9 +139,13 @@ to PyPI through Trusted Publishing (OIDC), so no API token is stored in GitHub.
 
 - **Decided** (2026-10-01): it runs on the same `v*` tag as the GitHub
   Release (`ci.yml` stays as is). The upload job runs in the GitHub
-  environment `pypi`, which needs the maintainer's approval. Approve only
-  after `ci.yml` passes on the tag. First upload: 0.2.1, done now, which
-  also secures the name.
+  environment `pypi`, limited to `v*` tags. First upload: 0.2.1, done now,
+  which also secures the name.
+- **No approval gate yet:** required reviewers need a public repo on the
+  owner's GitHub plan, so a `v*` tag uploads as soon as the wheel builds
+  and passes the smoke test, while `ci.yml` tests run at the same time.
+  Accepted until the repo goes public (see the backlog). Until then, tag
+  only commits whose tests pass locally.
 - **Accepted:** the wheel makes the library's source public while the repo
   is still private, and the PyPI page's GitHub links won't resolve until the
   repo goes public.
@@ -151,15 +155,14 @@ to PyPI through Trusted Publishing (OIDC), so no API token is stored in GitHub.
   `pypa/gh-action-pypi-publish` pinned by SHA).
 - [x] a. Add Step 5.5 here and make the README ready for PyPI.
 - [x] b. Add `publish.yml`.
-- [ ] c. By hand (owner): on GitHub, Settings → Environments → `pypi`, with
-  the owner as required reviewer and deployments limited to `v*` tags. On
+- [ ] c. By hand (owner): on GitHub, Settings → Environments → `pypi`,
+  with deployments limited to `v*` tags (done). On
   PyPI, account → Publishing → add a pending GitHub publisher with project
   `accuratum`, owner `aureliobarbosa`, repo `accuratum`, workflow
   `publish.yml`, environment `pypi`. A pending publisher does **not**
   reserve the name, so upload soon after.
-- [ ] d. Bump to 0.2.1, push, tag `v0.2.1` (ask first), approve the
-  deployment, then check https://pypi.org/p/accuratum and
-  `uvx accuratum --help`.
+- [ ] d. Bump to 0.2.1 (0094653), push, tag `v0.2.1` (ask first), then
+  check https://pypi.org/p/accuratum and `uvx accuratum --help`.
 - [ ] e. Close the step: shrink it here and record it in PROJECT_KNOWLEDGE.md.
 
 ## Step 6 — Create the website
@@ -273,3 +276,7 @@ meeting and start writing the paper (goal 5).
   `selector`. Today a regenerate resets the labels.
 - **Custom overlay images are stored as absolute paths**, so a project folder
   that uses one isn't portable. Copy the image into the folder instead.
+- **Approval gate for PyPI uploads**, once the repo is public (Step 6g):
+  add the owner as required reviewer of the GitHub environment `pypi`
+  (Settings → Environments). The private repo's plan doesn't offer it, so
+  today a `v*` tag uploads to PyPI without a click (Step 5.5).
