@@ -528,8 +528,9 @@ library through a uv workspace. The library stays at the repo root.
   Splitting later is one `git filter-repo --subdirectory-filter web`.
 
 **Wheel and PyPI.** The wheel goes out through the existing `v*` GitHub
-Releases (`ci.yml` runs `uv build`). PyPI waits until the first version of
-the paper is submitted.
+Releases (`ci.yml` runs `uv build`). PyPI was to wait until the first
+version of the paper was submitted. The user reversed that on 2026-10-01:
+the wheel goes to PyPI from 0.2.1 on (Step 5.5).
 
 **Traps to carry into Step 6:**
 

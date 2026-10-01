@@ -10,13 +10,15 @@ A full year is covered by two solstice-to-solstice frames
 
 ## Install
 
-Accuratum is not (yet) published on PyPI. Install it directly from GitHub:
+Install it from PyPI:
 
 ```bash
-pip install git+https://github.com/aureliobarbosa/accuratum.git
+pip install accuratum
+uv tool install accuratum   # or: just the `accuratum` CLI, in its own environment
 ```
 
-Pin to a branch, tag, or commit if needed:
+Or install the development version directly from GitHub, pinned to a
+branch, tag, or commit if needed:
 
 ```bash
 pip install git+https://github.com/aureliobarbosa/accuratum.git@main
@@ -145,12 +147,13 @@ uv run ruff check --fix
 uv run ruff format
 ```
 
-Prototype notebooks live in [`notebooks/`](notebooks/) and are not shipped
-in the built distribution.
+Prototype notebooks live in
+[`notebooks/`](https://github.com/aureliobarbosa/accuratum/tree/main/notebooks)
+and are not shipped in the built distribution.
 
 ## License
 
-MIT — see [LICENSE.md](LICENSE.md).
+MIT — see [LICENSE.md](https://github.com/aureliobarbosa/accuratum/blob/main/LICENSE.md).
 
 ## Authors
 
