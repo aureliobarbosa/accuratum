@@ -150,7 +150,7 @@ to PyPI through Trusted Publishing (OIDC), so no API token is stored in GitHub.
   (`needs: build`, environment `pypi`, `id-token: write` on this job only,
   `pypa/gh-action-pypi-publish` pinned by SHA).
 - [x] a. Add Step 5.5 here and make the README ready for PyPI.
-- [ ] b. Add `publish.yml`.
+- [x] b. Add `publish.yml`.
 - [ ] c. By hand (owner): on GitHub, Settings → Environments → `pypi`, with
   the owner as required reviewer and deployments limited to `v*` tags. On
   PyPI, account → Publishing → add a pending GitHub publisher with project
