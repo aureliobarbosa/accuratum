@@ -166,8 +166,11 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     before the leak).
   - [x] c. Approve the swap: force-push the cleaned `main` (and `v0.1` if its
     hash changed) from the clean clone; delete stale remote branches.
-  - [ ] d. Re-clone on all 3 machines (old clones still hold the leaked
-    objects); delete the old local branches.
+  - [ ] d. Re-clone on the other 2 machines (old clones still hold the
+    leaked objects and `restore-claude-sessions`); the main machine's clone
+    is clean (checked 2026-10-01). **Never push from an old clone:** one
+    `git push --all` republishes the leak, and CI doesn't run on pushes to
+    `main`.
   - [x] e. Drop the Dropbox sync of Claude sessions (2026-10-01): the bind
     mounts are gone; each machine keeps its own `claude-code-state` volume.
     On the other machines, delete any leftover `.claude-data/` folder with
@@ -176,8 +179,26 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     the public repo (skills, plans, agents, commands, memory worth
     sharing), e.g. under `.claude/`, reviewed for private data before each
     commit. Add them in new commits only: **no more history rewriting.**
-  - [ ] g. Only then make the repo public, and only once the project's
-    collaborators approve it. Not approved yet (2026-09-30).
+    Not blocking; it can follow going public.
+  - [ ] g. Check that GitHub no longer serves the pre-rewrite commits:
+    signed in, open `github.com/aureliobarbosa/accuratum/commit/6537c05`
+    (the leak) and `…/commit/b556631`. GitHub keeps force-pushed commits
+    reachable by hash, and PROJECT_KNOWLEDGE.md names them. If either
+    loads, ask GitHub Support to purge the dangling commits and cached
+    views, and wait for their confirmation.
+  - [ ] h. Find out where `accuratum/fig/rosa.png` (the default compass)
+    comes from and whether we may distribute it. It ships in the wheel,
+    so it is already public on PyPI (0.2.1). If its origin stays unknown,
+    replace it with our own drawing. `fig/escola_nas_estrelas.jpeg` was
+    removed (unused, no confirmed right); `fig/unb.jpg` is unused too.
+  - [ ] i. Make the repo public. **Approved by the collaborators
+    (2026-10-01).** The review of 2026-10-01 found the history and tree
+    clean (gitleaks and pickaxe over a mirror of every remote ref,
+    pull-request refs included; only the two authors' emails). Then, in
+    the GitHub settings: require approval before fork pull requests run
+    workflows; rulesets blocking force-push and deletion of `main` and
+    limiting `v*` tag creation to the owner; delete Actions runs from
+    before the 2026-09-30 force-push; add the `pypi` reviewer (backlog).
 
 - **Library prep — done** (2026-09-30): `solstice_timeframe` in
   `core/spec`, default overlays and `resolve_image_path` (confined to the
@@ -253,7 +274,7 @@ meeting and start writing the paper (goal 5).
   `selector`. Today a regenerate resets the labels.
 - **Custom overlay images are stored as absolute paths**, so a project folder
   that uses one isn't portable. Copy the image into the folder instead.
-- **Approval gate for PyPI uploads**, once the repo is public (Step 6g):
+- **Approval gate for PyPI uploads**, once the repo is public (Step 6i):
   add the owner as required reviewer of the GitHub environment `pypi`
   (Settings → Environments). The private repo's plan doesn't offer it, so
   today a `v*` tag uploads to PyPI without a click (Step 5.5).
