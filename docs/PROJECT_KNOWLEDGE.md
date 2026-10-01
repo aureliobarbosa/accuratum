@@ -734,24 +734,21 @@ Ported to `defaults/placement.py`. Originally recorded in
   and `pytest` on pull requests and `v*` tags only. **A `v*` tag builds the
   wheel, publishes a GitHub Release and uploads the wheel to PyPI**
   (Step 5.5). A plain push to `main` triggers nothing.
-- **Claude sessions sync through Dropbox** (1be0946, 3ca820c, b556631,
-  3be533e).
-  - The folders `projects, file-history, skills, agents, commands, plans,
-    todos` are bind-mounted from `~/Dropbox/claude-code/` into
-    `/home/vscode/.claude-code/`, with `CLAUDE_CONFIG_DIR` pointing there.
-  - Credentials, `.claude.json` and `settings.json` stay in the per-machine
-    Docker volume `claude-code-state` and never reach Dropbox.
-  - Sessions are filed by container path (`/workspaces/<folder>`), so **the
-    project folder must have the same name on every machine**.
-  - `cleanupPeriodDays: 100000` in the seeded `settings.json`: the default
-    30-day cleanup wiped the sessions during the 4-month break.
-  - **Never keep the same session open on two machines.** To move one: close
-    it, commit and push, wait for Dropbox's ✓, then pull and resume on the
-    other machine.
-  - To reuse this in another project, copy the `initializeCommand`, `mounts`
-    and `remoteEnv` keys of `.devcontainer/devcontainer.json`, plus the top
-    of `setup.sh` (the `chown` of the volume and the `settings.json` seed).
-    The container user must be `vscode`, or both paths need adjusting.
+- **Claude Code's state is per machine.** `CLAUDE_CONFIG_DIR` points to
+  `/home/vscode/.claude-code`, which is the Docker volume `claude-code-state`
+  (credentials, sessions, memory, plans), so it survives a container rebuild
+  but never leaves the machine. `setup.sh` `chown`s the volume and seeds
+  `settings.json` with `cleanupPeriodDays: 100000`, because the default
+  30-day cleanup wiped the sessions during a 4-month break.
+- **The Dropbox sync of sessions was dropped** (Step 6e, 2026-10-01). From
+  1be0946 to then, the folders `projects, file-history, skills, agents,
+  commands, plans, todos` were bind-mounted from `~/Dropbox/claude-code/`
+  over that volume, so sessions moved between the 3 machines. It was dropped
+  before going public: the `initializeCommand` created `~/Dropbox/` folders
+  on the host of anyone opening the devcontainer, and the setup carried the
+  same risk as the `.claude-data/` leak (transcripts next to the repo). The
+  user wasn't using it on the main machine any more. `docs/` is the only
+  shared context, and moving to another machine means a fresh session.
 - **Git is the source of truth for code and project context.** `.venv` and
   generated images don't travel. `uv.lock` is committed together with any
   dependency change.
@@ -806,8 +803,9 @@ Ported to `defaults/placement.py`. Originally recorded in
   `mcp-needs-auth-cache.json`, `.last-cleanup`. 8b32634, b556631 and 3be533e
   untracked it, but it stays in history of `main`, `origin/main` and the
   local branch `restore-claude-sessions`. Tag `v0.1` does not contain it. The
-  repo was private, so only people with access could see it. Claude data now
-  syncs through Dropbox bind mounts (`.devcontainer/devcontainer.json`).
+  repo was private, so only people with access could see it. Claude data then
+  synced through Dropbox bind mounts, dropped in Step 6e; it now stays in
+  the per-machine `claude-code-state` volume.
 - **Scan (gitleaks 8.30.1, 195 commits, all refs):** one rule hit,
   `generic-api-key` in `.claude-data/ide/34437.lock` (6537c05). Trap:
   gitleaks did NOT flag the OAuth tokens in `.claude-data/.credentials.json`

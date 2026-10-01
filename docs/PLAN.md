@@ -168,11 +168,10 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     hash changed) from the clean clone; delete stale remote branches.
   - [ ] d. Re-clone on all 3 machines (old clones still hold the leaked
     objects); delete the old local branches.
-  - [ ] e. Drop the Dropbox sync of Claude sessions (the `~/Dropbox/claude-code/*`
-    bind mounts in `.devcontainer/devcontainer.json`, see
-    [PROJECT_KNOWLEDGE.md § Dev environment](PROJECT_KNOWLEDGE.md#dev-environment-and-multi-machine-sync)). Each machine and
-    session then starts with its own clean memory; `docs/` stays the only
-    shared context. Delete the leftover `.claude-data/` folder too.
+  - [x] e. Drop the Dropbox sync of Claude sessions (2026-10-01): the bind
+    mounts are gone; each machine keeps its own `claude-code-state` volume.
+    On the other machines, delete any leftover `.claude-data/` folder with
+    the re-clone (d); the host's `~/Dropbox/claude-code/` can go too.
   - [ ] f. Investigate how to keep the useful parts of the Claude setup in
     the public repo (skills, plans, agents, commands, memory worth
     sharing), e.g. under `.claude/`, reviewed for private data before each
