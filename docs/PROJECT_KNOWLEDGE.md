@@ -838,7 +838,8 @@ Ported to `defaults/placement.py`. Originally recorded in
     (540 × 545 ≈ 3840 × 3876) pointed to the file.
   - Look-alikes are CC BY-SA 3.0 and would need attribution: Compass Rose
     English North.svg and its translations, from Serg!o's BrújulaN.svg.
-  - The UnB logos are the university's, and UnB is named in LICENSE.md.
+  - The UnB logo (`unb_basic.jpg`) is the university's, and UnB is named in
+    LICENSE.md. The unused `unb.jpg` was removed (c68ed1f).
     `logo.png` is the project's own. `escola_nas_estrelas.jpeg` was unused
     and had no confirmed right, so it was removed (6967fcb). It is still
     inside the 0.2.1 wheel.

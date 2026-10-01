@@ -170,7 +170,8 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     leaked objects and `restore-claude-sessions`); the main machine's clone
     is clean (checked 2026-10-01). **Never push from an old clone:** one
     `git push --all` republishes the leak, and CI doesn't run on pushes to
-    `main`.
+    `main`. Deferred by the owner (2026-10-01); CLAUDE.md has every session
+    remind them until it is ticked.
   - [x] e. Drop the Dropbox sync of Claude sessions (2026-10-01): the bind
     mounts are gone; each machine keeps its own `claude-code-state` volume.
     On the other machines, delete any leftover `.claude-data/` folder with
@@ -180,15 +181,19 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     sharing), e.g. under `.claude/`, reviewed for private data before each
     commit. Add them in new commits only: **no more history rewriting.**
     Not blocking; it can follow going public.
-  - [ ] g. Check that GitHub no longer serves the pre-rewrite commits:
-    signed in, open `github.com/aureliobarbosa/accuratum/commit/6537c05`
-    (the leak) and `…/commit/b556631`. GitHub keeps force-pushed commits
-    reachable by hash, and PROJECT_KNOWLEDGE.md names them. If either
-    loads, ask GitHub Support to purge the dangling commits and cached
-    views, and wait for their confirmation.
+  - [ ] g. Have GitHub purge the pre-rewrite commits it still serves by
+    hash (force-pushed commits stay reachable, and PROJECT_KNOWLEDGE.md
+    names them). The dangling commits:
+    - https://github.com/aureliobarbosa/accuratum/commit/6537c05 (the leak)
+    - https://github.com/aureliobarbosa/accuratum/commit/b556631
+
+    The owner asked GitHub Support to remove them on 2026-10-01. Wait for
+    their confirmation, then check that both links give a 404 while signed
+    in, before going public.
   - [x] h. Image rights (2026-10-01): `fig/rosa.png` is CC0 (Wikimedia
     Commons, see PROJECT_KNOWLEDGE.md); `fig/escola_nas_estrelas.jpeg` was
-    removed (unused, no confirmed right). `fig/unb.jpg` is unused too.
+    removed (unused, no confirmed right), and so was the unused `fig/unb.jpg`
+    (c68ed1f).
   - [ ] i. Make the repo public. **Approved by the collaborators
     (2026-10-01).** The review of 2026-10-01 found the history and tree
     clean (gitleaks and pickaxe over a mirror of every remote ref,
