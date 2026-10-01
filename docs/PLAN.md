@@ -186,11 +186,9 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     reachable by hash, and PROJECT_KNOWLEDGE.md names them. If either
     loads, ask GitHub Support to purge the dangling commits and cached
     views, and wait for their confirmation.
-  - [ ] h. Find out where `accuratum/fig/rosa.png` (the default compass)
-    comes from and whether we may distribute it. It ships in the wheel,
-    so it is already public on PyPI (0.2.1). If its origin stays unknown,
-    replace it with our own drawing. `fig/escola_nas_estrelas.jpeg` was
-    removed (unused, no confirmed right); `fig/unb.jpg` is unused too.
+  - [x] h. Image rights (2026-10-01): `fig/rosa.png` is CC0 (Wikimedia
+    Commons, see PROJECT_KNOWLEDGE.md); `fig/escola_nas_estrelas.jpeg` was
+    removed (unused, no confirmed right). `fig/unb.jpg` is unused too.
   - [ ] i. Make the repo public. **Approved by the collaborators
     (2026-10-01).** The review of 2026-10-01 found the history and tree
     clean (gitleaks and pickaxe over a mirror of every remote ref,

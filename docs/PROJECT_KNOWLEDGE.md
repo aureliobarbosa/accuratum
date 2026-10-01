@@ -828,6 +828,20 @@ Ported to `defaults/placement.py`. Originally recorded in
   branches kept theirs. Verify (`git log --all -- .claude-data` empty, main's
   tree unchanged, gitleaks clean), then map the doc hashes through
   `.git/filter-repo/commit-map`.
+- **Image rights (2026-10-01).** `accuratum/fig/` ships in the wheel.
+  - `rosa.png`, the default compass, is pixel-identical to Commons'
+    3840 px rendering of
+    [File:Rosa_dos_Ventos.svg](https://commons.wikimedia.org/wiki/File:Rosa_dos_Ventos.svg).
+    That file is CC0 and needs no attribution; it is User:Rehua's
+    derivative of an OpenClipart drawing. Found through the Commons API: a
+    lookup by SHA-1 fails for renderings of SVGs, but the aspect ratio
+    (540 × 545 ≈ 3840 × 3876) pointed to the file.
+  - Look-alikes are CC BY-SA 3.0 and would need attribution: Compass Rose
+    English North.svg and its translations, from Serg!o's BrújulaN.svg.
+  - The UnB logos are the university's, and UnB is named in LICENSE.md.
+    `logo.png` is the project's own. `escola_nas_estrelas.jpeg` was unused
+    and had no confirmed right, so it was removed (6967fcb). It is still
+    inside the 0.2.1 wheel.
 - **Manual owner steps** are the checklist in PLAN.md Step 6 (revoke
   credentials, check PRs/forks, force-push the clean clone, re-clone on all
   machines, then make the repo public).
