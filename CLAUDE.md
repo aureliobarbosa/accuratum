@@ -78,7 +78,7 @@ Record the *why* of any structural change in PROJECT_KNOWLEDGE.md.
 - `git push`;
 - force-pushing or rewriting published history;
 - creating tags, because a `v*` tag builds and publishes a GitHub Release
-  through CI;
+  and uploads the wheel to PyPI through CI (a PyPI version can't be reused);
 - deleting remote branches.
 
 ## Architecture

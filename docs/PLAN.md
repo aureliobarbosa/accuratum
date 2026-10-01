@@ -134,32 +134,34 @@ See [PROJECT_KNOWLEDGE.md § Line colors](PROJECT_KNOWLEDGE.md#line-colors-step-
 
 ### Step 5.5 — Publish the wheel on PyPI
 
-`.github/workflows/publish.yml` uploads the **wheel only** (library + CLI)
-to PyPI through Trusted Publishing (OIDC), so no API token is stored in GitHub.
+A `pypi` job in `.github/workflows/ci.yml` uploads the **wheel only**
+(library + CLI) to PyPI through Trusted Publishing (OIDC), so no API token
+is stored in GitHub.
 
 - **Decided** (2026-10-01): it runs on the same `v*` tag as the GitHub
-  Release (`ci.yml` stays as is). The upload job runs in the GitHub
-  environment `pypi`, limited to `v*` tags. First upload: 0.2.1, done now,
-  which also secures the name.
+  Release, in the GitHub environment `pypi`, limited to `v*` tags. First
+  upload: 0.2.1, done now, which also secures the name.
+- **In `ci.yml`, not a separate `publish.yml`:** `needs:` can't reach
+  across workflows, and the upload must wait for the tests. In `ci.yml` it
+  follows `build`, which already waits for `test` and `lint`, and it uploads
+  the same wheel as the GitHub Release.
 - **No approval gate yet:** required reviewers need a public repo on the
-  owner's GitHub plan, so a `v*` tag uploads as soon as the wheel builds
-  and passes the smoke test, while `ci.yml` tests run at the same time.
-  Accepted until the repo goes public (see the backlog). Until then, tag
-  only commits whose tests pass locally.
+  owner's GitHub plan, so a tag whose tests pass uploads without a click.
+  Accepted until the repo goes public (see the backlog).
 - **Accepted:** the wheel makes the library's source public while the repo
   is still private, and the PyPI page's GitHub links won't resolve until the
   repo goes public.
-- **Workflow:** a `build` job (tag = `uv version --short`, `uv build --wheel`,
-  and the clean-install smoke test copied from `ci.yml`) and a `publish` job
-  (`needs: build`, environment `pypi`, `id-token: write` on this job only,
-  `pypa/gh-action-pypi-publish` pinned by SHA).
+- **Workflow:** `build` now fails unless the tag is `v` + `uv version
+  --short` (a PyPI version can't be reused). The `pypi` job (`needs: build`,
+  environment `pypi`, `id-token: write` on this job only) drops the sdist and
+  runs `pypa/gh-action-pypi-publish`, pinned by SHA.
 - [x] a. Add Step 5.5 here and make the README ready for PyPI.
-- [x] b. Add `publish.yml`.
+- [x] b. Add the `pypi` job (first as `publish.yml`, then moved into `ci.yml`).
 - [ ] c. By hand (owner): on GitHub, Settings → Environments → `pypi`,
   with deployments limited to `v*` tags (done). On
   PyPI, account → Publishing → add a pending GitHub publisher with project
   `accuratum`, owner `aureliobarbosa`, repo `accuratum`, workflow
-  `publish.yml`, environment `pypi`. A pending publisher does **not**
+  `ci.yml`, environment `pypi`. A pending publisher does **not**
   reserve the name, so upload soon after.
 - [ ] d. Bump to 0.2.1 (0094653), push, tag `v0.2.1` (ask first), then
   check https://pypi.org/p/accuratum and `uvx accuratum --help`.

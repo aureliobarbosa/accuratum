@@ -687,8 +687,8 @@ Ported to `defaults/placement.py`. Originally recorded in
   backend `uv_build`.
 - **CI** (`.github/workflows/ci.yml`) runs `ruff check`, `ruff format --check`
   and `pytest` on pull requests and `v*` tags only. **A `v*` tag builds the
-  wheel and publishes a GitHub Release.** A plain push to `main` triggers
-  nothing.
+  wheel, publishes a GitHub Release and uploads the wheel to PyPI**
+  (Step 5.5). A plain push to `main` triggers nothing.
 - **Claude sessions sync through Dropbox** (1be0946, 3ca820c, b556631,
   3be533e).
   - The folders `projects, file-history, skills, agents, commands, plans,
