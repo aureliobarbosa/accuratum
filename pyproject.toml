@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "accuratum"
-version = "0.2.1"
+version = "0.2.2"
 description = "A python library and CLI for creating Accuratum sundial diagrams"
 readme = "README.md"
 authors = [
