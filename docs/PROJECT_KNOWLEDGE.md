@@ -439,7 +439,11 @@ PLAN Step 5.4, 2026-09-30.
 PLAN Step 5.5, 2026-10-01. Commits 24e6381 (plan, README), 6551fcc
 (`publish.yml`), 0094653 (0.2.1), 5a197e8 (approval gate to the backlog),
 0d5765b (moved into `ci.yml`). First upload: `v0.2.1`, about 3.5 minutes
-after the tag; https://pypi.org/p/accuratum.
+after the tag; https://pypi.org/p/accuratum. 0.2.1 was deleted on
+2026-10-04 with the old repo; the fresh repo's first upload is 0.2.2
+(70fe0f4), about 3 minutes after the tag. The publisher matched
+unchanged (same owner, repo name, workflow and environment), and
+GitHub created the `pypi` environment on first use.
 
 - **Why now.** PyPI was to wait for the paper. The user moved it ahead to
   secure the name: a PyPI *pending* publisher does not reserve it, and if
@@ -575,7 +579,7 @@ library through a uv workspace. The library stays at the repo root.
 **Wheel and PyPI.** The wheel goes out through the existing `v*` GitHub
 Releases (`ci.yml` runs `uv build`). PyPI was to wait until the first
 version of the paper was submitted. The user reversed that on 2026-10-01:
-the wheel goes to PyPI from 0.2.1 on (Step 5.5).
+the wheel goes to PyPI from 0.2.2 on (Step 5.5).
 
 **Traps to carry into Step 6:**
 
@@ -841,8 +845,41 @@ Ported to `defaults/placement.py`. Originally recorded in
   - The UnB logo (`unb_basic.jpg`) is the university's, and UnB is named in
     LICENSE.md. The unused `unb.jpg` was removed (c68ed1f).
     `logo.png` is the project's own. `escola_nas_estrelas.jpeg` was unused
-    and had no confirmed right, so it was removed (6967fcb). It is still
-    inside the 0.2.1 wheel.
-- **Manual owner steps** are the checklist in PLAN.md Step 6 (revoke
-  credentials, check PRs/forks, force-push the clean clone, re-clone on all
-  machines, then make the repo public).
+    and had no confirmed right, so it was removed (6967fcb). The 0.2.1
+    wheel that still held it was deleted from PyPI.
+- **A fresh repository, not a second rewrite (2026-10-04).** After the
+  force-push, GitHub still served the pre-rewrite commits by hash, the leak
+  included, and Support could take months to purge them. Hiding the hashes
+  with another rewrite would not have made them unreachable in a public
+  repo: the Activity page lists force-pushes with the old tip, Actions runs
+  name their commits, short hashes resolve (4-hex prefixes can be
+  brute-forced), and a new force-push leaves new dangling commits. A
+  rewrite would also have changed 54 hashes and both 0.2.x tags. Instead
+  the old repo was renamed, an empty `aureliobarbosa/accuratum` created,
+  and the clean `main` pushed as-is, so no hash changed. The old repo was
+  then deleted, which removes the leaked objects from GitHub. The two
+  leaked hashes were masked as `*******` in the docs (0cc4ca4); older
+  commits still name them, and they point to nothing.
+- **Credentials (2026-10-04).** The leaked `.credentials.json`, run with
+  `CLAUDE_CONFIG_DIR=<empty tmp> claude -p hi`, gave "OAuth session expired
+  and could not be refreshed". The owner rotated all passwords and signed
+  every device out of claude.ai. The scan of the leaked transcripts was
+  skipped: the repo was private and is deleted.
+- **What stayed behind:** tags `v0.1`, `v0.2.0`, `v0.2.1` and their GitHub
+  Releases, PRs #2–#7, and PyPI 0.2.1 (deleted after 0.2.2 was up, so the
+  project was never empty; delete a release, never the project, or the
+  name is freed). New first release: v0.2.2 (70fe0f4).
+- **Who can open PRs (2026-10-04).** Settings → General → Pull requests
+  is set to *Collaborators only* (a GitHub option since 2026-02): outsiders
+  can still fork, read and comment, but not open a PR. As a second layer,
+  Settings → Actions → General requires approval before workflows run on
+  PRs from all external contributors. `ci.yml` already used `pull_request`
+  (not `pull_request_target`) with a `contents: read` token, so a fork PR
+  never saw secrets; the risk removed is wasted runner minutes and cache
+  poisoning. Before approving an outside run, read its diff to
+  `.github/workflows/`, `pyproject.toml` and the tests: approving runs
+  their code. Collaborators on a personal repo can push to `main`, hence
+  the planned ruleset.
+- **Dropped: sharing Claude's setup in the repo** (skills, plans, memory
+  under `.claude/`). Keeping Claude's data in the repo is what led to the
+  leak.

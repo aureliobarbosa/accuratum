@@ -1,6 +1,7 @@
 # Accuratum — what's left to do
 
-> **Status (2026-10-01):** Steps 0–5.5 are closed (0.2.1 is on PyPI).
+> **Status (2026-10-04):** Steps 0–5.5 are closed, and the repo is public
+> (0.2.2 is on PyPI).
 > Next: the rest of Step 6 (layout decided: monorepo, with `web/` as its own
 > uv workspace project). Steps 4–7 are the fast track to a hosted website,
 > so the collaborators can meet and start the paper.
@@ -32,7 +33,7 @@ before it.
    replace it (see the backlog).
 
 The wheel (library + CLI) goes out on every `v*` tag, to the GitHub Releases
-and, from 0.2.1 on, to PyPI (Step 5.5). The user moved PyPI ahead of the
+and, from 0.2.2 on, to PyPI (Step 5.5). The user moved PyPI ahead of the
 paper on 2026-10-01.
 
 ---
@@ -139,6 +140,7 @@ See [PROJECT_KNOWLEDGE.md § Line colors](PROJECT_KNOWLEDGE.md#line-colors-step-
 - It's in `ci.yml`, not in its own workflow, because `needs:` can't wait on
   another workflow's tests.
 - First upload: 0.2.1 (2026-10-01), ahead of the paper, to secure the name.
+  Deleted on 2026-10-04 with the old repo; 0.2.2 replaced it.
 - No approval gate until the repo is public (backlog).
 
 See [PROJECT_KNOWLEDGE.md § PyPI publishing](PROJECT_KNOWLEDGE.md#pypi-publishing-step-55).
@@ -154,41 +156,17 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   (`/api/plot` slow, `/api/render` live) instead of regenerating on every
   edit (superseded by the single route in UX.md, see below).
 
-- **Before going public** (the cleaned history is
-  prepared and CI scans for secrets; see
-  [PROJECT_KNOWLEDGE.md § Security cleanup](PROJECT_KNOWLEDGE.md#security-cleanup-before-going-public-step-6)):
-  - [x] a. Revoke the leaked Claude credentials: `/logout` then `/login` in
-    Claude Code on each machine, and revoke old sessions in claude.ai
-    account settings. Rotate anything else found.
-  - [x] b. Check GitHub for pull requests (`refs/pull/*` cannot be rewritten
-    by force-push; if any contain the leaked commit, ask GitHub Support to
-    purge them or publish as a fresh repo), forks and collaborators. No PR after #7 (2026-05-11,
-    before the leak).
-  - [x] c. Approve the swap: force-push the cleaned `main` (and `v0.1` if its
-    hash changed) from the clean clone; delete stale remote branches.
-  - [x] d. Old clones removed from the other 2 machines (2026-10-04);
-    every machine now works from a fresh clone.
-  - [x] e. Drop the Dropbox sync of Claude sessions (2026-10-01): the bind
-    mounts are gone; each machine keeps its own `claude-code-state` volume.
-    On the other machines, delete any leftover `.claude-data/` folder with
-    the re-clone (d); the host's `~/Dropbox/claude-code/` can go too.
-  - [x] g. Purging the force-pushed commits is no longer needed
-    (2026-10-04): the old repo was removed, and the history was pushed to a
-    fresh `aureliobarbosa/accuratum` that never held the leaked objects.
-    The leaked OAuth tokens were tested and are dead; passwords were
-    rotated and all devices signed out of claude.ai.
-  - [x] h. Image rights (2026-10-01): `fig/rosa.png` is CC0 (Wikimedia
-    Commons, see PROJECT_KNOWLEDGE.md); `fig/escola_nas_estrelas.jpeg` was
-    removed (unused, no confirmed right), and so was the unused `fig/unb.jpg`
-    (c68ed1f).
-  - [ ] i. Make the repo public. **Approved by the collaborators
-    (2026-10-01).** The review of 2026-10-01 found the history and tree
-    clean (gitleaks and pickaxe over a mirror of every remote ref,
-    pull-request refs included; only the two authors' emails). Then, in
-    the GitHub settings: require approval before fork pull requests run
-    workflows; rulesets blocking force-push and deletion of `main` and
-    limiting `v*` tag creation to the owner; delete Actions runs from
-    before the 2026-09-30 force-push; add the `pypi` reviewer (backlog).
+- **Going public — done** (2026-10-04):
+  - the leaked `.claude-data/` commit was cut from history (2026-09-30),
+    then the clean `main` went to a fresh repo, since the old one still
+    served the leak by hash; the old repo is deleted;
+  - the leaked OAuth tokens were tested dead; passwords rotated, devices
+    signed out; every machine works from a fresh clone;
+  - the old tags and PyPI 0.2.1 stayed behind; the new repo's first
+    release is v0.2.2;
+  - keeping Claude's setup in the repo was dropped: it caused the leak.
+
+  See [PROJECT_KNOWLEDGE.md § Security cleanup](PROJECT_KNOWLEDGE.md#security-cleanup-before-going-public-step-6).
 
 - **Library prep — done** (2026-09-30): `solstice_timeframe` in
   `core/spec`, default overlays and `resolve_image_path` (confined to the
@@ -264,7 +242,12 @@ meeting and start writing the paper (goal 5).
   `selector`. Today a regenerate resets the labels.
 - **Custom overlay images are stored as absolute paths**, so a project folder
   that uses one isn't portable. Copy the image into the folder instead.
-- **Approval gate for PyPI uploads**, once the repo is public (Step 6i):
+- **Approval gate for PyPI uploads**, now that the repo is public:
   add the owner as required reviewer of the GitHub environment `pypi`
-  (Settings → Environments). The private repo's plan doesn't offer it, so
-  today a `v*` tag uploads to PyPI without a click (Step 5.5).
+  (Settings → Environments). Until then a `v*` tag uploads to PyPI without
+  a click (Step 5.5).
+- **GitHub hardening, in progress** (2026-10-04). Done: PRs restricted to
+  collaborators, and fork-PR workflows need approval (see
+  PROJECT_KNOWLEDGE.md § Security cleanup). Left: a ruleset blocking
+  force-push and deletion of `main` and limiting `v*` tags to the owner,
+  plus the `pypi` reviewer above.
