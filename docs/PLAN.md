@@ -166,12 +166,8 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     before the leak).
   - [x] c. Approve the swap: force-push the cleaned `main` (and `v0.1` if its
     hash changed) from the clean clone; delete stale remote branches.
-  - [ ] d. Re-clone on the other 2 machines (old clones still hold the
-    leaked objects and `restore-claude-sessions`); the main machine's clone
-    is clean (checked 2026-10-01). **Never push from an old clone:** one
-    `git push --all` republishes the leak, and CI doesn't run on pushes to
-    `main`. Deferred by the owner (2026-10-01); CLAUDE.md has every session
-    remind them until it is ticked.
+  - [x] d. Old clones removed from the other 2 machines (2026-10-04);
+    every machine now works from a fresh clone.
   - [x] e. Drop the Dropbox sync of Claude sessions (2026-10-01): the bind
     mounts are gone; each machine keeps its own `claude-code-state` volume.
     On the other machines, delete any leftover `.claude-data/` folder with
@@ -184,8 +180,8 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   - [ ] g. Have GitHub purge the pre-rewrite commits it still serves by
     hash (force-pushed commits stay reachable, and PROJECT_KNOWLEDGE.md
     names them). The dangling commits:
-    - https://github.com/aureliobarbosa/accuratum/commit/6537c05 (the leak)
-    - https://github.com/aureliobarbosa/accuratum/commit/b556631
+    - https://github.com/aureliobarbosa/accuratum/commit/******* (the leak)
+    - https://github.com/aureliobarbosa/accuratum/commit/*******
 
     The owner asked GitHub Support to remove them on 2026-10-01. Wait for
     their confirmation, then check that both links give a 404 while signed

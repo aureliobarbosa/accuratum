@@ -12,7 +12,7 @@
 ## Context
 
 The cleaned history is on `main`, but GitHub still serves the force-pushed
-commits by hash (`6537c05`, the `.claude-data/` leak, and `b556631`). The
+commits by hash (`*******`, the `.claude-data/` leak, and `*******`). The
 owner asked Support to purge them (2026-10-01), which may take months. The
 owner first proposed: confirm the leaked credentials are dead, remove the
 hash mentions from the repo with `git filter-repo`, force-push, then go
@@ -55,13 +55,13 @@ Claude does the local steps and asks before every push and commit.
 GitHub's own fallback, already named in PLAN item 6b. The leaked objects
 live only in the old repo, so a new repo that never received them has
 nothing dangling. The clean history is pushed as-is, so **no hash changes**:
-the docs, the tags and PyPI's provenance stay valid, and `6537c05` in the
+the docs, the tags and PyPI's provenance stay valid, and `*******` in the
 docs points to nothing.
 
 1. **Verify the credentials are dead** (owner's own account, isolated;
    do it before the old repo is deleted):
    - Owner: open the commit page signed in and copy the full hash of
-     `6537c05` (and `b556631`).
+     `*******` (and `*******`).
    - Claude: in a temp dir outside the repo, `git init` + `git fetch
      <origin url> <full-hash>` (GitHub serves unreferenced objects by full
      hash). Never inside the working repo.
@@ -124,7 +124,7 @@ docs points to nothing.
 
 - `git ls-remote` on the new repo lists only `main` and `v0.2.2` (no
   `refs/pull/*`, no old tags), with the same hashes as the fresh clone.
-- Signed out, `github.com/aureliobarbosa/accuratum/commit/6537c05` gives a
+- Signed out, `github.com/aureliobarbosa/accuratum/commit/*******` gives a
   404, and the Activity page shows no force-push.
 - gitleaks over a fresh `--mirror` clone of the new repo: no findings.
 - PyPI lists only 0.2.2; `uvx --refresh accuratum --help` installs 0.2.2

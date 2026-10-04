@@ -11,11 +11,6 @@ starting a new step.** Why each finished thing is the way it is, plus traps
 and lessons, is in [docs/PROJECT_KNOWLEDGE.md](docs/PROJECT_KNOWLEDGE.md).
 Grep it when you touch a finished area; don't read it whole.
 
-**Open reminder: until PLAN.md Step 6d is ticked, say it in your first reply
-of every session.** The other 2 machines still hold old clones with the
-leaked `.claude-data/` history; they must be re-cloned, and nothing may be
-pushed from them. Remove this paragraph when 6d is done.
-
 ## How to run
 
 ```bash

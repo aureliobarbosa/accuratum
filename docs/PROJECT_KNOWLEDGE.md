@@ -796,20 +796,20 @@ Ported to `defaults/placement.py`. Originally recorded in
 
 ## Security cleanup before going public (Step 6)
 
-- **What leaked:** commit 6537c05 (2026-07-03, "add claude-data") committed
+- **What leaked:** commit ******* (2026-07-03, "add claude-data") committed
   all of `.claude-data/` (the Claude Code config dir): `.credentials.json`
   (OAuth tokens), `.claude.json` + `backups/`, `projects/` (session
   transcripts), `file-history/`, `shell-snapshots/`, `ide/`, `settings.json`,
-  `mcp-needs-auth-cache.json`, `.last-cleanup`. 8b32634, b556631 and 3be533e
+  `mcp-needs-auth-cache.json`, `.last-cleanup`. 8b32634, ******* and 3be533e
   untracked it, but it stays in history of `main`, `origin/main` and the
   local branch `restore-claude-sessions`. Tag `v0.1` does not contain it. The
   repo was private, so only people with access could see it. Claude data then
   synced through Dropbox bind mounts, dropped in Step 6e; it now stays in
   the per-machine `claude-code-state` volume.
 - **Scan (gitleaks 8.30.1, 195 commits, all refs):** one rule hit,
-  `generic-api-key` in `.claude-data/ide/34437.lock` (6537c05). Trap:
+  `generic-api-key` in `.claude-data/ide/34437.lock` (*******). Trap:
   gitleaks did NOT flag the OAuth tokens in `.claude-data/.credentials.json`
-  (6537c05, 8b32634); a pickaxe (`git log --all -S'sk-ant'`) found them.
+  (*******, 8b32634); a pickaxe (`git log --all -S'sk-ant'`) found them.
   Treat the tokens as leaked regardless. The current tree (tracked and
   untracked) is clean. Non-secret personal data outside `.claude-data`:
   `/home/vscode` paths (harmless devcontainer user) and two emails (the
@@ -821,7 +821,7 @@ Ported to `defaults/placement.py`. Originally recorded in
   (`fetch-depth: 0`). It fails on the old history until it is rewritten.
 - **Rewrite procedure** (never in the working repo): `git clone --no-local`
   into a separate folder, then `git filter-repo --invert-paths --path
-  .claude-data/ --refs 6537c05^..main`. Trap: a full-history filter-repo
+  .claude-data/ --refs *******^..main`. Trap: a full-history filter-repo
   strips the GPG signatures GitHub puts on web-made commits, so it rewrote
   212 of 216 commits, `v0.1` and every PR ref. The range limit rewrote only
   the 42 commits from the leak on; older hashes, `v0.1` and the other
