@@ -172,20 +172,11 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
     mounts are gone; each machine keeps its own `claude-code-state` volume.
     On the other machines, delete any leftover `.claude-data/` folder with
     the re-clone (d); the host's `~/Dropbox/claude-code/` can go too.
-  - [ ] f. Investigate how to keep the useful parts of the Claude setup in
-    the public repo (skills, plans, agents, commands, memory worth
-    sharing), e.g. under `.claude/`, reviewed for private data before each
-    commit. Add them in new commits only: **no more history rewriting.**
-    Not blocking; it can follow going public.
-  - [ ] g. Have GitHub purge the pre-rewrite commits it still serves by
-    hash (force-pushed commits stay reachable, and PROJECT_KNOWLEDGE.md
-    names them). The dangling commits:
-    - https://github.com/aureliobarbosa/accuratum/commit/******* (the leak)
-    - https://github.com/aureliobarbosa/accuratum/commit/*******
-
-    The owner asked GitHub Support to remove them on 2026-10-01. Wait for
-    their confirmation, then check that both links give a 404 while signed
-    in, before going public.
+  - [x] g. Purging the force-pushed commits is no longer needed
+    (2026-10-04): the old repo was removed, and the history was pushed to a
+    fresh `aureliobarbosa/accuratum` that never held the leaked objects.
+    The leaked OAuth tokens were tested and are dead; passwords were
+    rotated and all devices signed out of claude.ai.
   - [x] h. Image rights (2026-10-01): `fig/rosa.png` is CC0 (Wikimedia
     Commons, see PROJECT_KNOWLEDGE.md); `fig/escola_nas_estrelas.jpeg` was
     removed (unused, no confirmed right), and so was the unused `fig/unb.jpg`
