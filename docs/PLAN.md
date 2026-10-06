@@ -212,9 +212,10 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   from the `v*` tags that publish the wheel. Bingo stays as it is, and
   the site gets its own Cloud Run service behind Firebase Hosting at
   `accuratum.web.app`, if that name is free.
-- **Open decision:** a new Google Cloud project for the site, or a second
-  Hosting site and Cloud Run service inside Bingo's project. The free tier
-  is the same either way, since it's counted per billing account.
+- **Decided** (2026-10-06): a new Google Cloud/Firebase project for the
+  site, on the same billing account as Bingo, so the two stay separate. The
+  free tier is shared either way, since it's counted per billing account.
+  Cloud Run runs with `--max-instances 3`, so a spike can't run up the bill.
 
 See [PROJECT_KNOWLEDGE.md § Website groundwork](PROJECT_KNOWLEDGE.md#website-groundwork-step-6).
 
