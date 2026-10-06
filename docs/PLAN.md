@@ -208,9 +208,13 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   editing on the site, so a single spec → PNG + PDF route replaces the
   `/api/plot` + `/api/render` pair. The logo and compass are uploads.
   UX.md lists its own open questions.
-- **Open decisions:**
-  - the deploy trigger: a `site-v*` tag, or a push that touches `web/`;
-  - whether to reuse Bingo's Google Cloud project.
+- **Decided** (2026-10-06): the site deploys on a `site-v*` tag, apart
+  from the `v*` tags that publish the wheel. Bingo stays as it is, and
+  the site gets its own Cloud Run service behind Firebase Hosting at
+  `accuratum.web.app`, if that name is free.
+- **Open decision:** a new Google Cloud project for the site, or a second
+  Hosting site and Cloud Run service inside Bingo's project. The free tier
+  is the same either way, since it's counted per billing account.
 
 See [PROJECT_KNOWLEDGE.md § Website groundwork](PROJECT_KNOWLEDGE.md#website-groundwork-step-6).
 
