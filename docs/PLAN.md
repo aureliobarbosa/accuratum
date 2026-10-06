@@ -230,21 +230,36 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
 
 - **7a — client IP behind the CDN — done:** the rate limit reads
   `Fastly-Client-Ip` first (Firebase Hosting's CDN calls Cloud Run).
-- **7b — Dockerfile and smoke test:** multi-stage, one Python 3.11 base,
-  only the website and the library, non-root user, matplotlib font cache
-  built at build time; `scripts/smoke.sh URL` checks the page, a static
-  file and one real `POST /api/sundial`.
-- **7c — `deploy.yml`:** on `site-v*` tags and by hand; build → smoke →
-  push → deploy by digest → smoke on the public URL. WIF, no keys. The
-  Google steps are skipped until the repo variables exist. Cloud Run:
-  `--max-instances=3`, `--min-instances=0`, 2 vCPU (one process per
-  half-year), memory set from the smoke run.
-- **7d — Google side:** `scripts/setup-gcp.sh` (APIs, Artifact Registry
-  with a cleanup policy, deploy and runtime service accounts, WIF pinned
-  to this repo), `firebase.json` rewriting `**` to the service. The owner
-  creates the Firebase project, the `accuratum` site and a budget alert.
-- **7e — first deploy:** the owner sets the repo variables; a `site-v0.1.0`
-  tag (ask first); smoke test on `accuratum.web.app`; check the headers.
+- **7b — Dockerfile and smoke test — written** (6ebda9b): two stages on
+  `python:3.11-slim`, both packages as wheels, non-root, font cache at
+  build time. `scripts/smoke.sh URL` passed against the image's venv
+  replayed locally; the image itself is first built in CI.
+- **7c — `deploy.yml` — written** (f987a34): tests → build → smoke under
+  2 CPUs/2 GB (prints peak memory) → push → deploy by digest → smoke on
+  the public URL. Google steps run only on `site-v*` tags with the
+  variables set; a manual run on `main` is a dry run of the image.
+  Cloud Run: 2 vCPU, 2 GiB, 0–3 instances, 60 s, runtime account without
+  roles. Region `southamerica-east1` (in `deploy.yml`, `firebase.json`,
+  `setup-gcp.sh`).
+- **7d — Google side — written** (854140b): `scripts/setup-gcp.sh` and
+  `firebase.json` (empty `hosting/public`).
+- **7e — first deploy, the owner's part, in order:**
+  1. `git push` (ask first), then Actions → *Deploy website* → *Run
+     workflow* on `main`: the dry run builds and smoke-tests the image.
+  2. Firebase console → *Add project* (this creates the Google Cloud
+     project and shows the terms; skipping them is Bingo's misleading
+     403 on `addfirebase`). Analytics off. Upgrade to Blaze with the
+     existing billing account. Budget alert of a few dollars in Billing.
+  3. Cloud Shell: `git clone` the repo, `PROJECT=<id> bash
+     scripts/setup-gcp.sh`; copy the four values it prints into the
+     repo's Actions Variables.
+  4. Tag `site-v0.1.0` (ask first): deploys and creates the service.
+  5. Cloud Shell, in the clone (firebase CLI is preinstalled there):
+     `firebase hosting:sites:create accuratum --project <id>` (only this
+     command says whether the name is free; if not, change `site` in
+     `firebase.json`), then `firebase deploy --only hosting --project <id>`.
+  6. `scripts/smoke.sh https://accuratum.web.app`; check that the CSP
+     header survives the CDN; set `--memory` from the printed peak.
 
 ## Backlog (not scheduled)
 
