@@ -1,0 +1,166 @@
+# Deploys the website to Cloud Run.
+#
+# Kept apart from ci.yml for PERMISSIONS: WIF needs `id-token: write`, and in
+# ci.yml that would reach the jobs that run pull-request code, so any PR
+# could trade the token for access to the Google project. This file never
+# runs on pull requests.
+#
+# Triggers: a `site-v*` tag deploys. ci.yml's `v*` tags publish the wheel and
+# don't match `site-v*` (GitHub matches the pattern from the start of the
+# name). Running it by hand on a branch builds and smoke-tests the image
+# without deploying; on a `site-v*` tag it redeploys that tag (a rollback).
+#
+# Build → smoke → push → deploy by digest, in one job: what goes live is the
+# exact image that passed the smoke test, not a rebuild.
+name: Deploy website
+
+on:
+  push:
+    tags:
+      - "site-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A deploy is never cancelled halfway; two tags in a row deploy in order.
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+env:
+  REGION: southamerica-east1
+  REPOSITORY: accuratum
+  SERVICE: accuratum-web
+
+jobs:
+  # Pushes to main aren't checked by ci.yml, so the deploy runs the tests itself.
+  test:
+    name: Tests (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv sync --all-packages --extra dev --group dev
+
+      - name: Library tests
+        run: uv run pytest -q
+
+      - name: Website tests
+        run: cd web && uv run pytest -q
+
+  deploy:
+    name: Build, smoke-test and deploy
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # only this job can mint the OIDC token Google trusts
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: accuratum-web:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Cloud Run's port and limits, so the smoke run is a dress rehearsal.
+      - name: Start the container like Cloud Run would
+        run: |
+          docker run --detach --name site --env PORT=8080 --publish 8080:8080 \
+            --cpus=2 --memory=2g accuratum-web:${{ github.sha }}
+
+      - name: Smoke test on the container
+        run: ./scripts/smoke.sh http://127.0.0.1:8080
+
+      # Sizes --memory below: the peak of one full sundial (two worker processes).
+      - name: Peak memory of the container
+        run: |
+          echo "memory.peak: $(docker exec site cat /sys/fs/cgroup/memory.peak 2>/dev/null \
+            | awk '{printf "%.0f MiB", $1/1048576}')"
+
+      - name: Container log, if the smoke test failed
+        if: failure()
+        run: docker logs site || true
+
+      - name: Stop the container
+        run: docker rm --force site
+
+      # No service-account key: GitHub presents a short-lived OIDC token and
+      # Google swaps it for temporary credentials. The provider's condition,
+      # pinned to this repository, is what authorizes it.
+      # Skipped (not failed) until the repository variables exist, and when
+      # run by hand on anything but a site-v* tag.
+      - name: Authenticate to Google Cloud
+        id: auth
+        if: vars.GCP_WIF_PROVIDER != '' && startsWith(github.ref, 'refs/tags/site-v')
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SA_DEPLOY }}
+          token_format: access_token # the registry login needs a real access token
+
+      - name: Log in to Artifact Registry
+        if: steps.auth.outcome == 'success'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      # The digest, read back from the registry, names this exact content; the
+      # tag is for humans and can be rewritten.
+      - name: Push the image and read its digest
+        id: image
+        if: steps.auth.outcome == 'success'
+        run: |
+          set -euo pipefail
+          IMAGE="${REGION}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${REPOSITORY}/web"
+          docker tag "accuratum-web:${{ github.sha }}" "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:${{ github.sha }}"
+          REF=$(docker image inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:${{ github.sha }}")
+          echo "ref=${REF}" >> "${GITHUB_OUTPUT}"
+          echo "Deploying ${REF}"
+
+      # 2 vCPU: one process per half-year (13–15 s). 2 GiB: two workers at
+      # ~260 MB each plus the server, with room to spare (see the peak above).
+      # --max-instances=3 bounds the bill of an open service; min 0 means an
+      # idle site costs nothing. 60 s is also Firebase Hosting's own limit.
+      # The runtime identity is an account with no roles: the service calls
+      # nothing in Google. The default Compute account often has Editor.
+      - name: Deploy to Cloud Run
+        id: deploy
+        if: steps.auth.outcome == 'success'
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ steps.image.outputs.ref }}
+          flags: >-
+            --allow-unauthenticated
+            --service-account=${{ vars.GCP_SA_RUNTIME }}
+            --cpu=2
+            --memory=2Gi
+            --min-instances=0
+            --max-instances=3
+            --timeout=60s
+
+      # Building and deploying don't prove the service answers.
+      - name: Smoke test on the public URL
+        if: steps.deploy.outcome == 'success'
+        run: ./scripts/smoke.sh "${{ steps.deploy.outputs.url }}"
