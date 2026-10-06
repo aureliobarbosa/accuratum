@@ -85,11 +85,13 @@ class RateLimiter:
 
 
 def _client(request: Request) -> str:
-    # Behind Firebase Hosting and Cloud Run the visitor is the first
-    # X-Forwarded-For entry. A client can forge it to dodge its own limit;
-    # the per-instance concurrency cap still bounds the load (Step 7 revisits).
-    forwarded = request.headers.get("x-forwarded-for", "")
-    return forwarded.split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    # Behind Firebase Hosting the CDN (Fastly) calls Cloud Run, and the visitor
+    # is in Fastly-Client-Ip. Called on run.app directly, the visitor is the
+    # first X-Forwarded-For entry. Both can be forged to dodge one's own limit;
+    # the per-instance concurrency cap and max instances still bound the load.
+    fastly = request.headers.get("fastly-client-ip", "").strip()
+    forwarded = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+    return fastly or forwarded or (request.client.host if request.client else "unknown")
 
 
 def _request_from_form(form, uploads: dict[str, bytes | None]) -> SundialRequest:

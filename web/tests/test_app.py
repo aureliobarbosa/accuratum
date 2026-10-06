@@ -120,6 +120,17 @@ def test_sundial_requests_are_rate_limited_per_client():
         assert c.get("/api/health").status_code == 200  # only the costly route is limited
 
 
+def test_behind_firebase_hosting_the_client_is_the_fastly_client_ip():
+    # Firebase Hosting's CDN is the one calling Cloud Run, so every visitor
+    # shares X-Forwarded-For's first entry; Fastly-Client-Ip tells them apart.
+    proxy = {"x-forwarded-for": "203.0.113.1"}
+    with TestClient(create_app(grid=FAST_GRID, workers=0, rate_limit=(1, 60.0))) as c:
+        first = c.post("/api/sundial", data=FORM, headers={**proxy, "fastly-client-ip": "198.51.100.1"})
+        second = c.post("/api/sundial", data=FORM, headers={**proxy, "fastly-client-ip": "198.51.100.2"})
+        again = c.post("/api/sundial", data=FORM, headers={**proxy, "fastly-client-ip": "198.51.100.1"})
+    assert [first.status_code, second.status_code, again.status_code] == [200, 200, 429]
+
+
 def test_the_page_is_served_at_the_root(client):
     response = client.get("/")
     assert response.status_code == 200

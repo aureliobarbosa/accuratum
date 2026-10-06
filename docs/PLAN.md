@@ -225,6 +225,27 @@ Bingo's Docker, Cloud Run, Firebase Hosting and WIF deploy setup carries
 over (see the section above). Once it's hosted, call the collaborators for a
 meeting and start writing the paper (goal 5).
 
+There's no Docker in the dev container, so the image is built and
+smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
+
+- **7a — client IP behind the CDN — done:** the rate limit reads
+  `Fastly-Client-Ip` first (Firebase Hosting's CDN calls Cloud Run).
+- **7b — Dockerfile and smoke test:** multi-stage, one Python 3.11 base,
+  only the website and the library, non-root user, matplotlib font cache
+  built at build time; `scripts/smoke.sh URL` checks the page, a static
+  file and one real `POST /api/sundial`.
+- **7c — `deploy.yml`:** on `site-v*` tags and by hand; build → smoke →
+  push → deploy by digest → smoke on the public URL. WIF, no keys. The
+  Google steps are skipped until the repo variables exist. Cloud Run:
+  `--max-instances=3`, `--min-instances=0`, 2 vCPU (one process per
+  half-year), memory set from the smoke run.
+- **7d — Google side:** `scripts/setup-gcp.sh` (APIs, Artifact Registry
+  with a cleanup policy, deploy and runtime service accounts, WIF pinned
+  to this repo), `firebase.json` rewriting `**` to the service. The owner
+  creates the Firebase project, the `accuratum` site and a budget alert.
+- **7e — first deploy:** the owner sets the repo variables; a `site-v0.1.0`
+  tag (ask first); smoke test on `accuratum.web.app`; check the headers.
+
 ## Backlog (not scheduled)
 
 - **Sun map:** a plot of the sun's position (altitude, azimuth), comparing
