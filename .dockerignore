@@ -1,0 +1,12 @@
+# Allow-list: the image gets only what the Dockerfile copies. Anything new in
+# the repo (notebooks, projects, local venvs) stays out by default.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE.md
+!accuratum/
+!web/pyproject.toml
+!web/accuratum_web/
+**/__pycache__
+**/*.py[oc]
