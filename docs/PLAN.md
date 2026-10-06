@@ -259,7 +259,8 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
      command says whether the name is free; if not, change `site` in
      `firebase.json`), then `firebase deploy --only hosting --project <id>`.
   6. `scripts/smoke.sh https://accuratum.web.app`; check that the CSP
-     header survives the CDN; set `--memory` from the printed peak.
+     header survives the CDN. Memory: the dry run peaked at 1159 MiB, so
+     `--memory=2Gi` stays (CPU, not memory, uses up the free tier first).
 
 ## Backlog (not scheduled)
 
