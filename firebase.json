@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "site": "accuratum",
+    "public": "hosting/public",
+    "ignore": ["firebase.json", "**/.*", "README.md"],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "accuratum-web",
+          "region": "southamerica-east1"
+        }
+      }
+    ]
+  }
+}
