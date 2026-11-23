@@ -17,6 +17,7 @@
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude-code"
   },
   "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "sudo chown -R vscode:vscode /home/vscode/.claude-code",
   "customizations": {
     "vscode": {
       "extensions": [

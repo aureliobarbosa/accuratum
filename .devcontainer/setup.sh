@@ -1,7 +1,9 @@
 #!/bin/bash
-# Claude Code config: the named volume is created root-owned
+# Claude Code config: the named volume is created root-owned, and Docker
+# creates bind-mount points inside it as root too. Recursive, or Claude Code
+# can't write its transcripts (see postStartCommand in devcontainer.json).
 CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-/home/vscode/.claude-code}"
-sudo chown vscode:vscode "$CLAUDE_CONFIG_DIR"
+sudo chown -R vscode:vscode "$CLAUDE_CONFIG_DIR"
 
 # Seed per-machine Claude settings (settings.json is not synced)
 if [ ! -f "$CLAUDE_CONFIG_DIR/settings.json" ]; then

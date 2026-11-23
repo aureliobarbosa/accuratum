@@ -753,6 +753,17 @@ Ported to `defaults/placement.py`. Originally recorded in
   same risk as the `.claude-data/` leak (transcripts next to the repo). The
   user wasn't using it on the main machine any more. `docs/` is the only
   shared context, and moving to another machine means a fresh session.
+- **Trap: root-owned leftovers in the volume silently disable transcripts.**
+  Docker created the Dropbox mount points (`projects`, `skills`, `agents`,
+  `commands`) inside `claude-code-state` as root, and they stayed root-owned
+  after the bind mounts were dropped. `setup.sh` only `chown`ed the top
+  folder, once. Claude Code then failed every transcript write with
+  `EACCES` (shown only in the extension's debug log), so sessions lived in
+  memory alone. On 2026-11-23 a suspend/resume closed the VS Code panel and
+  the session that made 97fe279 was lost for good, with nothing to
+  `--resume`. Now `setup.sh` and `postStartCommand` both run `chown -R` on
+  every container start. Check:
+  `ls ~/.claude-code/projects/-workspaces-accuratum/*.jsonl`.
 - **Git is the source of truth for code and project context.** `.venv` and
   generated images don't travel. `uv.lock` is committed together with any
   dependency change.
