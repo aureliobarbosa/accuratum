@@ -89,15 +89,27 @@ create "GitHub identity pool" \
   gcloud iam workload-identity-pools create "github" \
     --project="${PROJECT}" --location="global" --display-name="GitHub Actions"
 
-# --attribute-condition is the security piece: without it ANY GitHub
-# repository in the world could trade its token for access to this project.
+# --attribute-condition is the security piece. Pinning the repository stops
+# the rest of GitHub; pinning the workflow file and the tag stops this repo's
+# OTHER workflows: claude.yml also holds `id-token: write` and runs
+# agent-written commands, and no workflow but deploy.yml on a site-v* tag
+# (pushed, or rerun by hand for a rollback) may deploy.
+WIF_CONDITION="assertion.repository == '${GITHUB_REPO}' && assertion.workflow_ref.startsWith('${GITHUB_REPO}/.github/workflows/deploy.yml@refs/tags/site-v')"
 create "OIDC provider pinned to ${GITHUB_REPO}" \
   gcloud iam workload-identity-pools providers create-oidc "accuratum" \
     --project="${PROJECT}" --location="global" \
     --workload-identity-pool="github" --display-name="accuratum repository" \
     --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-    --attribute-condition="assertion.repository == '${GITHUB_REPO}'" \
+    --attribute-condition="${WIF_CONDITION}" \
     --issuer-uri="https://token.actions.githubusercontent.com"
+
+# `create` leaves an existing provider untouched; this brings an older one
+# (pinned to the repository only) up to the condition above.
+echo "==> Provider condition: deploy.yml on site-v* tags only"
+gcloud iam workload-identity-pools providers update-oidc "accuratum" \
+  --project="${PROJECT}" --location="global" \
+  --workload-identity-pool="github" \
+  --attribute-condition="${WIF_CONDITION}" >/dev/null
 
 echo "==> Letting the repository use the deploy account"
 gcloud iam service-accounts add-iam-policy-binding "${SA_DEPLOY}" \
@@ -128,7 +140,8 @@ Done. Now add these four Variables on GitHub, in
   GCP_SA_RUNTIME     ${SA_RUNTIME}
 
 They are identifiers, not credentials: no key was created. The provider's
-condition, pinned to ${GITHUB_REPO}, is what authorizes the deploy.
+condition (${GITHUB_REPO}, deploy.yml, site-v* tags) is what authorizes
+the deploy.
 
 Then a site-v* tag deploys.
 ======================================================================
