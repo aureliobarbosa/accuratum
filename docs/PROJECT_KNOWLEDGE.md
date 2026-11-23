@@ -764,6 +764,17 @@ Ported to `defaults/placement.py`. Originally recorded in
   `--resume`. Now `setup.sh` and `postStartCommand` both run `chown -R` on
   every container start. Check:
   `ls ~/.claude-code/projects/-workspaces-accuratum/*.jsonl`.
+- **Only Claude editor tabs survive a restart.** After a suspend, a VS Code
+  reopen or a container restart, the extension (v2.1.330) restores a
+  session only from an editor tab (`claudeVSCodePanel`, which has a webview
+  serializer). The primary and secondary sidebar views have none, so they
+  always open a blank conversation (`resume: undefined` in the extension
+  log), even though the transcript is safe on disk. Use "Claude Code: Open
+  in New Tab" to keep sessions across restarts; otherwise reopen one from
+  the Sessions list (Claude icon in the activity bar; its "active" filter
+  hides finished sessions) or "Resume conversations". The extension's own
+  binary, `~/.vscode-server/extensions/anthropic.claude-code-*/resources/native-binary/claude --resume`,
+  stands in for the CLI, which isn't installed in the container.
 - **Git is the source of truth for code and project context.** `.venv` and
   generated images don't travel. `uv.lock` is committed together with any
   dependency change.
