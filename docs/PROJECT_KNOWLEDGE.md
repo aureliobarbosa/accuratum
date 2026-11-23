@@ -883,3 +883,38 @@ Ported to `defaults/placement.py`. Originally recorded in
 - **Dropped: sharing Claude's setup in the repo** (skills, plans, memory
   under `.claude/`). Keeping Claude's data in the repo is what led to the
   leak.
+
+## Agents on GitHub issues (2026-11-23)
+
+Goal: agents pick up issues without a machine left on, ask before coding,
+and hand over a PR for review.
+
+- **Chosen: `anthropics/claude-code-action`** (`.github/workflows/claude.yml`).
+  It runs on GitHub's runners, is started from the issue itself, and CI
+  already runs on PRs. Rejected: an always-on home machine running headless
+  `claude` (credentials and uptime to look after, and no `gh` in the dev
+  container), and a self-hosted Actions runner (on a public repo, PR code
+  could run on the machine). Claude Code on the web with a scheduled routine
+  stays an option if polling for issues is ever wanted.
+- **Branching:** trunk-based development stays for the owner. Agents work on
+  short-lived `claude/…` branches (the action's default prefix), one per
+  issue, merged by the owner. CLAUDE.md § Unattended agents has the rules:
+  plan comment → `@claude go` → PR. That's the Checkpoints rule, moved onto
+  GitHub.
+- **Who can start it:** only `github.repository_owner`, by the `agent` label
+  or an `@claude` comment. Outsiders can still comment on a public repo, so
+  the action's write-access check alone wasn't relied on.
+- **WIF trap found while wiring it:** the provider condition was
+  `assertion.repository == repo`, so *any* workflow in the repo holding
+  `id-token: write` could get deploy credentials. `claude.yml` needs that
+  permission (the action trades the OIDC token for the Claude App's token;
+  GITHUB_TOKEN pushes don't trigger CI). The condition now also requires
+  `workflow_ref` to start with `<repo>/.github/workflows/deploy.yml@refs/tags/site-v`.
+  `setup-gcp.sh` re-applies it with `update-oidc` on every run, so rerunning
+  the script fixes a provider created earlier.
+- **Layers, from the outside in:** owner-only `if:` → the App's permissions
+  (no `workflows`) → rulesets on `main` and on the `v*`/`site-v*` tags →
+  WIF pinned to deploy.yml on tags. `--allowedTools` only saves prompts; it
+  isn't a sandbox.
+- **Rendered PNGs** go to `agent-out/` (gitignored), which the workflow
+  uploads as an artifact, so visual approval works without committing images.

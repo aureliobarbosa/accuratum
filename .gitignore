@@ -195,3 +195,6 @@ nohup.out
 /*.svg
 # Project folders the CLI creates in the current directory (<location>_<year>_p<period>/)
 /*_p[01]/
+
+# Rendered PNGs from the Claude GitHub Action; claude.yml uploads them as a run artifact
+/agent-out/

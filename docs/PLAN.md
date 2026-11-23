@@ -288,8 +288,19 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
   add the owner as required reviewer of the GitHub environment `pypi`
   (Settings → Environments). Until then a `v*` tag uploads to PyPI without
   a click (Step 5.5).
-- **GitHub hardening, in progress** (2026-10-04). Done: PRs restricted to
-  collaborators, and fork-PR workflows need approval (see
-  PROJECT_KNOWLEDGE.md § Security cleanup). Left: a ruleset blocking
-  force-push and deletion of `main` and limiting `v*` tags to the owner,
-  plus the `pypi` reviewer above.
+- **Agents on issues — the owner's setup, in order** (workflow and rules
+  written 2026-11-23; why in PROJECT_KNOWLEDGE.md § Agents on GitHub issues):
+  1. Rulesets (Settings → Rules → Rulesets), bypass for *Repository admin*
+     only. `main`: require a pull request, block force-push and deletion.
+     Tags `v*` and `site-v*`: restrict creation, update and deletion. This
+     replaces the earlier hardening item (PRs restricted to collaborators
+     and fork-PR approval are done; see § Security cleanup).
+  2. If `setup-gcp.sh` already ran: rerun it in Cloud Shell. It narrows the
+     WIF condition to deploy.yml on `site-v*` tags. Do this before step 4.
+  3. In Claude Code, `/install-github-app`: installs the Claude GitHub App
+     on this repo and stores `CLAUDE_CODE_OAUTH_TOKEN` (or set it by hand
+     from `claude setup-token`). Create the `agent` label.
+  4. `git push` (ask first), then try a small issue: add the label, read the
+     plan comment, reply `@claude go`, and review the PR. Check two things
+     on that first run: CI starts on the PR, and *Collaborators only* PRs
+     let the App open it (if not, the action's own "Create PR" link works).
