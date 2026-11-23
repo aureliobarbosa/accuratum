@@ -290,11 +290,13 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
   a click (Step 5.5).
 - **Agents on issues — the owner's setup, in order** (workflow and rules
   written 2026-11-23; why in PROJECT_KNOWLEDGE.md § Agents on GitHub issues):
-  1. Rulesets (Settings → Rules → Rulesets), bypass for *Repository admin*
-     only. `main`: require a pull request, block force-push and deletion.
-     Tags `v*` and `site-v*`: restrict creation, update and deletion. This
-     replaces the earlier hardening item (PRs restricted to collaborators
-     and fork-PR approval are done; see § Security cleanup).
+  1. ~~Rulesets~~ — done 2026-11-23. Branch ruleset `main` (PR required,
+     0 approvals, no force-push or deletion) and tag ruleset `release tags`
+     (`v*`, `site-v*`: no creation, update or deletion), both bypassed by
+     *Repository admin* only. Check with
+     `curl -s https://api.github.com/repos/aureliobarbosa/accuratum/rulesets`.
+     Trap: the tags need a *tag* ruleset; a branch ruleset turns `v*` into
+     `refs/heads/v*` and leaves the tags open.
   2. If `setup-gcp.sh` already ran: rerun it in Cloud Shell. It narrows the
      WIF condition to deploy.yml on `site-v*` tags. Do this before step 4.
   3. In Claude Code, `/install-github-app`: installs the Claude GitHub App
