@@ -1,7 +1,7 @@
 # Accuratum — what's left to do
 
 > **Status (2026-10-04):** Steps 0–5.5 are closed, and the repo is public
-> (0.2.2 is on PyPI).
+> (0.2.3 is on PyPI).
 > Next: the rest of Step 6 (layout decided: monorepo, with `web/` as its own
 > uv workspace project). Steps 4–7 are the fast track to a hosted website,
 > so the collaborators can meet and start the paper.
@@ -293,8 +293,24 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
   issues). Trial issue #6: plan posted, `@claude go` given. Left: on #6's
   PR, check that CI starts and that *Collaborators only* PRs let the App
   open it (if not, the action's "Create PR" link works).
-- **Action bumps of 2026-11-25 are untested by CI until used:** the next PR
-  exercises checkout/setup-uv; `release`/`pypi` (upload/download-artifact,
-  pypi-publish) only run on the next `v*` tag, and deploy.yml on the next
-  `site-v*` tag. Watch those runs (PROJECT_KNOWLEDGE.md § GitHub Actions
-  versions).
+- **Action bumps of 2026-11-25 (PROJECT_KNOWLEDGE.md § GitHub Actions
+  versions).** `v0.2.3` passed: GitHub Release and PyPI 0.2.3 are online.
+  The next PR exercises checkout/setup-uv on pull requests.
+- **Website deploy unconfirmed — check first in the next session; no action
+  taken yet.** `site-v0.1.1` failed at *Deploy to Cloud Run* (RepoDigests
+  trap, PROJECT_KNOWLEDGE.md § Traps). `site-v0.1.2` (4c67e6d, the fix) is
+  pushed, but on 2026-11-25 the owner saw no change on the site. That alone
+  proves nothing: no code changed since `site-v0.1.0` and the page shows
+  no version. To check:
+  1. Actions → *Deploy website* → the `site-v0.1.2` run: which step, if
+     any, failed? (Read its log before changing anything.)
+  2. If it passed: Cloud Run → `accuratum-web` → Revisions. The newest one
+     should carry the label `commit-sha=4c67e6d…` and take 100 % of the
+     traffic.
+  3. If the digest step failed again, compare its output with the
+     RepoDigests listing, and see whether runner-images or docker/* have
+     a documented fix. Fallback: `runs-on: ubuntu-24.04` for the
+     `deploy` job.
+  4. Once it's green, fold this into PROJECT_KNOWLEDGE.md and drop the item.
+  Optional: show the website version in the page footer, so a deploy is
+  visible from the page itself.
