@@ -133,7 +133,10 @@ jobs:
           IMAGE="${REGION}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${REPOSITORY}/web"
           docker tag "accuratum-web:${{ github.sha }}" "${IMAGE}:${{ github.sha }}"
           docker push "${IMAGE}:${{ github.sha }}"
-          REF=$(docker image inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:${{ github.sha }}")
+          # Docker 29's containerd store lists a digest for every name, the
+          # local accuratum-web first, so pick the registry's; none fails here.
+          REF=$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' \
+            "${IMAGE}:${{ github.sha }}" | grep -m1 "^${IMAGE}@sha256:")
           echo "ref=${REF}" >> "${GITHUB_OUTPUT}"
           echo "Deploying ${REF}"
 

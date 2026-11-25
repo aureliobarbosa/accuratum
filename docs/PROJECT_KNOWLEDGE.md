@@ -808,6 +808,14 @@ Ported to `defaults/placement.py`. Originally recorded in
   provenance in every new `project.json`. Delete it on each machine
   (`rm -rf accuratum.egg-info`). Bumping the version also needs
   `uv lock` (0b569cd).
+- **`{{index .RepoDigests 0}}` broke the deploy (site-v0.1.1, 2026-11-25).**
+  `ubuntu-latest` moved to Ubuntu 26.04 with Docker 29 from late
+  October 2026, and Docker 29's containerd image store gives *every* name a
+  digest entry, so the local `accuratum-web@sha256:…` came first. gcloud
+  then looked for it on Docker Hub (`mirror.gcr.io/library/accuratum-web`):
+  "Image … not found". deploy.yml now keeps only the entry starting with the
+  Artifact Registry image name and fails if none matches. A tag runs the
+  workflow file *at that tag*, so a fix needs a new `site-v*` tag.
 
 ## Workflow lessons
 
