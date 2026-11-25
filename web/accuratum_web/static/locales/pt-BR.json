@@ -44,5 +44,6 @@
   "details.tooMany": "Relógios de sol demais em pouco tempo. Tente novamente em alguns minutos.",
   "details.network": "Não foi possível acessar o servidor. Verifique sua conexão.",
   "result.heading": "Seu relógio de sol",
-  "result.download": "Baixar PDF"
+  "result.download": "Baixar PDF",
+  "result.elapsed": "Relógio de sol gerado em {seconds} segundos."
 }

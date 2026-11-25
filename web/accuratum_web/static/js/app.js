@@ -10,6 +10,7 @@ const NOMINATIM_GAP_MS = 1100; // Nominatim allows 1 request per second
 const state = {
   place: null, // {lat, lon, name}
   result: null, // {pngs: [...], pdf: "..."}
+  seconds: null, // how long the last sundial took, request to response
   images: { logo: null, compass: null }, // File, or null for the default
   pdfUrl: null,
 };
@@ -237,6 +238,7 @@ async function generate(event) {
       return;
     }
     status.textContent = "";
+    state.seconds = (performance.now() - started) / 1000;
     showResult(body, f.title0.value, f.year.value);
   } catch {
     status.textContent = I18N.t("details.network");
@@ -263,7 +265,15 @@ function showResult(result, title, year) {
   const download = $("#download");
   download.href = state.pdfUrl;
   download.download = `accuratum-${slug(title)}-${year}.pdf`;
+  showElapsed();
   location.hash = "#/result";
+}
+
+function showElapsed() {
+  // Kept on the page so speed-ups of the computation are easy to check.
+  if (state.seconds === null) return;
+  const seconds = state.seconds.toLocaleString(I18N.lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  $("#elapsed").textContent = I18N.t("result.elapsed", { seconds });
 }
 
 // --- landing carousel --------------------------------------------------------
@@ -312,6 +322,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   lang.addEventListener("change", () => I18N.use(lang.value));
   document.addEventListener("languagechange", () => {
     if (!$("#view-location").hidden) showMap();
+    showElapsed();
   });
 
   $("#search-form").addEventListener("submit", search);

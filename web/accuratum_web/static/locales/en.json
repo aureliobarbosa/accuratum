@@ -44,5 +44,6 @@
   "details.tooMany": "Too many sundials in a short time. Try again in a few minutes.",
   "details.network": "Could not reach the server. Check your connection.",
   "result.heading": "Your sundial",
-  "result.download": "Download PDF"
+  "result.download": "Download PDF",
+  "result.elapsed": "Sundial generated in {seconds} seconds."
 }

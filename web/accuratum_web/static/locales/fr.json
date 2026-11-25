@@ -44,5 +44,6 @@
   "details.tooMany": "Trop de cadrans solaires en peu de temps. Réessayez dans quelques minutes.",
   "details.network": "Impossible de joindre le serveur. Vérifiez votre connexion.",
   "result.heading": "Votre cadran solaire",
-  "result.download": "Télécharger le PDF"
+  "result.download": "Télécharger le PDF",
+  "result.elapsed": "Cadran solaire généré en {seconds} secondes."
 }

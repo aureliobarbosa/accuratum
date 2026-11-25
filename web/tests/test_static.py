@@ -76,3 +76,11 @@ def test_the_wait_message_counts_instead_of_promising_a_time(lang):
     assert not re.search(r"\d", message), message
     assert "{seconds}" in message
     assert "setInterval" in JS and "clearInterval" in JS
+
+
+def test_the_result_page_says_how_long_the_sundial_took():
+    # Issue #6: the owner checks future speed-ups against this figure.
+    result = re.search(r'<section id="view-result".*?</section>', HTML, re.S).group(0)
+    assert 'id="elapsed"' in result
+    for lang in LANGUAGES:
+        assert "{seconds}" in LOCALES[lang]["result.elapsed"], lang
