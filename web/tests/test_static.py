@@ -59,3 +59,11 @@ def test_always_light_on_the_logo_white():
     assert "color-scheme: light" in css
     assert "--bg: #ffffff" in css
     assert '<meta name="color-scheme" content="light">' in HTML
+
+
+def test_the_last_details_button_says_generate():
+    # Issue #6: Details is the last step, so its button generates, not "Next".
+    button = re.search(r'<button id="generate".*?</button>', HTML, re.S).group(0)
+    assert 'data-i18n="details.generate"' in button
+    assert "common.next" not in button
+    assert LOCALES["en"]["details.generate"] == "Generate"

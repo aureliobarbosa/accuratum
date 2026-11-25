@@ -35,6 +35,7 @@
   "details.period1": "Junio → Diciembre",
   "details.title": "Título",
   "details.subtitle": "Subtítulo",
+  "details.generate": "Generar",
   "details.imageTooBig": "La imagen pesa más de 2 MB.",
   "details.imageType": "Usa una imagen PNG o JPEG.",
   "details.computing": "Calculando ambos semestres; esto tarda unos 15 segundos…",

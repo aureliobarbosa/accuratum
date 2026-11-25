@@ -35,6 +35,7 @@
   "details.period1": "June → December",
   "details.title": "Title",
   "details.subtitle": "Subtitle",
+  "details.generate": "Generate",
   "details.imageTooBig": "The image is larger than 2 MB.",
   "details.imageType": "Use a PNG or JPEG image.",
   "details.computing": "Computing both half-years; this takes about 15 seconds…",
