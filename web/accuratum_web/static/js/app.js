@@ -221,7 +221,14 @@ async function generate(event) {
 
   button.disabled = true;
   button.classList.add("busy");
-  status.textContent = I18N.t("details.computing");
+  // A live count, so a long wait reads as progress, not a hang.
+  const started = performance.now();
+  const tick = () => {
+    const seconds = Math.floor((performance.now() - started) / 1000);
+    status.textContent = I18N.t("details.computing", { seconds });
+  };
+  tick();
+  const counter = setInterval(tick, 1000);
   try {
     const response = await fetch("api/sundial", { method: "POST", body: data });
     const body = await response.json().catch(() => null);
@@ -234,6 +241,7 @@ async function generate(event) {
   } catch {
     status.textContent = I18N.t("details.network");
   } finally {
+    clearInterval(counter);
     button.disabled = false;
     button.classList.remove("busy");
   }

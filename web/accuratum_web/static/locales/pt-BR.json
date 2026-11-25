@@ -38,7 +38,7 @@
   "details.generate": "Gerar",
   "details.imageTooBig": "A imagem é maior que 2 MB.",
   "details.imageType": "Use uma imagem PNG ou JPEG.",
-  "details.computing": "Calculando os dois semestres; isso leva cerca de 15 segundos…",
+  "details.computing": "Calculando os dois semestres; isso pode levar até um minuto… {seconds} s",
   "details.failed": "Não foi possível gerar o relógio de sol: {reason}",
   "details.busy": "O servidor está ocupado. Tente novamente em um minuto.",
   "details.tooMany": "Relógios de sol demais em pouco tempo. Tente novamente em alguns minutos.",

@@ -67,3 +67,12 @@ def test_the_last_details_button_says_generate():
     assert 'data-i18n="details.generate"' in button
     assert "common.next" not in button
     assert LOCALES["en"]["details.generate"] == "Generate"
+
+
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_the_wait_message_counts_instead_of_promising_a_time(lang):
+    # Issue #6: "about 15 seconds" was a dev-machine figure; the site took a minute.
+    message = LOCALES[lang]["details.computing"]
+    assert not re.search(r"\d", message), message
+    assert "{seconds}" in message
+    assert "setInterval" in JS and "clearInterval" in JS
