@@ -59,3 +59,14 @@ def test_always_light_on_the_logo_white():
     assert "color-scheme: light" in css
     assert "--bg: #ffffff" in css
     assert '<meta name="color-scheme" content="light">' in HTML
+
+
+def test_the_brand_is_the_only_home_link_in_the_top_bar():
+    # Owner's choice (issue #3): the clickable "Accuratum" brand already goes home,
+    # so a separate "Home" link in the nav would be redundant.
+    topbar = re.search(r'<header class="topbar">(.*?)</header>', HTML, re.S).group(1)
+    assert '<a class="brand" href="#/">' in topbar
+    assert re.findall(r'href="#/"', topbar) == ['href="#/"']
+    assert "nav.home" not in HTML
+    for lang in LANGUAGES:
+        assert "nav.home" not in LOCALES[lang], lang
