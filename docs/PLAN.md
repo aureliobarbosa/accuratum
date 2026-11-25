@@ -264,6 +264,28 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
 
 ## Backlog (not scheduled)
 
+- **Website version in the page footer**, so a deploy is visible from the
+  page itself (today the page shows no version, so a deploy without
+  visible changes can't be told apart from no deploy). Read it from
+  `importlib.metadata.version("accuratum-web")`, and maybe the library's
+  too.
+- **Relax the `uv_build` range to the latest stable uv.** Both
+  `pyproject.toml` files say `uv_build>=0.11.6,<0.13`, and `uv lock` with
+  uv 0.13.5 warns about it (builds still work: uv fetches an older
+  `uv_build`). Widen the upper bound to cover the current release, and in
+  the same commit check the Dockerfile's `UV_VERSION=0.12.23` and
+  `uv lock`.
+- **Run the website on the newest Python it can.** The website image uses
+  `python:3.11-slim-bookworm` (Dockerfile, both stages), and recent CPython
+  releases are much faster, which could shorten the 13–15 s per half-year
+  users wait. Constraint: the workspace shares one `uv.lock`, so the lock
+  must also install on the library's 3.11 baseline (`requires-python =
+  ">=3.11"`), which stays. To do: check that astropy/astroplan/matplotlib
+  have wheels for the newest Python, bump the image's base, run the web
+  tests on that Python too (ci.yml `test-web`, deploy.yml `test`), and
+  compare the timing and the peak memory the deploy job prints against
+  the 3.11 numbers.
+
 - **Sun map:** a plot of the sun's position (altitude, azimuth), comparing
   astropy against skyfield.
 - **Guard test** that `core/` never imports matplotlib.
@@ -312,5 +334,3 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
      a documented fix. Fallback: `runs-on: ubuntu-24.04` for the
      `deploy` job.
   4. Once it's green, fold this into PROJECT_KNOWLEDGE.md and drop the item.
-  Optional: show the website version in the page footer, so a deploy is
-  visible from the page itself.
