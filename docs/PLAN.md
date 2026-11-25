@@ -290,8 +290,11 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
   a click (Step 5.5).
 - **Agents on issues — setup done 2026-11-25** (rulesets, WIF rerun, App,
   `agent` label, token; traps in PROJECT_KNOWLEDGE.md § Agents on GitHub
-  issues). Trial issue #6: plan posted, `@claude go` given. Left:
-  1. On #6's PR, check that CI starts and that *Collaborators only* PRs
-     let the App open it (if not, the action's "Create PR" link works).
-  2. Owner-only: bump `actions/upload-artifact@v4` in `claude.yml` (Node 20
-     deprecation warning; harmless today).
+  issues). Trial issue #6: plan posted, `@claude go` given. Left: on #6's
+  PR, check that CI starts and that *Collaborators only* PRs let the App
+  open it (if not, the action's "Create PR" link works).
+- **Action bumps of 2026-11-25 are untested by CI until used:** the next PR
+  exercises checkout/setup-uv; `release`/`pypi` (upload/download-artifact,
+  pypi-publish) only run on the next `v*` tag, and deploy.yml on the next
+  `site-v*` tag. Watch those runs (PROJECT_KNOWLEDGE.md § GitHub Actions
+  versions).

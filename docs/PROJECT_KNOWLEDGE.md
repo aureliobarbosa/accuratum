@@ -951,3 +951,42 @@ and hand over a PR for review.
   set by hand instead of `/install-github-app`; the CLI is at
   `~/.vscode-server/extensions/anthropic.claude-code-*/resources/native-binary/claude`.
   First successful run: issue #6, plan in 39 s.
+
+## GitHub Actions versions (2026-11-25)
+
+All actions bumped to their latest release. GitHub removed Node 20 from
+runners on 2026-09-23 (Node 24 the default since 2026-06-16), so the
+`node20` actions were already being forced onto Node 24; the bump makes that
+official and drops the warning. Node 24 itself changes nothing here: the
+project runs no Node code, the runners are GitHub-hosted (always newer than
+the 2.327.1 minimum), and Node 24's lost platforms (macOS ≤ 13.4, ARM32) are
+not used. What was checked in each major we crossed:
+
+- **`actions/checkout` v4/v5 → v7.** v5: Node 24. v6: credentials persist to
+  a separate file under `$RUNNER_TEMP` (claude-code-action's own examples use
+  v6+, so the agent's git setup is fine). v7: ESM, and refuses fork-PR
+  checkouts on `pull_request_target`/`workflow_run`, events we don't use.
+  The `build` job was still on v4, out of line with the rest.
+- **`actions/upload-artifact` v4 → v7.** v5/v6: Node 24. v7: ESM, opt-in
+  `archive: false`. Our inputs (`name`, `path`, `if-no-files-found`,
+  `retention-days`) are unchanged.
+- **`actions/download-artifact` v4 → v8.** v5: single downloads *by ID* no
+  longer nest; we download by `name`, unchanged. v6/v7: Node 24. v8: ESM,
+  non-zip files are not unzipped, and a digest mismatch now fails the job
+  (was a warning). Upload v7 and download v8 are the matching pair.
+- **`astral-sh/setup-uv` v8.1.0 → v10.4.0** (still SHA-pinned; it publishes
+  no floating major tags). v9: `prune-cache` defaults to `false`, so caches
+  grow; the public repo's free 10 GB cache with LRU eviction absorbs it.
+  v10: `enable-cache: auto` turns the cache off on `pull_request_target`,
+  `workflow_run` and `release`, none of which we use.
+- **`pypa/gh-action-pypi-publish` v1.14.2 → v1.14.3** (SHA-pinned; the SHA is
+  the commit, `v1.14.3^{}`, not the annotated tag object). A security
+  release (GHSA-5xjx-3w67-w9x9) with hash-checked dependencies inside.
+- Already on the latest major via floating tags: docker/setup-buildx-action
+  v4, docker/build-push-action v7, docker/login-action v4,
+  google-github-actions/auth v3 and deploy-cloudrun v3,
+  softprops/action-gh-release v3, anthropics/claude-code-action v1. All run
+  `node24` or are composite.
+- **How to recheck:** `curl -s https://api.github.com/repos/<owner>/<action>/releases`
+  for the tags, and the `runs.using:` line of `action.yml` at a tag for the
+  runtime. No `gh` in the dev container.
