@@ -288,45 +288,10 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
   add the owner as required reviewer of the GitHub environment `pypi`
   (Settings → Environments). Until then a `v*` tag uploads to PyPI without
   a click (Step 5.5).
-- **Agents on issues — the owner's setup, in order** (workflow and rules
-  written 2026-11-23; why in PROJECT_KNOWLEDGE.md § Agents on GitHub issues):
-  1. ~~Rulesets~~ — done 2026-11-23. Branch ruleset `main` (PR required,
-     0 approvals, no force-push or deletion) and tag ruleset `release tags`
-     (`v*`, `site-v*`: no creation, update or deletion), both bypassed by
-     *Repository admin* only. Check with
-     `curl -s https://api.github.com/repos/aureliobarbosa/accuratum/rulesets`.
-     Trap: the tags need a *tag* ruleset; a branch ruleset turns `v*` into
-     `refs/heads/v*` and leaves the tags open.
-  2. ~~Rerun `setup-gcp.sh`~~ — done 2026-11-23, same project; the four
-     Actions Variables didn't change (the script only prints them).
-  3. ~~Claude GitHub App, `agent` label, `CLAUDE_CODE_OAUTH_TOKEN`~~ — done
-     2026-11-23, set by hand (no `gh` in the dev container, so no
-     `/install-github-app`). The App works: `claude[bot]` comments on #6.
-  4. **Now: Claude fails 2 s after starting** (trial issue #6, runs
-     45231402274 and 45232470287). Step *Run anthropics/claude-code-action*
-     ends `Claude execution failed: result is_error:true`. Trigger, owner
-     filter and App token work (the bot's own comments show as *skipped*,
-     as intended). A missing secret gives a different error, so the token
-     or the account is the suspect. To debug:
-     a. Open the failed run logged in (anonymous API gets 403 on logs),
-        expand that step, find the JSON line with `"type":"result"` or the
-        last message: it names the cause.
-     b. Auth error ("Invalid API key", "OAuth token…", 401): rerun
-        `claude setup-token` and paste it again into Settings → Secrets and
-        variables → Actions → *Secrets* → `CLAUDE_CODE_OAUTH_TOKEN` → Update.
-        Paste only the `sk-ant-oat01-…` string: no spaces or line breaks
-        (a terminal can wrap a long token onto two lines).
-     c. "usage limit" / rate limit: the subscription's quota; wait, or use
-        an API key (`anthropic_api_key`, see the comment in `claude.yml`).
-     d. Model error: drop `--model opus` from `claude_args` in `claude.yml`
-        (the owner edits workflows, not the agent).
-     e. If the log hides the reason, add `show_full_output: true` to the
-        action's `with:` for one run, then remove it: the repo is public
-        and so are its logs.
-     Retry: Actions → the failed run → *Re-run all jobs*, or remove and
-     re-add the `agent` label on #6.
-  5. Then: read the plan comment on #6, reply `@claude go`, review the PR.
-     Check that CI starts on the PR and that *Collaborators only* PRs let
-     the App open it (if not, the action's "Create PR" link works).
-  6. Small, owner-only: bump `actions/upload-artifact@v4` in `claude.yml`
-     (Node 20 deprecation warning; harmless today).
+- **Agents on issues — setup done 2026-11-25** (rulesets, WIF rerun, App,
+  `agent` label, token; traps in PROJECT_KNOWLEDGE.md § Agents on GitHub
+  issues). Trial issue #6: plan posted, `@claude go` given. Left:
+  1. On #6's PR, check that CI starts and that *Collaborators only* PRs
+     let the App open it (if not, the action's "Create PR" link works).
+  2. Owner-only: bump `actions/upload-artifact@v4` in `claude.yml` (Node 20
+     deprecation warning; harmless today).

@@ -940,3 +940,14 @@ and hand over a PR for review.
   isn't a sandbox.
 - **Rendered PNGs** go to `agent-out/` (gitignored), which the workflow
   uploads as an artifact, so visual approval works without committing images.
+- **Setup traps hit on the way (2026-11-23/25):** the release tags need a
+  *tag* ruleset (a branch ruleset turns `v*` into `refs/heads/v*` and
+  leaves the tags open). `CLAUDE_CODE_OAUTH_TOKEN` copied from a terminal
+  that wrapped it gets a space in the middle; the action then fails 2 s in
+  with `Claude execution failed: result is_error:true` and no clearer
+  message in the public view. Clean the token in an editor before pasting.
+  `claude setup-token` bills whichever account is logged in on claude.ai in
+  the browser. No `gh` in the dev container, so the App and the secret were
+  set by hand instead of `/install-github-app`; the CLI is at
+  `~/.vscode-server/extensions/anthropic.claude-code-*/resources/native-binary/claude`.
+  First successful run: issue #6, plan in 39 s.
