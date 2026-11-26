@@ -7,7 +7,8 @@ version: nothing more.
 
 The top bar stays on every page. It holds:
 
-- **Home**, which goes to the landing page;
+- **the "Accuratum" name**, which goes to the landing page (no separate
+  Home link: it would be redundant, issue #3);
 - **About**;
 - **Contact**;
 - **a language selector**: `pt-BR` (the default), `en`, `es` and `fr`;

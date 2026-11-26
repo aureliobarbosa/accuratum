@@ -702,6 +702,10 @@ the wheel goes to PyPI from 0.2.2 on (Step 5.5).
   Ceilândia") runs under the logo. The renderer centers the title in the
   header without fitting it between the overlays; the CLI has the same
   issue.
+- **No "Home" link in the top bar** (issue #3, owner's choice): the
+  clickable "Accuratum" brand already goes to `#/`, so the nav holds only
+  About and Contact. `test_the_brand_is_the_only_home_link_in_the_top_bar`
+  keeps it that way; `nav.home` is gone from every locale.
 
 ## Generate button and timing (issue #6, 2026-11-25)
 
