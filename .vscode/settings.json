@@ -7,6 +7,9 @@
       "source.organizeImports.ruff": "explicit"
     }
   },
+  "[markdown]": {
+    "editor.formatOnSave": false
+  },
   "remote.autoForwardPortsFallback": 0,
   "ruff.path": [
     "/workspaces/accuratum/.venv/bin/ruff"
