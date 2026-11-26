@@ -843,6 +843,17 @@ Ported to `defaults/placement.py`. Originally recorded in
   hides finished sessions) or "Resume conversations". The extension's own
   binary, `~/.vscode-server/extensions/anthropic.claude-code-*/resources/native-binary/claude --resume`,
   stands in for the CLI, which isn't installed in the container.
+- **uv versions (2026-11-26).** `uv_build>=0.11.6,<0.14` in both
+  `pyproject.toml` files, and `UV_VERSION=0.13.8` in the Dockerfile. With
+  the old `<0.13` bound, uv 0.13 couldn't use the `uv_build` bundled in it:
+  it warned and fetched an older one from PyPI. Now `uv build -v` says
+  "Using bundled `uv_build` backend". `setup.sh` and CI's setup-uv install
+  the newest uv, so widen the bound when uv's minor version moves (0.14).
+  Checked for 0.13: none of 0.13.0's breaking changes touch us (Python 3.15
+  becomes the default only for downloads, and the image runs with
+  `UV_PYTHON_DOWNLOADS=never`), `uv lock` left `uv.lock` unchanged, and the
+  0.2.3 wheel built with it has the same files as the one on PyPI (0.13
+  switched its tar backend). Pick a uv release at least two weeks old.
 - **Git is the source of truth for code and project context.** `.venv` and
   generated images don't travel. `uv.lock` is committed together with any
   dependency change.

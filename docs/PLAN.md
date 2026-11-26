@@ -239,12 +239,6 @@ See [PROJECT_KNOWLEDGE.md § Hosting](PROJECT_KNOWLEDGE.md#hosting-step-7).
   visible changes can't be told apart from no deploy). Read it from
   `importlib.metadata.version("accuratum-web")`, and maybe the library's
   too.
-- **Relax the `uv_build` range to the latest stable uv.** Both
-  `pyproject.toml` files say `uv_build>=0.11.6,<0.13`, and `uv lock` with
-  uv 0.13.5 warns about it (builds still work: uv fetches an older
-  `uv_build`). Widen the upper bound to cover the current release, and in
-  the same commit check the Dockerfile's `UV_VERSION=0.12.23` and
-  `uv lock`.
 - **Run the website on the newest Python it can.** The website image uses
   `python:3.11-slim-bookworm` (Dockerfile, both stages), and recent CPython
   releases are much faster, which could shorten the 13–15 s per half-year

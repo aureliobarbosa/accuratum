@@ -10,7 +10,7 @@
 #
 # uv comes in by `COPY --from` with a fixed version; the uv.lock pins only
 # the dependencies, not the tool.
-ARG UV_VERSION=0.12.23
+ARG UV_VERSION=0.13.8
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
 
 # --- build -----------------------------------------------------------------
