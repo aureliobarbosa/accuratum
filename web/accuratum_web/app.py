@@ -109,6 +109,12 @@ def _request_from_form(form, uploads: dict[str, bytes | None]) -> SundialRequest
         raise ValueError(f"missing field {exc.args[0]!r}.") from None
 
 
+def _warm_up() -> bool:
+    # Runs in each worker: unpickling this function imports accuratum_web.app,
+    # and with it astropy, astroplan and matplotlib (seconds of imports).
+    return True
+
+
 def create_app(
     grid: GridConfig = GRID,
     workers: int = WORKERS,
@@ -125,7 +131,11 @@ def create_app(
     async def lifespan(_: FastAPI):
         if workers:
             # spawn, not fork: forking a threaded server can copy held locks.
-            pool["executor"] = ProcessPoolExecutor(max_workers=workers, mp_context=get_context("spawn"))
+            executor = ProcessPoolExecutor(max_workers=workers, mp_context=get_context("spawn"))
+            pool["executor"] = app.state.executor = executor
+            # The pool starts its processes on demand. Start them now, with one
+            # job each, so the first visitor doesn't wait for their imports.
+            app.state.warm_up = [executor.submit(_warm_up) for _ in range(workers)]
         yield
         if pool:
             pool.pop("executor").shutdown(cancel_futures=True)

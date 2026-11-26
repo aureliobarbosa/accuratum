@@ -97,14 +97,16 @@ Two buttons change the images:
 Each image can also be put back to the default (the package's logo or
 compass).
 
-**Next** is a button that spins while the sundial is computed (about 10 s),
-then leads to step 4.
+**Generate** is a button that spins while the sundial is computed, next
+to a live count of the seconds (no fixed time is promised: about a minute
+on the deployed site), then leads to step 4.
 
 ## 4. Result
 
 A PNG preview of each half-year (plain `<img>`s) and a **Download PDF**
 button for the two-page PDF. The same request returns all of them, so
-the sundial isn't computed twice. There is no SVG download.
+the sundial isn't computed twice. There is no SVG download. A line under the buttons
+says how long the sundial took ("Sundial generated in X seconds.").
 
 That is the end of the flow.
 
