@@ -70,6 +70,8 @@ def test_the_brand_is_the_only_home_link_in_the_top_bar():
     assert "nav.home" not in HTML
     for lang in LANGUAGES:
         assert "nav.home" not in LOCALES[lang], lang
+
+
 def test_the_last_details_button_says_generate():
     # Issue #6: Details is the last step, so its button generates, not "Next".
     button = re.search(r'<button id="generate".*?</button>', HTML, re.S).group(0)
