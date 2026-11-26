@@ -44,5 +44,6 @@
   "details.network": "No se pudo conectar con el servidor. Comprueba tu conexión.",
   "result.heading": "Tu reloj de sol",
   "result.download": "Descargar PDF",
-  "result.elapsed": "Reloj de sol generado en {seconds} segundos."
+  "result.elapsed": "Reloj de sol generado en {seconds} segundos.",
+  "footer.version": "Sitio {site} · Accuratum {library}"
 }

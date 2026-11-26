@@ -149,6 +149,7 @@ input[type="color"] {
 .search-results li { border-bottom: 1px solid var(--border); }
 .status { color: var(--muted); font-size: 0.875rem; margin: 0.5rem 0; min-height: 1.25rem; }
 .status[role="alert"] { color: var(--text); font-size: 1rem; }
+.site-footer { color: var(--muted); font-size: 0.75rem; text-align: center; padding: 0 var(--gutter) 1.5rem; min-height: 1rem; }
 .map {
   height: 60vh;
   min-height: 300px;

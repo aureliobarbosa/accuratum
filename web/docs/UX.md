@@ -21,6 +21,14 @@ language. Every visible string comes from one translation table per
 language, never written into the markup. Adding a language means adding
 one table.
 
+## Every page: the footer
+
+A small muted line at the bottom of every page shows the site's and the
+library's versions (the `footer.version` text, worded by the owner), read from
+`/api/health`. It is there so a deploy shows on the page even when nothing
+else changed (added 2026-11-26). If the request fails, the footer stays
+empty.
+
 ## 1. Landing page (`accuratum.web.app`)
 
 From top to bottom:

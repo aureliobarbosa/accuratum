@@ -313,6 +313,27 @@ async function setupGallery() {
   }
 }
 
+// --- footer ------------------------------------------------------------------
+// The deployed versions, so a deploy shows on the page even without visible changes.
+
+let versions = null;
+
+async function loadVersions() {
+  try {
+    const response = await fetch("api/health");
+    if (!response.ok) return;
+    versions = await response.json();
+  } catch {
+    return; // the footer just stays empty
+  }
+  showVersions();
+}
+
+function showVersions() {
+  if (!versions) return;
+  $("#version").textContent = I18N.t("footer.version", { site: versions.site, library: versions.library });
+}
+
 // --- start -------------------------------------------------------------------
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -323,6 +344,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("languagechange", () => {
     if (!$("#view-location").hidden) showMap();
     showElapsed();
+    showVersions();
   });
 
   $("#search-form").addEventListener("submit", search);
@@ -339,4 +361,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("hashchange", route);
   route();
   setupGallery();
+  loadVersions();
 });

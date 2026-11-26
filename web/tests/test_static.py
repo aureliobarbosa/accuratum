@@ -95,3 +95,13 @@ def test_the_result_page_says_how_long_the_sundial_took():
     assert 'id="elapsed"' in result
     for lang in LANGUAGES:
         assert "{seconds}" in LOCALES[lang]["result.elapsed"], lang
+
+
+def test_the_footer_shows_the_site_and_library_versions():
+    # So a deploy is visible on the page itself, even one without visible changes.
+    footer = re.search(r'<footer class="site-footer">(.*?)</footer>', HTML, re.S).group(1)
+    assert 'id="version"' in footer
+    assert 'fetch("api/health")' in JS
+    assert 'I18N.t("footer.version"' in JS
+    for lang in LANGUAGES:
+        assert {"{site}", "{library}"} <= set(re.findall(r"\{\w+\}", LOCALES[lang]["footer.version"])), lang

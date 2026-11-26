@@ -1,5 +1,6 @@
 import base64
 import io
+from importlib.metadata import version
 
 import pytest
 from fastapi.testclient import TestClient
@@ -39,7 +40,11 @@ def test_health():
     with TestClient(app) as c:
         response = c.get("/api/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {
+        "status": "ok",
+        "site": version("accuratum-web"),
+        "library": version("accuratum"),
+    }
 
 
 def test_sundial_returns_two_pngs_and_a_pdf(client):

@@ -44,5 +44,6 @@
   "details.network": "Could not reach the server. Check your connection.",
   "result.heading": "Your sundial",
   "result.download": "Download PDF",
-  "result.elapsed": "Sundial generated in {seconds} seconds."
+  "result.elapsed": "Sundial generated in {seconds} seconds.",
+  "footer.version": "Accuratum {library} · Site {site}"
 }

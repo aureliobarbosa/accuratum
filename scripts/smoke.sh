@@ -43,6 +43,12 @@ echo "1/4 the page, with its security headers"
 curl -sS -D "${TMP}/headers" -o "${TMP}/index.html" "${BASE}/" || fail "/: curl exited ${?}"
 grep -q "<title>Accuratum</title>" "${TMP}/index.html" || fail "/: not the site's index.html"
 grep -qi "^content-security-policy: default-src 'self'" "${TMP}/headers" || fail "/: no CSP header"
+get "/api/health" "${TMP}/health.json"
+python3 - "${TMP}/health.json" <<'EOF' || fail "/api/health: no versions"
+import json, sys
+health = json.load(open(sys.argv[1]))
+print(f"    site {health['site']}, library {health['library']}")
+EOF
 
 echo "2/4 static files and package images"
 get "/js/app.js" "${TMP}/app.js"

@@ -234,11 +234,6 @@ See [PROJECT_KNOWLEDGE.md § Hosting](PROJECT_KNOWLEDGE.md#hosting-step-7).
 
 ## Backlog (not scheduled)
 
-- **Website version in the page footer**, so a deploy is visible from the
-  page itself (today the page shows no version, so a deploy without
-  visible changes can't be told apart from no deploy). Read it from
-  `importlib.metadata.version("accuratum-web")`, and maybe the library's
-  too.
 - **Interpolate erfa's slow terms (proposed 2026-11-26).** Over 80 % of
   `build_plot` is erfa's C code (`epv00`, `pnm06a`), run for every time
   sample. astropy's `erfa_astrom` set to `ErfaAstromInterpolator(1 h)`

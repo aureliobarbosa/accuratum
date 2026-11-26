@@ -771,6 +771,23 @@ Firebase Hosting and WIF setup carried over.
 - **Deploy traps:** see § Traps (`RepoDigests`, and how to check a deploy
   when the page looks unchanged).
 
+## Version footer (2026-11-26)
+
+- **`/api/health` returns `{"status", "site", "library"}`**, the installed
+  versions of `accuratum-web` and `accuratum` (`importlib.metadata`). The
+  page's footer fetches it and shows both (`footer.version`, worded by the
+  owner, redrawn on a language change); `scripts/smoke.sh` prints it, so the deploy
+  log names what went out.
+- **Why the health route and not a new one:** it was already public and
+  already polled by the smoke test; one route answers both "is it up" and
+  "which build is it". Only our own two packages are exposed, not astropy &c.
+- **Bump `web/pyproject.toml` (and run `uv lock`) before each `site-v*`
+  tag**, or the footer still shows the old number and the deploy looks
+  like it didn't happen, which is the confusion this footer removes.
+- Not checked in a browser here: Chromium needs system libraries the dev
+  container lacks, and installing them with sudo was refused. Checked:
+  structural tests, the route through uvicorn, and smoke.sh's output.
+
 ## Speed: where the time goes (2026-11-26)
 
 Measured on the dev container, one core (`taskset`), Brasília, the website's

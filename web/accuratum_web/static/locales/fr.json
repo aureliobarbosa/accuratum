@@ -44,5 +44,6 @@
   "details.network": "Impossible de joindre le serveur. Vérifiez votre connexion.",
   "result.heading": "Votre cadran solaire",
   "result.download": "Télécharger le PDF",
-  "result.elapsed": "Cadran solaire généré en {seconds} secondes."
+  "result.elapsed": "Cadran solaire généré en {seconds} secondes.",
+  "footer.version": "Site {site} · Accuratum {library}"
 }

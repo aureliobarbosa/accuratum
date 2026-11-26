@@ -11,6 +11,7 @@ import time
 from collections import defaultdict, deque
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import asynccontextmanager
+from importlib.metadata import version
 from multiprocessing import get_context
 from pathlib import Path
 
@@ -171,7 +172,8 @@ def create_app(
 
     @app.get("/api/health")
     def health() -> dict[str, str]:
-        return {"status": "ok"}
+        # The versions let the page footer (and curl) tell one deploy from another.
+        return {"status": "ok", "site": version("accuratum-web"), "library": version("accuratum")}
 
     @app.get("/api/image/{name}")
     def package_image(name: str):
