@@ -1,7 +1,7 @@
 # Accuratum — what's left to do
 
 > **Status (2026-11-26):** Steps 0–5.5 and 7 are closed: the site runs at
-> accuratum.web.app (`site-v0.1.2`), and 0.2.3 is on PyPI. Agents on
+> accuratum.web.app (`site-v0.1.3`, version in the footer), and 0.2.3 is on PyPI. Agents on
 > issues work (PRs #7 and #8 merged).
 > Next: the rest of Step 6 (layout decided: monorepo, with `web/` as its own
 > uv workspace project). Steps 4–7 are the fast track to a hosted website,

@@ -736,7 +736,7 @@ the wheel goes to PyPI from 0.2.2 on (Step 5.5).
 ## Hosting (Step 7)
 
 Live at https://accuratum.web.app since `site-v0.1.0` (2026-10-06); the
-current deploy is `site-v0.1.2` (4c67e6d). Bingo's Docker, Cloud Run,
+current deploy is `site-v0.1.3` (1a4811b, the version footer). Bingo's Docker, Cloud Run,
 Firebase Hosting and WIF setup carried over.
 
 - **Client IP behind the CDN** (1b2b1e3): Firebase Hosting's Fastly CDN
@@ -787,6 +787,9 @@ Firebase Hosting and WIF setup carried over.
 - Not checked in a browser here: Chromium needs system libraries the dev
   container lacks, and installing them with sudo was refused. Checked:
   structural tests, the route through uvicorn, and smoke.sh's output.
+- **First deploy it confirms: `site-v0.1.3`** (1a4811b, 2026-11-26), green
+  in Actions; `https://accuratum.web.app/api/health` answered site 0.1.3,
+  library 0.2.3.
 
 ## Speed: where the time goes (2026-11-26)
 
