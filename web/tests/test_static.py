@@ -70,3 +70,26 @@ def test_the_brand_is_the_only_home_link_in_the_top_bar():
     assert "nav.home" not in HTML
     for lang in LANGUAGES:
         assert "nav.home" not in LOCALES[lang], lang
+def test_the_last_details_button_says_generate():
+    # Issue #6: Details is the last step, so its button generates, not "Next".
+    button = re.search(r'<button id="generate".*?</button>', HTML, re.S).group(0)
+    assert 'data-i18n="details.generate"' in button
+    assert "common.next" not in button
+    assert LOCALES["en"]["details.generate"] == "Generate"
+
+
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_the_wait_message_counts_instead_of_promising_a_time(lang):
+    # Issue #6: "about 15 seconds" was a dev-machine figure; the site took a minute.
+    message = LOCALES[lang]["details.computing"]
+    assert not re.search(r"\d", message), message
+    assert "{seconds}" in message
+    assert "setInterval" in JS and "clearInterval" in JS
+
+
+def test_the_result_page_says_how_long_the_sundial_took():
+    # Issue #6: the owner checks future speed-ups against this figure.
+    result = re.search(r'<section id="view-result".*?</section>', HTML, re.S).group(0)
+    assert 'id="elapsed"' in result
+    for lang in LANGUAGES:
+        assert "{seconds}" in LOCALES[lang]["result.elapsed"], lang

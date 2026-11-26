@@ -90,6 +90,15 @@ def test_parallel_workers_give_the_same_pages():
     assert len(response.json()["pngs"]) == 2
 
 
+def test_workers_start_and_import_with_the_server():
+    # Issue #6: otherwise the first visitor waits for two processes to
+    # start and import astropy, astroplan and matplotlib.
+    with TestClient(create_app(grid=FAST_GRID, workers=2)) as c:
+        executor = c.app.state.executor
+        assert len(executor._processes) == 2
+        assert all(f.result(timeout=120) for f in c.app.state.warm_up)
+
+
 # --- security headers, rate limit, static page -------------------------------
 
 

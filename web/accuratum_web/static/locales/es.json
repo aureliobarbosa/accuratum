@@ -34,13 +34,15 @@
   "details.period1": "Junio → Diciembre",
   "details.title": "Título",
   "details.subtitle": "Subtítulo",
+  "details.generate": "Generar",
   "details.imageTooBig": "La imagen pesa más de 2 MB.",
   "details.imageType": "Usa una imagen PNG o JPEG.",
-  "details.computing": "Calculando ambos semestres; esto tarda unos 15 segundos…",
+  "details.computing": "Calculando ambos semestres; esto puede tardar hasta un minuto… {seconds} s",
   "details.failed": "No se pudo generar el reloj de sol: {reason}",
   "details.busy": "El servidor está ocupado. Inténtalo de nuevo en un minuto.",
   "details.tooMany": "Demasiados relojes de sol en poco tiempo. Inténtalo de nuevo en unos minutos.",
   "details.network": "No se pudo conectar con el servidor. Comprueba tu conexión.",
   "result.heading": "Tu reloj de sol",
-  "result.download": "Descargar PDF"
+  "result.download": "Descargar PDF",
+  "result.elapsed": "Reloj de sol generado en {seconds} segundos."
 }

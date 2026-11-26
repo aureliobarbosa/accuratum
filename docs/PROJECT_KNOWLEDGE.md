@@ -707,6 +707,32 @@ the wheel goes to PyPI from 0.2.2 on (Step 5.5).
   About and Contact. `test_the_brand_is_the_only_home_link_in_the_top_bar`
   keeps it that way; `nav.home` is gone from every locale.
 
+## Generate button and timing (issue #6, 2026-11-25)
+
+- **The Details button says "Generate"** (`details.generate`: Gerar /
+  Generate / Generar / Générer), since it is the last step. The Location
+  page keeps `common.next`.
+- **No fixed time in the wait message.** The old "about 15 seconds" was
+  the 13–15 s measured on the dev machine; the deployed site takes about
+  a minute (owner, 2026-11-25), and an old Threadripper 10–20 s.
+  `details.computing` now says "can take up to a minute" with a live
+  `{seconds}` count; a test bans digits in it.
+- **"Sundial generated in X seconds."** ends the result page
+  (`result.elapsed`, `#elapsed`). The owner asked for it to check future
+  speed-ups (cache, numerics) on the real site. It is timed in the
+  browser, request to response, so it includes the network and any Cloud
+  Run cold start: what the visitor waits for, not the computation alone.
+- **Workers start with the server.** `ProcessPoolExecutor` starts its
+  processes on the first job, and each spawned worker imports astropy,
+  astroplan and matplotlib before computing. The lifespan submits one
+  `_warm_up` job per worker (`app.state.warm_up`), so this happens at
+  startup. It doesn't help a Cloud Run cold start (uvicorn runs the
+  lifespan before it listens, so that request still waits) or a slow CPU.
+  Why the site takes about a minute isn't measured yet: profile
+  `make_sundial` on Cloud Run before optimizing.
+- Commits: 9b0fe36 (button), 6a1155f (counter), 2bd46b4 (elapsed), 5bb9205
+  (warm-up).
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in

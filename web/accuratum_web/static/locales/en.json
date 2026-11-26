@@ -34,13 +34,15 @@
   "details.period1": "June → December",
   "details.title": "Title",
   "details.subtitle": "Subtitle",
+  "details.generate": "Generate",
   "details.imageTooBig": "The image is larger than 2 MB.",
   "details.imageType": "Use a PNG or JPEG image.",
-  "details.computing": "Computing both half-years; this takes about 15 seconds…",
+  "details.computing": "Computing both half-years; this can take up to a minute… {seconds} s",
   "details.failed": "The sundial could not be generated: {reason}",
   "details.busy": "The server is busy. Try again in a minute.",
   "details.tooMany": "Too many sundials in a short time. Try again in a few minutes.",
   "details.network": "Could not reach the server. Check your connection.",
   "result.heading": "Your sundial",
-  "result.download": "Download PDF"
+  "result.download": "Download PDF",
+  "result.elapsed": "Sundial generated in {seconds} seconds."
 }

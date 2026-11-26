@@ -34,13 +34,15 @@
   "details.period1": "Juin → Décembre",
   "details.title": "Titre",
   "details.subtitle": "Sous-titre",
+  "details.generate": "Générer",
   "details.imageTooBig": "L’image dépasse 2 Mo.",
   "details.imageType": "Utilisez une image PNG ou JPEG.",
-  "details.computing": "Calcul des deux semestres ; cela prend environ 15 secondes…",
+  "details.computing": "Calcul des deux semestres ; cela peut prendre jusqu’à une minute… {seconds} s",
   "details.failed": "Impossible de générer le cadran solaire : {reason}",
   "details.busy": "Le serveur est occupé. Réessayez dans une minute.",
   "details.tooMany": "Trop de cadrans solaires en peu de temps. Réessayez dans quelques minutes.",
   "details.network": "Impossible de joindre le serveur. Vérifiez votre connexion.",
   "result.heading": "Votre cadran solaire",
-  "result.download": "Télécharger le PDF"
+  "result.download": "Télécharger le PDF",
+  "result.elapsed": "Cadran solaire généré en {seconds} secondes."
 }
