@@ -761,8 +761,8 @@ Firebase Hosting and WIF setup carried over.
   (92e10b8). CPU, not memory, uses up the free tier first.
 - **Speed:** the owner sees about a minute per sundial on the site, against
   10–20 s on their machine (2026-11-25); the result page now shows the
-  time (§ Generate button and timing). The backlog's newer-Python item is
-  the first attempt at closing that gap.
+  time (§ Generate button and timing). A newer Python didn't close the
+  gap; interpolating erfa's terms might (§ Speed: where the time goes).
 - **First-deploy traps:** create the project from the Firebase console's
   *Add project* (it shows the terms; skipping them gives Bingo's misleading
   403 on `addfirebase`). `firebase hosting:sites:create` is the only command
@@ -770,6 +770,42 @@ Firebase Hosting and WIF setup carried over.
   existing billing account, a budget alert of a few dollars.
 - **Deploy traps:** see § Traps (`RepoDigests`, and how to check a deploy
   when the page looks unchanged).
+
+## Speed: where the time goes (2026-11-26)
+
+Measured on the dev container, one core (`taskset`), Brasília, the website's
+default grid, both half-years run one after the other.
+
+- **A newer Python doesn't help, so the site stays on 3.11.** The frozen
+  `uv.lock` installs on 3.14 from wheels alone (every compiled dependency
+  has cp314 wheels; none has cp315 yet), but 3.11.16 and 3.14.10 time the
+  same: compute 19.5 vs 19.9 s, render 2.7 vs 2.6 s. 3.14 imports slower
+  (2.6 vs 0.8 s). This dropped the backlog's "newest Python" item before
+  any Dockerfile change.
+- **Why:** cProfile of one half-year (11.0 s): `erfa.epv00` 4.4 s (Earth
+  position and velocity) and `erfa.pnm06a` 3.7 s (precession–nutation),
+  plus `dtdb` 0.8 s, all C code under `SkyCoord.transform_to` → `apco`.
+  They run for every sample, in `get_sun_altaz` (4.6 s) and in astroplan's
+  sunrise/sunset search (6.4 s).
+- **`ErfaAstromInterpolator`** (`astropy.coordinates.erfa_astrom`, a
+  `ScienceState` used as `with erfa_astrom.set(...)`) computes those terms
+  on a coarse grid and interpolates. Time and largest polyline
+  difference from the exact run, in plumb lengths (span 5.7):
+
+  | step | Brasília | 60°N 10°E | 0° 170°E | 75°N 10°E | max diff |
+  |---|---|---|---|---|---|
+  | exact | 19.8 s | 18.0 s | 19.5 s | 17.7 s | — |
+  | 300 s | 25.8 s | 24.2 s | 25.6 s | | 1.3×10⁻⁶ |
+  | 3600 s | 8.2 s | 7.4 s | 8.4 s | | 4.1×10⁻⁶ |
+  | 6 h | 7.0 s | | | 5.7 s | 2.2×10⁻³ |
+  | 1 day | 5.2 s | | | 4.4 s | 2.2×10⁻³ |
+
+  Finer than the dial's own sampling is slower, not faster. The polylines
+  kept the same shapes (same NaT cut) in every case.
+- **Rendering** (PNG at 150 dpi + PDF, both pages) is about 2.7 s: not
+  the bottleneck.
+- The site's "about a minute" is these 20 s spread over 2 vCPUs, on
+  slower cores, plus any cold start; not profiled on Cloud Run yet.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 

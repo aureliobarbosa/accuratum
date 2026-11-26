@@ -239,16 +239,15 @@ See [PROJECT_KNOWLEDGE.md § Hosting](PROJECT_KNOWLEDGE.md#hosting-step-7).
   visible changes can't be told apart from no deploy). Read it from
   `importlib.metadata.version("accuratum-web")`, and maybe the library's
   too.
-- **Run the website on the newest Python it can.** The website image uses
-  `python:3.11-slim-bookworm` (Dockerfile, both stages), and recent CPython
-  releases are much faster, which could shorten the 13–15 s per half-year
-  users wait. Constraint: the workspace shares one `uv.lock`, so the lock
-  must also install on the library's 3.11 baseline (`requires-python =
-  ">=3.11"`), which stays. To do: check that astropy/astroplan/matplotlib
-  have wheels for the newest Python, bump the image's base, run the web
-  tests on that Python too (ci.yml `test-web`, deploy.yml `test`), and
-  compare the timing and the peak memory the deploy job prints against
-  the 3.11 numbers.
+- **Interpolate erfa's slow terms (proposed 2026-11-26).** Over 80 % of
+  `build_plot` is erfa's C code (`epv00`, `pnm06a`), run for every time
+  sample. astropy's `erfa_astrom` set to `ErfaAstromInterpolator(1 h)`
+  made both half-years 2.4× faster (19.8 → 8.2 s, serial) with polylines
+  within 4×10⁻⁶ plumb lengths of the exact ones, at −15.8°, 60° and 0°/170°.
+  Finer steps are slower; 6 h and 1 day reach 3–4× but drift 2×10⁻³.
+  To do: a test comparing exact and interpolated geometry within a
+  tolerance, then wrap `build_plot`'s astronomy in the context manager.
+  See PROJECT_KNOWLEDGE.md § Speed: where the time goes.
 
 - **Sun map:** a plot of the sun's position (altitude, azimuth), comparing
   astropy against skyfield.
