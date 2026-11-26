@@ -733,6 +733,44 @@ the wheel goes to PyPI from 0.2.2 on (Step 5.5).
 - Commits: 9b0fe36 (button), 6a1155f (counter), 2bd46b4 (elapsed), 5bb9205
   (warm-up).
 
+## Hosting (Step 7)
+
+Live at https://accuratum.web.app since `site-v0.1.0` (2026-10-06); the
+current deploy is `site-v0.1.2` (4c67e6d). Bingo's Docker, Cloud Run,
+Firebase Hosting and WIF setup carried over.
+
+- **Client IP behind the CDN** (1b2b1e3): Firebase Hosting's Fastly CDN
+  calls Cloud Run, so the rate limit reads `Fastly-Client-Ip` first.
+- **Image** (6ebda9b): two stages on `python:3.11-slim-bookworm`, both
+  packages installed as wheels, non-root, matplotlib's font cache built at
+  image build time. `scripts/smoke.sh URL` posts one sundial and checks the
+  PNGs, the PDF and the headers. No Docker in the dev container: the image
+  is built and smoke-tested only in GitHub Actions.
+- **`deploy.yml`** (f987a34): tests → build → smoke test under 2 CPUs/2 GB
+  (prints peak memory) → push → deploy by digest → smoke test on the public
+  URL. The Google steps run only on `site-v*` tags with the repo variables
+  set; a manual run on `main` is a dry run of the image. Cloud Run: 2 vCPU,
+  2 GiB, 0–3 instances, 60 s timeout, a runtime service account without
+  roles, region `southamerica-east1` (in `deploy.yml`, `firebase.json` and
+  `setup-gcp.sh`).
+- **Google side** (854140b): `scripts/setup-gcp.sh` (idempotent; rerun it
+  to re-apply the WIF condition, see § Agents on GitHub issues) and
+  `firebase.json` (empty `hosting/public`, everything rewritten to Cloud
+  Run).
+- **Memory:** the dry run peaked at 1159 MiB, so `--memory=2Gi` stays
+  (92e10b8). CPU, not memory, uses up the free tier first.
+- **Speed:** the owner sees about a minute per sundial on the site, against
+  10–20 s on their machine (2026-11-25); the result page now shows the
+  time (§ Generate button and timing). The backlog's newer-Python item is
+  the first attempt at closing that gap.
+- **First-deploy traps:** create the project from the Firebase console's
+  *Add project* (it shows the terms; skipping them gives Bingo's misleading
+  403 on `addfirebase`). `firebase hosting:sites:create` is the only command
+  that says whether a site name is free. Analytics off, Blaze on the
+  existing billing account, a budget alert of a few dollars.
+- **Deploy traps:** see § Traps (`RepoDigests`, and how to check a deploy
+  when the page looks unchanged).
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
@@ -846,6 +884,15 @@ Ported to `defaults/placement.py`. Originally recorded in
   "Image … not found". deploy.yml now keeps only the entry starting with the
   Artifact Registry image name and fails if none matches. A tag runs the
   workflow file *at that tag*, so a fix needs a new `site-v*` tag.
+  `site-v0.1.2` (4c67e6d) passed every step, the public smoke test
+  included (confirmed 2026-11-26).
+- **"I see no change on the site" doesn't mean the deploy failed.** Until
+  the page shows its version, check the deploy from the outside:
+  `curl -s https://api.github.com/repos/aureliobarbosa/accuratum/actions/workflows/deploy.yml/runs`
+  (no login needed on a public repo, and no `gh` in the dev container),
+  then `/actions/runs/<id>/jobs` for the steps. `curl -sI
+  https://accuratum.web.app` shows a `last-modified` equal to the image's
+  build time, since the static files' mtime is when the wheel was installed.
 
 ## Workflow lessons
 
@@ -989,6 +1036,10 @@ and hand over a PR for review.
   set by hand instead of `/install-github-app`; the CLI is at
   `~/.vscode-server/extensions/anthropic.claude-code-*/resources/native-binary/claude`.
   First successful run: issue #6, plan in 39 s.
+- **Trial closed (2026-11-26).** After `@claude go` the App opened PR #7
+  (issue #6) and then PR #8 (issue #3) by itself, so *Collaborators only*
+  doesn't block it and the "Create PR" link isn't needed. CI ran on both
+  (an App's pushes trigger workflows, unlike GITHUB_TOKEN's) and passed.
 
 ## GitHub Actions versions (2026-11-25)
 
@@ -1025,6 +1076,9 @@ not used. What was checked in each major we crossed:
   google-github-actions/auth v3 and deploy-cloudrun v3,
   softprops/action-gh-release v3, anthropics/claude-code-action v1. All run
   `node24` or are composite.
+- **Confirmed (2026-11-26):** the `v0.2.3` tag ran the build, Release and
+  PyPI jobs, and PRs #7 and #8 ran checkout/setup-uv on `pull_request`,
+  all green.
 - **How to recheck:** `curl -s https://api.github.com/repos/<owner>/<action>/releases`
   for the tags, and the `runs.using:` line of `action.yml` at a tag for the
   runtime. No `gh` in the dev container.

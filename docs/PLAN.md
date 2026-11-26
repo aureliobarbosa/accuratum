@@ -1,7 +1,8 @@
 # Accuratum — what's left to do
 
-> **Status (2026-10-04):** Steps 0–5.5 are closed, and the repo is public
-> (0.2.3 is on PyPI).
+> **Status (2026-11-26):** Steps 0–5.5 and 7 are closed: the site runs at
+> accuratum.web.app (`site-v0.1.2`), and 0.2.3 is on PyPI. Agents on
+> issues work (PRs #7 and #8 merged).
 > Next: the rest of Step 6 (layout decided: monorepo, with `web/` as its own
 > uv workspace project). Steps 4–7 are the fast track to a hosted website,
 > so the collaborators can meet and start the paper.
@@ -219,48 +220,17 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
 
 See [PROJECT_KNOWLEDGE.md § Website groundwork](PROJECT_KNOWLEDGE.md#website-groundwork-step-6).
 
-## Step 7 — Host the website in the cloud
+## Step 7 — Host the website in the cloud — **done**
 
-Bingo's Docker, Cloud Run, Firebase Hosting and WIF deploy setup carries
-over (see the section above). Once it's hosted, call the collaborators for a
-meeting and start writing the paper (goal 5).
+- Live at accuratum.web.app: Cloud Run (2 vCPU, 2 GiB, 0–3 instances,
+  `southamerica-east1`) behind Firebase Hosting, deployed by `deploy.yml`
+  on `site-v*` tags; a manual run on `main` is a dry run.
+- The image is built and smoke-tested only in GitHub Actions (no Docker in
+  the dev container).
+- Next, outside the code: call the collaborators for a meeting and start
+  the paper (goal 5).
 
-There's no Docker in the dev container, so the image is built and
-smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
-
-- **7a — client IP behind the CDN — done:** the rate limit reads
-  `Fastly-Client-Ip` first (Firebase Hosting's CDN calls Cloud Run).
-- **7b — Dockerfile and smoke test — written** (6ebda9b): two stages on
-  `python:3.11-slim`, both packages as wheels, non-root, font cache at
-  build time. `scripts/smoke.sh URL` passed against the image's venv
-  replayed locally; the image itself is first built in CI.
-- **7c — `deploy.yml` — written** (f987a34): tests → build → smoke under
-  2 CPUs/2 GB (prints peak memory) → push → deploy by digest → smoke on
-  the public URL. Google steps run only on `site-v*` tags with the
-  variables set; a manual run on `main` is a dry run of the image.
-  Cloud Run: 2 vCPU, 2 GiB, 0–3 instances, 60 s, runtime account without
-  roles. Region `southamerica-east1` (in `deploy.yml`, `firebase.json`,
-  `setup-gcp.sh`).
-- **7d — Google side — written** (854140b): `scripts/setup-gcp.sh` and
-  `firebase.json` (empty `hosting/public`).
-- **7e — first deploy, the owner's part, in order:**
-  1. `git push` (ask first), then Actions → *Deploy website* → *Run
-     workflow* on `main`: the dry run builds and smoke-tests the image.
-  2. Firebase console → *Add project* (this creates the Google Cloud
-     project and shows the terms; skipping them is Bingo's misleading
-     403 on `addfirebase`). Analytics off. Upgrade to Blaze with the
-     existing billing account. Budget alert of a few dollars in Billing.
-  3. Cloud Shell: `git clone` the repo, `PROJECT=<id> bash
-     scripts/setup-gcp.sh`; copy the four values it prints into the
-     repo's Actions Variables.
-  4. Tag `site-v0.1.0` (ask first): deploys and creates the service.
-  5. Cloud Shell, in the clone (firebase CLI is preinstalled there):
-     `firebase hosting:sites:create accuratum --project <id>` (only this
-     command says whether the name is free; if not, change `site` in
-     `firebase.json`), then `firebase deploy --only hosting --project <id>`.
-  6. `scripts/smoke.sh https://accuratum.web.app`; check that the CSP
-     header survives the CDN. Memory: the dry run peaked at 1159 MiB, so
-     `--memory=2Gi` stays (CPU, not memory, uses up the free tier first).
+See [PROJECT_KNOWLEDGE.md § Hosting](PROJECT_KNOWLEDGE.md#hosting-step-7).
 
 ## Backlog (not scheduled)
 
@@ -310,27 +280,3 @@ smoke-tested only in GitHub Actions (`deploy.yml`, also runnable by hand).
   add the owner as required reviewer of the GitHub environment `pypi`
   (Settings → Environments). Until then a `v*` tag uploads to PyPI without
   a click (Step 5.5).
-- **Agents on issues — setup done 2026-11-25** (rulesets, WIF rerun, App,
-  `agent` label, token; traps in PROJECT_KNOWLEDGE.md § Agents on GitHub
-  issues). Trial issue #6: plan posted, `@claude go` given. Left: on #6's
-  PR, check that CI starts and that *Collaborators only* PRs let the App
-  open it (if not, the action's "Create PR" link works).
-- **Action bumps of 2026-11-25 (PROJECT_KNOWLEDGE.md § GitHub Actions
-  versions).** `v0.2.3` passed: GitHub Release and PyPI 0.2.3 are online.
-  The next PR exercises checkout/setup-uv on pull requests.
-- **Website deploy unconfirmed — check first in the next session; no action
-  taken yet.** `site-v0.1.1` failed at *Deploy to Cloud Run* (RepoDigests
-  trap, PROJECT_KNOWLEDGE.md § Traps). `site-v0.1.2` (4c67e6d, the fix) is
-  pushed, but on 2026-11-25 the owner saw no change on the site. That alone
-  proves nothing: no code changed since `site-v0.1.0` and the page shows
-  no version. To check:
-  1. Actions → *Deploy website* → the `site-v0.1.2` run: which step, if
-     any, failed? (Read its log before changing anything.)
-  2. If it passed: Cloud Run → `accuratum-web` → Revisions. The newest one
-     should carry the label `commit-sha=4c67e6d…` and take 100 % of the
-     traffic.
-  3. If the digest step failed again, compare its output with the
-     RepoDigests listing, and see whether runner-images or docker/* have
-     a documented fix. Fallback: `runs-on: ubuntu-24.04` for the
-     `deploy` job.
-  4. Once it's green, fold this into PROJECT_KNOWLEDGE.md and drop the item.
