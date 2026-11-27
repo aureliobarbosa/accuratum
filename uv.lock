@@ -52,7 +52,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "accuratum-web"
-version = "0.1.5"
+version = "0.1.6"
 source = { editable = "web" }
 dependencies = [
     { name = "accuratum" },
