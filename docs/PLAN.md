@@ -187,7 +187,9 @@ start of the step. It accepts latitudes within ±`MAX_LATITUDE` (75°).
   (`fig/logo.png`, `ACCURATUM_LOGO`) on the landing page (17aeb6e).
 - **Left in Step 6:**
   - the one-line description (owner);
-  - About and Contact pages (owner, work in progress).
+  - Contact page (owner, work in progress). About is done (2026-11-27):
+    one HTML fragment per language, see
+    [PROJECT_KNOWLEDGE.md § About page](PROJECT_KNOWLEDGE.md#about-page-2026-11-27).
 - **Security requirements for `web/`** (the trust boundary):
   - no file paths from users: logo and compass uploads with size and type
     limits, re-encoded server-side; never load a user's project folder

@@ -89,6 +89,10 @@ input[type="color"] {
 .view { max-width: 1000px; margin: 0 auto; padding: 1.5rem var(--gutter) 3rem; }
 .view[hidden], [hidden] { display: none !important; }
 
+/* Long texts (About): a readable line length. */
+.prose { max-width: 42rem; line-height: 1.6; }
+.prose p { margin: 0 0 1rem; }
+
 .hero { text-align: center; padding: 2rem 0; }
 .hero h1 { margin: 0 0 1rem; line-height: 0; }
 .hero-logo { width: min(240px, 70vw); height: auto; }

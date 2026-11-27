@@ -1,6 +1,8 @@
 // Translations: one JSON table per language in locales/. Markup carries only
 // keys (data-i18n, data-i18n-placeholder, data-i18n-title); adding a language
-// means adding one table and one <option>.
+// means adding one table and one <option>. Long texts (About) are one HTML
+// fragment per language in locales/<name>/<lang>.html, put in elements that
+// carry data-i18n-html="<name>"; a missing translation falls back to pt-BR.
 "use strict";
 
 const I18N = (() => {
@@ -34,8 +36,31 @@ const I18N = (() => {
     root.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
     root.querySelectorAll("[data-i18n-placeholder]").forEach((el) => (el.placeholder = t(el.dataset.i18nPlaceholder)));
     root.querySelectorAll("[data-i18n-title]").forEach((el) => (el.title = t(el.dataset.i18nTitle)));
+    root.querySelectorAll("[data-i18n-html]").forEach(loadText);
     document.documentElement.lang = current;
     document.title = t("page.title");
+  }
+
+  async function fetchText(name, lang) {
+    const response = await fetch(`locales/${name}/${lang}.html`);
+    if (!response.ok) throw new Error(`${response.status}`);
+    return response.text();
+  }
+
+  async function loadText(el) {
+    const name = el.dataset.i18nHtml;
+    const lang = current;
+    let html;
+    try {
+      html = await fetchText(name, lang);
+    } catch {
+      try {
+        html = await fetchText(name, DEFAULT);
+      } catch {
+        return; // keep whatever is there
+      }
+    }
+    if (lang === current) el.innerHTML = html; // our own same-origin file; a newer language wins
   }
 
   async function use(lang) {

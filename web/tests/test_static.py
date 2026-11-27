@@ -105,3 +105,60 @@ def test_the_footer_shows_the_site_and_library_versions():
     assert 'I18N.t("footer.version"' in JS
     for lang in LANGUAGES:
         assert {"{site}", "{library}"} <= set(re.findall(r"\{\w+\}", LOCALES[lang]["footer.version"])), lang
+
+
+# --- long texts: one HTML fragment per language ---------------------------------
+
+TEXTS = ["about"]
+ALLOWED_TAGS = {"p", "a", "em", "strong"}
+
+
+def _fragment(name: str, lang: str) -> str:
+    return (STATIC / "locales" / name / f"{lang}.html").read_text(encoding="utf-8")
+
+
+def _paragraphs_of_html(html: str) -> list[str]:
+    paragraphs = re.findall(r"<p>(.*?)</p>", html, re.S)
+    return [" ".join(re.sub(r"<[^>]+>", "", p).split()) for p in paragraphs]
+
+
+@pytest.mark.parametrize("name", TEXTS)
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_every_long_text_exists_in_every_language(name, lang):
+    assert _fragment(name, lang).strip()
+
+
+@pytest.mark.parametrize("name", TEXTS)
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_long_texts_use_only_plain_markup(name, lang):
+    # The fragment goes in with innerHTML: no scripts, styles, handlers or loaded media.
+    html = _fragment(name, lang)
+    assert set(re.findall(r"<([a-z0-9]+)", html)) <= ALLOWED_TAGS
+    assert not re.search(r"\s(on[a-z]+|style|src)=", html)
+    for attrs in re.findall(r"<a\s([^>]*)>", html):
+        assert re.fullmatch(r'href="https://[^"]+"', attrs), attrs
+
+
+@pytest.mark.parametrize("name", TEXTS)
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_translations_keep_the_shape_of_the_original(name, lang):
+    original, translated = _fragment(name, "pt-BR"), _fragment(name, lang)
+    assert len(_paragraphs_of_html(translated)) == len(_paragraphs_of_html(original))
+    for tag in ALLOWED_TAGS:
+        assert translated.count(f"<{tag}") == original.count(f"<{tag}"), tag
+    assert "https://github.com/aureliobarbosa/accuratum" in translated
+
+
+def test_the_portuguese_about_is_the_owners_text_word_for_word():
+    # web/docs/about.md is the owner's hand-written text; the page must not drift from it.
+    markdown = (Path(__file__).parents[1] / "docs" / "about.md").read_text(encoding="utf-8")
+    plain = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", markdown).replace("*", "")
+    paragraphs = [" ".join(p.split()) for p in plain.split("\n\n") if p.strip()]
+    assert _paragraphs_of_html(_fragment("about", "pt-BR")) == paragraphs
+
+
+def test_the_about_view_loads_its_long_text():
+    about = re.search(r'<section id="view-about".*?</section>', HTML, re.S).group(0)
+    assert 'data-i18n-html="about"' in about
+    assert "common.wip" not in about
+    assert "locales/${name}/${lang}.html" in JS

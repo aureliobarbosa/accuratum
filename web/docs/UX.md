@@ -58,7 +58,9 @@ From top to bottom:
 
 The button leads to step 2. The top bar stays.
 
-**About and Contact** are work in progress: placeholder pages for now.
+**About** shows the owner's hand-written text (`web/docs/about.md`,
+Portuguese), translated into en, es and fr (2026-11-27). **Contact** is
+still a placeholder.
 
 ## 2. Location
 

@@ -791,6 +791,36 @@ Firebase Hosting and WIF setup carried over.
   in Actions; `https://accuratum.web.app/api/health` answered site 0.1.3,
   library 0.2.3.
 
+## About page (2026-11-27)
+
+- **Long texts are one HTML fragment per language**,
+  `static/locales/<name>/<lang>.html`, put by `i18n.js` into any element with
+  `data-i18n-html="<name>"` (re-fetched on a language change; a missing
+  language falls back to pt-BR). Short UI strings stay in the JSON tables.
+- **Why not the other options** (owner chose, 2026-11-27): JSON keys per
+  paragraph cut the prose into escaped one-line pieces and need HTML in
+  strings for the links; Markdown rendered in the browser ships ~50 KB of JS
+  for five paragraphs; Markdown rendered on the server adds a dependency
+  and a route; every language inside `index.html` grows the main page. If
+  long texts multiply (FAQ, method), rendering Markdown on the server
+  (Python `markdown`) is the next step: it changes how fragments are
+  made, not how the page loads them.
+- **`web/docs/about.md` is the owner's original**, written by hand in
+  Portuguese (only spelling, grammar and punctuation were corrected). A test
+  checks the pt-BR fragment matches it word for word, so edit both. en, es
+  and fr were translated by Claude straight from Portuguese, each linking
+  the Tower of the Winds in its own Wikipedia.
+- **Fragments go in with `innerHTML`**, so tests allow only `p`, `a`,
+  `em`, `strong`, `href="https://…"` links, and no `src`/`style`/`on*`.
+  They also check every translation has the original's paragraphs and tags.
+- **Fact fixed in the text:** the Earth's orientation comes from the IERS
+  tables bundled in `astropy-iers-data` (Bulletin A from the USNO, B from
+  the Paris Observatory), not "NASA data"; the Sun's position is Astropy's
+  own model (ERFA). The IERS gives the Earth's orientation only.
+- Not checked in a browser (no Chromium here, see § Version footer):
+  checked the structural tests and that uvicorn serves each fragment under
+  the CSP.
+
 ## Speed: where the time goes (2026-11-26)
 
 Measured on the dev container, one core (`taskset`), Brasília, the website's
