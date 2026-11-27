@@ -736,7 +736,7 @@ the wheel goes to PyPI from 0.2.2 on (Step 5.5).
 ## Hosting (Step 7)
 
 Live at https://accuratum.web.app since `site-v0.1.0` (2026-10-06); the
-current deploy is `site-v0.1.4` (4c13ddc, the About page). Bingo's Docker, Cloud Run,
+current deploy is `site-v0.1.5` (57943c0, the issue #4 label fixes). Bingo's Docker, Cloud Run,
 Firebase Hosting and WIF setup carried over.
 
 - **Client IP behind the CDN** (1b2b1e3): Firebase Hosting's Fastly CDN
@@ -913,6 +913,9 @@ curve under it is slanted.
   `--label-fontsize` and custom hints don't re-place labels.
 - Both example projects were regenerated (they dated from 0.1.0: green
   lines, pre-Step-5 geometry) in a separate commit.
+- **Released** as accuratum 0.2.4 and `site-v0.1.5` (57943c0), the branch
+  fast-forwarded into `main`. CI passed and uploaded 0.2.4 to PyPI; the
+  deploy went live with `/api/health` reporting site 0.1.5, library 0.2.4.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 
