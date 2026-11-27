@@ -151,3 +151,21 @@ def test_a_short_title_keeps_its_size():
     fig, _ = render(_outline(12.0, 5.0, "Planaltina", "2025-12-21 / 2026-06-21"), hints)
     sizes = sorted(t.get_fontsize() for t in fig.texts)
     assert sizes == [hints.subtitle_fontsize, hints.title_fontsize]
+
+
+@pytest.mark.parametrize("width, height", [(12.0, 6.0), (6.0, 12.0)])
+def test_label_text_size_estimate_matches_the_drawn_text(width, height):
+    # Placement keeps labels off the lines with text boxes estimated in data
+    # units; they must match what matplotlib draws for wide and tall dials.
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    from accuratum.defaults.placement import font_size_in_data_units, text_box
+
+    plot = _outline(width, height)
+    plot.labels.append(Label(text="12/21", x=0.0, y=0.0, ha="left", va="top", kind="dayline"))
+    fig, ax = render(plot)
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    drawn = ax.texts[0].get_window_extent(canvas.get_renderer()).transformed(ax.transData.inverted())
+    x0, y0, x1, y1 = text_box(0.0, 0.0, "12/21", "left", "top", font_size_in_data_units(plot.polylines))
+    assert (x0, y0, x1, y1) == pytest.approx((drawn.x0, drawn.y0, drawn.x1, drawn.y1), abs=0.02 * (x1 - x0))

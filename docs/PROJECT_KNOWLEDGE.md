@@ -880,6 +880,40 @@ default grid, both half-years run one after the other.
   cut, e.g. Toronto 07h/18h) still put their label inside the dial; that
   needs more than a side rule.
 
+**Follow-up: text boxes** (owner's review on the same branch). Most hour
+labels still touched a line with one corner ("0" or "h"), and a few hit a
+date label (Edinburgh 11h under 12/21). The checks compared anchor points
+only, and the text box started exactly at the endpoint while the solstice
+curve under it is slanted.
+
+- **Placement now knows the text size.** `font_size_in_data_units`
+  rebuilds matplotlib's scale from the default `RenderHints` (axes size,
+  equal aspect, 5 % autoscale margins) without importing matplotlib;
+  `text_box` uses DejaVu Sans widths (0.64 em per digit or "h", 0.34 for
+  "/"). A renderer test checks both against the drawn text, wide and tall.
+- **Height is hinted to whole pixels:** 0.86 em at 72 dpi, 1.03 at 100 and
+  150 dpi (the site), 0.98 at 200 (the CLI). `TEXT_HEIGHT_EM` takes the
+  tallest.
+- **Each label moves outward until its box (+0.1 em) clears every line,**
+  starting 0.2 em from the endpoint, up to 2 em. If that fails it tries
+  the direction its own line would continue past the endpoint. At high
+  latitude, lines meet the steep solstice curve almost flat, with
+  neighbours just above and below and empty dial straight ahead
+  (Reykjavik 06h/07h/20h/21h would be lost without it).
+- **A label still blocked, or whose box overlaps a placed one, is
+  hidden.** The anchor rules (per-axis tolerance, plumb disk) stay
+  unchanged and run first.
+- **Measured** with a script that renders each dial and intersects every
+  drawn text box with the lines and the other boxes, in pixels: 26 dials
+  (0° to 64°, both hemispheres, both frames) went from 4–12 labels
+  touching a line per dial to none, with no overlapping pairs. Four
+  hours lost their only label, all of which sat on crossing lines
+  (Santiago 07h, Sydney 06h, Edinburgh 19h) or on a date (Edinburgh 11h).
+- **Known limit:** the boxes assume the default figure size and label font.
+  `--label-fontsize` and custom hints don't re-place labels.
+- Both example projects were regenerated (they dated from 0.1.0: green
+  lines, pre-Step-5 geometry) in a separate commit.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
@@ -903,9 +937,10 @@ Ported to `defaults/placement.py`. Originally recorded in
 - **Tolerances scale with the data extent** (~4% of `max(range_x, range_y)`).
   Fixed thresholds calibrated on unit-sized prototypes failed on ±6-unit
   plots.
-- **Known limits:** extreme latitudes are untested, and collision math uses
-  data coordinates rather than display coordinates. It is best-effort by
-  design, which is why overrides exist.
+- **Known limits:** extreme latitudes are untested. Collision math is in
+  data coordinates, with text boxes estimated for the default render hints
+  (see § Hour labels on the drawing). It is best-effort by design, which
+  is why labels can be edited.
 
 ## Dev environment and multi-machine sync
 

@@ -36,8 +36,8 @@ def test_dayline_label_at_both_endpoints_with_correct_alignment():
     )
     assert len(labels) == 2
     left, right = labels
-    assert left.x == -5.0 and left.ha == "right" and left.text == "01/15"
-    assert right.x == 5.0 and right.ha == "left" and right.text == "01/15"
+    assert left.x <= -5.0 and left.ha == "right" and left.text == "01/15"
+    assert right.x >= 5.0 and right.ha == "left" and right.text == "01/15"
     assert left.selector == {"kind": "dayline", "date": "2026-01-15", "end": "start"}
     assert right.selector == {"kind": "dayline", "date": "2026-01-15", "end": "end"}
 
@@ -49,8 +49,8 @@ def test_hourline_labels_point_outward_on_a_line_running_up():
     labels = place_labels(polys, dayline_labels=[None], hourline_labels=["07h"], data_extent=10.0)
     assert len(labels) == 2
     first, last = labels
-    assert first.y == -2.0 and first.va == "top" and first.text == "07h"
-    assert last.y == 2.0 and last.va == "bottom" and last.text == "07h"
+    assert first.y <= -2.0 and first.va == "top" and first.text == "07h"
+    assert last.y >= 2.0 and last.va == "bottom" and last.text == "07h"
     assert first.selector == {"kind": "hourline", "hour": 7, "end": "start"}
     assert last.selector == {"kind": "hourline", "hour": 7, "end": "end"}
 
@@ -62,8 +62,8 @@ def test_hourline_labels_point_outward_on_a_line_running_down():
     polys = [_hourline(7, xs=[-3.0, 0.0, 3.0], ys=[2.0, 0.0, -2.0])]
     labels = place_labels(polys, dayline_labels=[None], hourline_labels=["07h"], data_extent=10.0)
     first, last = labels
-    assert first.y == 2.0 and first.va == "bottom"
-    assert last.y == -2.0 and last.va == "top"
+    assert first.y >= 2.0 and first.va == "bottom"
+    assert last.y <= -2.0 and last.va == "top"
     assert first.selector == {"kind": "hourline", "hour": 7, "end": "start"}
     assert last.selector == {"kind": "hourline", "hour": 7, "end": "end"}
 
@@ -212,3 +212,64 @@ def test_hour_labels_collide_by_side_not_by_end():
     labels = place_labels(polys, dayline_labels=[None, None], hourline_labels=["15h", "16h"], data_extent=10.0)
     sixteen = [(lbl.va, lbl.hidden) for lbl in labels if lbl.text == "16h"]
     assert sixteen == [("bottom", True), ("top", False)]
+
+
+# --- text boxes: clear of lines and of each other (issue #4 follow-up) -------
+
+EM = 0.1  # one em of label text in data units
+
+
+def test_hour_label_clears_a_slanted_line_through_its_endpoint():
+    # The lower end of 10h sits on a solstice line with slope 0.8. A label
+    # hung right at the endpoint would cut the line with one corner.
+    polys = [
+        _dayline("2026-06-21", xs=[-3.0, 3.0], ys=[-2.4, 2.4]),
+        _hourline(10, xs=[0.0, 0.0], ys=[0.0, 3.0]),
+    ]
+    labels = place_labels(polys, [None, None], [None, "10h"], data_extent=1.0, em=EM)
+    lower = labels[0]
+    half_width = 1.93 * EM / 2
+    assert lower.va == "top" and lower.x == 0.0
+    assert lower.y < -0.8 * half_width  # the box's top edge is below the line at its corner
+
+
+def test_day_label_clears_a_neighbouring_line_that_sticks_out():
+    # 06/21's left label would cover the end of the line below it, which
+    # starts further left; it moves left until it is clear.
+    polys = [
+        _dayline("2026-06-21", xs=[-5.0, 5.0], ys=[0.0, 0.0]),
+        _dayline("2026-06-22", xs=[-5.1, 5.0], ys=[0.03, 0.03]),
+    ]
+    labels = place_labels(polys, ["06/21", None], [None, None], data_extent=10.0, em=EM)
+    left = labels[0]
+    assert left.ha == "right" and not left.hidden
+    assert left.x < -5.1
+
+
+def test_hour_label_hides_when_its_text_overlaps_a_day_label():
+    # 12/21 is anchored at its right edge and extends left, over 11h's lower
+    # label (Edinburgh). The anchors are 0.15 apart in x, past the 0.04
+    # tolerance, so only the text boxes show the overlap.
+    polys = [
+        _dayline("2026-12-21", xs=[0.0, 1.0], ys=[0.0, 0.0]),
+        _hourline(11, xs=[-0.15, -0.15], ys=[0.06, 1.0]),
+    ]
+    labels = place_labels(polys, ["12/21", None], [None, "11h"], data_extent=1.0, em=EM)
+    eleven = [(lbl.va, lbl.hidden) for lbl in labels if lbl.text == "11h"]
+    assert eleven == [("top", True), ("bottom", False)]
+
+
+def test_label_falls_back_to_where_its_line_would_continue():
+    # 06h ends on a steep solstice curve, flanked above and below by the
+    # neighbouring hour lines (Reykjavik). Up and down are blocked; past the
+    # end of its own line (to the right, inside the dial) is free.
+    polys = [
+        _dayline("2026-06-21", xs=[0.0, 0.0], ys=[-1.0, 1.0]),
+        _hourline(5, xs=[-1.0, 0.0], ys=[0.1, 0.1]),
+        _hourline(6, xs=[-1.0, 0.0], ys=[0.0, 0.0]),
+        _hourline(7, xs=[-1.0, 0.0], ys=[-0.1, -0.1]),
+    ]
+    labels = place_labels(polys, [None] * 4, [None, None, "06h", None], data_extent=10.0, em=EM, plumb_exclusion=0.0)
+    end = next(lbl for lbl in labels if lbl.selector["end"] == "end")
+    assert not end.hidden
+    assert end.ha == "left" and end.va == "center" and end.x > 0.0
