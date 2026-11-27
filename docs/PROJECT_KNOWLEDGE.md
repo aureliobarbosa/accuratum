@@ -860,14 +860,35 @@ default grid, both half-years run one after the other.
 - The site's "about a minute" is these 20 s spread over 2 vCPUs, on
   slower cores, plus any cold start; not profiled on Cloud Run yet.
 
+## Hour labels on the drawing (issue #4, 2026-11-27)
+
+- **The bug.** Hour labels went below the *first* sample and above the
+  *last*. That assumes every hour line runs bottom→top, true for the
+  Dec→Jun frame only. In Jun→Dec (`--period 1`) the samples start at the
+  June solstice, which is the upper curve at every latitude, so both labels
+  pointed inward and sat on the solstice daylines (Caracas, Toronto,
+  Santiago in the issue). `test_hourline_label_above_first_below_last`
+  pinned the bug: its line ran downward.
+- **The fix.** The side comes from geometry: the lower endpoint's label
+  hangs below it (`va="top"`), the upper one's sits above it. Collisions
+  are grouped by side (`va` for hours, `ha` for days) instead of by
+  `selector["end"]`, since the bottom label is the `"start"` one in one
+  frame and the `"end"` one in the other. Selectors keep `end`: it is the
+  label's identity, not its side.
+- **Unchanged:** Dec→Jun drawings, including both example projects
+  (period 0). Hour lines that start or end mid-drawing (sun under the 10°
+  cut, e.g. Toronto 07h/18h) still put their label inside the dial; that
+  needs more than a side rule.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
 `docs/LESSONS_LABELS.md` (`git show ad69d87:docs/LESSONS_LABELS.md`).
 
 - **Labels sit at line endpoints only.** Day lines get `MM/DD` left of the
-  first sample and right of the last; hour lines get `HHh` below the first and
-  above the last.
+  first sample and right of the last; hour lines get `HHh` below their lower
+  endpoint and above their upper one (issue #4; see § Hour labels on the
+  drawing).
 - **One day-line label per local month transition.** One hour-line label per
   row whose *middle* sample falls within `time_step/2` of an exact hour. The
   middle sample avoids DST bias at the ends.

@@ -42,18 +42,28 @@ def test_dayline_label_at_both_endpoints_with_correct_alignment():
     assert right.selector == {"kind": "dayline", "date": "2026-01-15", "end": "end"}
 
 
-def test_hourline_label_above_first_below_last():
-    polys = [_hourline(7, xs=[-3.0, 0.0, 3.0], ys=[2.0, 0.0, -2.0])]
-    labels = place_labels(
-        polys,
-        dayline_labels=[None],
-        hourline_labels=["07h"],
-        data_extent=10.0,
-    )
+def test_hourline_labels_point_outward_on_a_line_running_up():
+    # Dec→Jun frame: the first sample is the lower end. Its label goes below
+    # it (va="top"), the last one above (va="bottom").
+    polys = [_hourline(7, xs=[-3.0, 0.0, 3.0], ys=[-2.0, 0.0, 2.0])]
+    labels = place_labels(polys, dayline_labels=[None], hourline_labels=["07h"], data_extent=10.0)
     assert len(labels) == 2
     first, last = labels
-    assert first.y == 2.0 and first.va == "top" and first.text == "07h"
-    assert last.y == -2.0 and last.va == "bottom" and last.text == "07h"
+    assert first.y == -2.0 and first.va == "top" and first.text == "07h"
+    assert last.y == 2.0 and last.va == "bottom" and last.text == "07h"
+    assert first.selector == {"kind": "hourline", "hour": 7, "end": "start"}
+    assert last.selector == {"kind": "hourline", "hour": 7, "end": "end"}
+
+
+def test_hourline_labels_point_outward_on_a_line_running_down():
+    # Jun→Dec frame (issue #4): the first sample is the upper end. A label
+    # below it would sit on the drawing, so it goes above, and the last
+    # (lower) one goes below.
+    polys = [_hourline(7, xs=[-3.0, 0.0, 3.0], ys=[2.0, 0.0, -2.0])]
+    labels = place_labels(polys, dayline_labels=[None], hourline_labels=["07h"], data_extent=10.0)
+    first, last = labels
+    assert first.y == 2.0 and first.va == "bottom"
+    assert last.y == -2.0 and last.va == "top"
     assert first.selector == {"kind": "hourline", "hour": 7, "end": "start"}
     assert last.selector == {"kind": "hourline", "hour": 7, "end": "end"}
 
@@ -190,3 +200,15 @@ def test_every_label_has_a_unique_selector():
     keys = [tuple(sorted(lbl.selector.items())) for lbl in labels]
     assert len(keys) == 4
     assert len(set(keys)) == 4
+
+
+def test_hour_labels_collide_by_side_not_by_end():
+    # 15h runs up and 16h runs down, so their top labels come from different
+    # ends. They share a side and sit 0.2 apart in x, so 16h's top is hidden.
+    polys = [
+        _hourline(15, xs=[0.9, 1.2], ys=[-0.3, 1.0]),
+        _hourline(16, xs=[1.4, 3.0], ys=[1.5, -0.5]),
+    ]
+    labels = place_labels(polys, dayline_labels=[None, None], hourline_labels=["15h", "16h"], data_extent=10.0)
+    sixteen = [(lbl.va, lbl.hidden) for lbl in labels if lbl.text == "16h"]
+    assert sixteen == [("bottom", True), ("top", False)]
