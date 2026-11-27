@@ -736,7 +736,7 @@ the wheel goes to PyPI from 0.2.2 on (Step 5.5).
 ## Hosting (Step 7)
 
 Live at https://accuratum.web.app since `site-v0.1.0` (2026-10-06); the
-current deploy is `site-v0.1.3` (1a4811b, the version footer). Bingo's Docker, Cloud Run,
+current deploy is `site-v0.1.4` (4c13ddc, the About page). Bingo's Docker, Cloud Run,
 Firebase Hosting and WIF setup carried over.
 
 - **Client IP behind the CDN** (1b2b1e3): Firebase Hosting's Fastly CDN
@@ -820,6 +820,9 @@ Firebase Hosting and WIF setup carried over.
 - Not checked in a browser (no Chromium here, see § Version footer):
   checked the structural tests and that uvicorn serves each fragment under
   the CSP.
+- **Deployed as `site-v0.1.4`** (4c13ddc): live about 5 min after the tag
+  push; `/api/health` answered site 0.1.4, library 0.2.3, and the four
+  fragments return 200 on accuratum.web.app.
 
 ## Speed: where the time goes (2026-11-26)
 
