@@ -927,6 +927,38 @@ curve under it is slanted.
   the run date (`half_year(today)`), so the subtitles change at each
   solstice too.
 
+## README for a non-technical audience (issue #10, 2026-11-27)
+
+- **The README is an entry point for spreading the project,** not a
+  manual. In order: the website's logo (`accuratum/fig/logo.png`), badges,
+  a short description based on the About page, how to use the website
+  (with `web/accuratum_web/static/gallery/brasilia.png`), installing with
+  `pipx` / `uv tool install` / `uvx`, a "For developers" pointer, authors
+  (Lattes CVs; GitHub only for Marco, Paulo has none) and the license last.
+- **Two languages:** `README.md` in English and `README_pt-BR.md` in
+  Portuguese, each linking to the other. The rule (update pt-BR whenever the
+  README is rewritten) is in CLAUDE.md.
+- **Technical content moved to `docs/DEVELOPERS.md`,** for now a verbatim
+  copy of the old Install, CLI, Project folders, Library and Development
+  sections, with relative links (it is not on PyPI). Improving it is left to
+  a future issue; its Development section still says `uv sync --extra dev`,
+  older than CLAUDE.md's command.
+- **Absolute URLs everywhere in both READMEs** (`raw.githubusercontent.com`
+  for images, `github.com/.../blob/main/` for links), because `README.md`
+  is the PyPI description (see § PyPI). Images on `main` only show once the
+  files are on `main`.
+- **Badges, option (b) chosen by the owner:** one `ci.yml` badge (lint +
+  library tests + website tests in one workflow) and one `deploy.yml` badge
+  as the website signal. GitHub badges are per workflow, not per job, so
+  separate library/website test badges would need `ci.yml` split in two
+  (agents can't edit workflows). CI runs only on PRs and `v*` tags, so the
+  `ci.yml` badge shows the latest PR or tag run, not `main`.
+- **No outside pull requests for now.** Both READMEs carry the owner's
+  wording: bug reports and suggestions as issues; would-be contributors
+  contact prof. Marco Barbosa by LinkedIn or e-mail.
+- **From now on, changes come in through GitHub issues** (owner,
+  2026-11-27), so this task added nothing to PLAN.md.
+
 ## Label placement lessons (from the unmerged `labels` branch)
 
 Ported to `defaults/placement.py`. Originally recorded in
