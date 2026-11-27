@@ -1,161 +1,105 @@
-# **Accuratum**
+<p align="center">
+  <img src="https://raw.githubusercontent.com/aureliobarbosa/accuratum/main/accuratum/fig/logo.png" alt="Accuratum logo" width="160">
+</p>
 
-### A Python library and CLI for creating *Accuratum sundials*
+<h1 align="center">Accuratum</h1>
 
-Accuratum draws a horizontal sundial (the shadow cast by a plumb/gnomon on a
-flat surface) for a given location on Earth, computed precisely with
-[astropy](https://www.astropy.org/) and [astroplan](https://astroplan.readthedocs.io/).
-A full year is covered by two solstice-to-solstice frames
-(December → June and June → December).
+<p align="center"><strong>Sundials for any place on Earth</strong></p>
 
-## Install
+<p align="center">
+  🇧🇷 <a href="https://github.com/aureliobarbosa/accuratum/blob/main/README_pt-BR.md">Leia em português</a>
+</p>
 
-Install it from PyPI:
+<p align="center">
+  <a href="https://github.com/aureliobarbosa/accuratum/actions/workflows/ci.yml"><img src="https://github.com/aureliobarbosa/accuratum/actions/workflows/ci.yml/badge.svg" alt="Tests (library and website)"></a>
+  <a href="https://github.com/aureliobarbosa/accuratum/actions/workflows/deploy.yml"><img src="https://github.com/aureliobarbosa/accuratum/actions/workflows/deploy.yml/badge.svg" alt="Website deploy"></a>
+  <a href="https://pypi.org/project/accuratum/"><img src="https://img.shields.io/pypi/v/accuratum" alt="PyPI version"></a>
+  <a href="https://github.com/aureliobarbosa/accuratum/blob/main/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
+</p>
+
+**Make your own sundial at [accuratum.web.app](https://accuratum.web.app).**
+
+## What is Accuratum?
+
+For several millennia, sundials were the main way of keeping time in daily
+life. They stood in squares and on buildings, and some monuments were built
+just to mark the hours. Today they no longer serve a practical purpose, but
+they have become something greater: works of art, and tools for teaching
+and sharing science and the history of how humanity has kept time.
+
+Accuratum lets anyone, anywhere on Earth, make a sundial for their own
+neighborhood, simply and accurately. It draws a **horizontal sundial**: the
+lines on which the shadow of a vertical pointer (the *gnomon*) falls,
+through the hours of the day and the dates of the year, for (almost) any
+place on the globe.
+
+*Accuratum* is Latin for accurate, made with care, meticulous.
+
+## Using the website
+
+The easiest way to make a sundial is the website,
+**[accuratum.web.app](https://accuratum.web.app)**. No installation is
+needed.
+
+1. **Choose the place.** Search for a city, university or address, or click
+   the map.
+2. **Personalize it.** Set the year, the title and subtitle, the line
+   colors, and your own logo if you like.
+3. **Generate.** It takes up to a minute.
+4. **Download the PDF.** It has both halves of the year (December → June
+   and June → December), ready to print.
+
+This is the sundial for Brasília (June → December 2026):
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/aureliobarbosa/accuratum/main/web/accuratum_web/static/gallery/brasilia.png" alt="Accuratum sundial for Brasília" width="720">
+</p>
+
+## Installing the program
+
+You can also make sundials on your own computer with the `accuratum`
+command. It needs [Python](https://www.python.org/) 3.11 or newer and one
+of these tools: [pipx](https://pipx.pypa.io/) or
+[uv](https://docs.astral.sh/uv/).
 
 ```bash
-pip install accuratum
-uv tool install accuratum   # or: just the `accuratum` CLI, in its own environment
+pipx install accuratum      # with pipx
+uv tool install accuratum   # or with uv
 ```
 
-Or install the development version directly from GitHub, pinned to a
-branch, tag, or commit if needed:
+Then make a sundial by naming a place, or by giving its latitude and
+longitude:
 
 ```bash
-pip install git+https://github.com/aureliobarbosa/accuratum.git@main
-pip install git+https://github.com/aureliobarbosa/accuratum.git@<tag-or-sha>
-```
-
-Requirements: Python ≥ 3.11. Major dependencies (astropy, astroplan, matplotlib,
-geopy, numpy, timezonefinder) are installed automatically.
-
-## CLI usage
-
-After installation the `accuratum` command is available:
-
-```bash
-# By location string (resolved via Nominatim/OpenStreetMap). Creates the
-# project folder belem-brazil_<year>_p0/ with project.json, polylines.npz and
-# accuratum.png
 accuratum "belem, brazil"
-
-# By explicit latitude/longitude (use '=' for negative values)
-accuratum --lat-long=-15.78,-47.92 --output brasilia.png
-
-# The other half-year frame (June → December) of a given year
-accuratum --lat-long=-15.78,-47.92 --year 2026 --period 1
-
-# Override the overlay logo and its position/size (figure coords, 0-1)
-accuratum --lat-long=0,0 --logo my_logo.png --logo-rect=0.1,0.8,0.15,0.15
-
-# Title and subtitle; they default to the location name (or its coordinates)
-# and the timeframe. '' leaves one out
-accuratum "belem, brazil" --title "Belém do Pará" --subtitle "Praça da República"
-
-# Vector output (.svg or .pdf) that a print shop can scale to any panel size
-accuratum --lat-long=-15.78,-47.92 --output panel.svg
-
-# Hand-edit labels in <folder>/project.json, then render without recomputing
-accuratum --project lat-15.78_lon-47.92_2026_p0 --output clock.svg
-
-# After editing the spec in project.json (e.g. "period"), recompute it
-accuratum --project lat-15.78_lon-47.92_2026_p0 --regenerate
+accuratum --lat-long=-15.78,-47.92
 ```
 
-### Project folders
+Each command creates a folder with the drawing (`accuratum.png`) inside.
+To try it once without installing anything, use `uvx accuratum "belem, brazil"`.
+For all the options, run `accuratum --help`.
 
-Each run saves a folder (`--project-dir` sets it; an existing one is only
-overwritten with `--force`):
+## For developers
 
-- `project.json` — short and hand-editable: the `spec` (location, year,
-  period, grid, ...), the `render` settings (font size, logo and compass),
-  the `title` and `subtitle` (`""` leaves one out) and the `labels`, one
-  per line. Move a label by editing `x`/`y`;
-  hide or restore one with `hidden` (labels the placement heuristic suppressed
-  are kept, hidden); add one by appending `{"text": "...", "x": 0, "y": 3}`.
-- `polylines.npz` — the computed day and hour lines (NumPy arrays).
+Detailed instructions for using Accuratum as a Python library, for the
+command line and for development are in
+[docs/DEVELOPERS.md](https://github.com/aureliobarbosa/accuratum/blob/main/docs/DEVELOPERS.md).
 
-Rendering a folder with `--project` uses the saved lines and labels as they
-are. Render flags given on the command line win over the saved settings for
-that run. If the spec was edited, `--project` refuses and asks for
-`--regenerate`, which recomputes lines and labels (label edits are lost; an
-edited title or subtitle is kept; the previous file is kept as
-`project.json.bak`).
-
-Hour lines are labelled in the zone's **standard time**. Where daylight
-saving applies, add one hour to the dial's reading in summer, as with any
-sundial.
-
-Latitudes from 75° S to 75° N are supported. Past about 56.5°, the winter
-sun stays below the 10° horizon cut for some weeks around the solstice, so
-the dial covers less of the year the closer it is to the poles.
-
-See `accuratum --help` for the full list of options (grid resolution,
-timezone override, plumb length, etc.).
-
-Geocoding uses the free [Nominatim](https://nominatim.org/) service via
-`geopy`, which has strict rate limits and requires network access. For
-batch or reproducible use, prefer `--lat-long`.
-
-## Library usage
-
-A `SundialSpec` describes the sundial; `build_plot` turns it into a `Plot`
-(pure data); a renderer draws it. Labels are plain data: each endpoint label
-has its own `selector`, and labels the placement heuristic suppressed are kept
-with `hidden=True`.
-
-```python
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-from accuratum.core.builder import build_plot
-from accuratum.core.hints import RenderHints
-from accuratum.core.spec import Location, SundialSpec, TimeFrame
-from accuratum.renderers import matplotlib_backend
-
-tz = ZoneInfo("America/Sao_Paulo")
-spec = SundialSpec(
-    location=Location(lat=-15.78, lon=-47.92, timezone="America/Sao_Paulo"),
-    timeframe=TimeFrame(start=datetime(2025, 12, 21, tzinfo=tz), end=datetime(2026, 6, 21, tzinfo=tz)),
-)
-plot = build_plot(spec)  # pure data: polylines + labels, no matplotlib
-
-fig, _ = matplotlib_backend.render(plot, RenderHints())
-fig.savefig("clock.png", dpi=200, bbox_inches="tight")
-fig.savefig("clock.svg", bbox_inches="tight")  # vector; .pdf works too
-```
-
-To save and reload a project folder from Python, use
-`accuratum.core.project.Project` with `accuratum.core.project_io.save_project`
-/ `load_project`.
-
-## Development
-
-Development uses [uv](https://docs.astral.sh/uv/) and runs inside a devcontainer.
-
-```bash
-git clone https://github.com/aureliobarbosa/accuratum.git
-cd accuratum
-uv sync --extra dev
-uv run pytest
-uv run accuratum --help
-```
-
-Code formatting/linting:
-
-```bash
-uv run ruff check --fix
-uv run ruff format
-```
-
-Prototype notebooks live in
-[`notebooks/`](https://github.com/aureliobarbosa/accuratum/tree/main/notebooks)
-and are not shipped in the built distribution.
-
-## License
-
-MIT — see [LICENSE.md](https://github.com/aureliobarbosa/accuratum/blob/main/LICENSE.md).
+This project does not accept contributions via pull requests at this
+moment. Bug reports and suggestions are welcome as
+[issues](https://github.com/aureliobarbosa/accuratum/issues). If you want to
+contribute to this project you can contact prof. Marco Barbosa through
+LinkedIn or e-mail.
 
 ## Authors
 
-- Paulo Eduardo de Brito (creator)
-- Marco Aurélio Alves Barbosa
+- **Paulo Eduardo de Brito**, creator ·
+  [Lattes CV](https://busca-cv-lattes.cnpq.br/curriculo/9022648500703356)
+- **Marco Aurélio Alves Barbosa**, developer ·
+  [Lattes CV](https://busca-cv-lattes.cnpq.br/curriculo/5720622055548812) ·
+  [GitHub](https://github.com/aureliobarbosa)
+
+## License
+
+Accuratum is free software under the MIT license. See
+[LICENSE.md](https://github.com/aureliobarbosa/accuratum/blob/main/LICENSE.md).
