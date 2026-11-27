@@ -736,7 +736,7 @@ the wheel goes to PyPI from 0.2.2 on (Step 5.5).
 ## Hosting (Step 7)
 
 Live at https://accuratum.web.app since `site-v0.1.0` (2026-10-06); the
-current deploy is `site-v0.1.5` (57943c0, the issue #4 label fixes). Bingo's Docker, Cloud Run,
+current deploy is `site-v0.1.6` (issue #9: gallery images regenerated; 0.1.5 was the issue #4 label fixes). Bingo's Docker, Cloud Run,
 Firebase Hosting and WIF setup carried over.
 
 - **Client IP behind the CDN** (1b2b1e3): Firebase Hosting's Fastly CDN
@@ -916,6 +916,16 @@ curve under it is slanted.
 - **Released** as accuratum 0.2.4 and `site-v0.1.5` (57943c0), the branch
   fast-forwarded into `main`. CI passed and uploaded 0.2.4 to PyPI; the
   deploy went live with `/api/health` reporting site 0.1.5, library 0.2.4.
+- **Issue #9: the landing-page gallery was stale after that release.** The
+  carousel PNGs in `web/accuratum_web/static/gallery/` are committed
+  output of `cd web && uv run python -m accuratum_web.gallery`, not built in
+  CI or at deploy, so a placement change in the library does not reach them
+  until someone reruns it. They were regenerated with 0.2.4 (hour and date
+  labels now clear of the lines) and released as `site-v0.1.6`. **Trap:**
+  after any change that moves labels or lines, rerun that module and commit
+  the PNGs together with the site version bump. The frame shown depends on
+  the run date (`half_year(today)`), so the subtitles change at each
+  solstice too.
 
 ## Label placement lessons (from the unmerged `labels` branch)
 
