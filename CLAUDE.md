@@ -60,6 +60,10 @@ production code.
 - **Subagents are fine when they help.** Run the tests they wrote in the main
   thread before trusting their work.
 - **English** for code, docs and commit messages.
+- **README.md is in English, for a non-technical audience** (it is also
+  the PyPI description, so links and images use absolute URLs). Whenever
+  it is rewritten, update the Portuguese version, `README_pt-BR.md`, to
+  match. Technical usage goes in `docs/DEVELOPERS.md`.
 - **Project context lives in `docs/`, not in Claude's auto-memory.** Git
   carries `docs/` to every machine. Record a decision there before switching
   machines.
