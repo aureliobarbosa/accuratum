@@ -14,7 +14,7 @@ members = [
 
 [[package]]
 name = "accuratum"
-version = "0.2.3"
+version = "0.2.4"
 source = { editable = "." }
 dependencies = [
     { name = "astroplan" },
@@ -52,7 +52,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "accuratum-web"
-version = "0.1.4"
+version = "0.1.5"
 source = { editable = "web" }
 dependencies = [
     { name = "accuratum" },
